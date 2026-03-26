@@ -1,0 +1,380 @@
+"""Patient list and management widget with inline form."""
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QLineEdit, QTableWidget, QTableWidgetItem,
+    QHeaderView, QFrame, QStackedWidget, QMessageBox,
+    QSpinBox, QTextEdit, QFormLayout, QComboBox
+)
+from PyQt6.QtCore import Qt
+from ...services.patient_service import PatientService
+from ...services.treatment_service import TreatmentService
+from ...models.patient import Patient
+
+
+class PatientFormView(QWidget):
+    """Inline patient form (not a dialog)."""
+
+    def __init__(self, patient_service, treatment_service, parent_widget, patient: Patient = None):
+        super().__init__()
+        self.patient_service = patient_service
+        self.treatment_service = treatment_service
+        self.parent_widget = parent_widget
+        self.patient = patient
+        self.is_edit_mode = patient is not None
+        self.init_ui()
+
+        if self.is_edit_mode:
+            self.load_patient_data()
+
+    def init_ui(self):
+        """Initialize the form UI."""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(24)
+
+        # Header
+        header_layout = QHBoxLayout()
+
+        title = QLabel("Edit Patient" if self.is_edit_mode else "Add New Patient")
+        title.setObjectName("page_title")
+        header_layout.addWidget(title)
+
+        header_layout.addStretch()
+
+        # Cancel button
+        cancel_btn = QPushButton("← Back to Patients")
+        cancel_btn.setObjectName("secondary_button")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.clicked.connect(self.on_cancel)
+        header_layout.addWidget(cancel_btn)
+
+        layout.addLayout(header_layout)
+
+        # Form card
+        form_frame = QFrame()
+        form_frame.setObjectName("card")
+        form_layout = QFormLayout(form_frame)
+        form_layout.setSpacing(16)
+        form_layout.setContentsMargins(24, 24, 24, 24)
+
+        # Patient Basic Info Section
+        section_label = QLabel("Patient Information")
+        section_label.setObjectName("section_title")
+        form_layout.addRow(section_label)
+
+        # Name
+        self.name_input = QLineEdit()
+        self.name_input.setPlaceholderText("Enter full name")
+        form_layout.addRow("Name *:", self.name_input)
+
+        # Mobile
+        self.mobile_input = QLineEdit()
+        self.mobile_input.setPlaceholderText("10-digit mobile number")
+        self.mobile_input.setMaxLength(10)
+        form_layout.addRow("Mobile *:", self.mobile_input)
+
+        # Age
+        self.age_input = QSpinBox()
+        self.age_input.setMinimum(1)
+        self.age_input.setMaximum(120)
+        self.age_input.setValue(30)
+        form_layout.addRow("Age *:", self.age_input)
+
+        # City
+        self.city_input = QLineEdit()
+        self.city_input.setPlaceholderText("Enter city")
+        form_layout.addRow("City *:", self.city_input)
+
+        # Address
+        self.address_input = QTextEdit()
+        self.address_input.setPlaceholderText("Enter full address (optional)")
+        self.address_input.setMaximumHeight(80)
+        form_layout.addRow("Address:", self.address_input)
+
+        layout.addWidget(form_frame)
+
+        # Error label
+        self.error_label = QLabel()
+        self.error_label.setObjectName("error_label")
+        self.error_label.setWordWrap(True)
+        self.error_label.setVisible(False)
+        layout.addWidget(self.error_label)
+
+        # Success label
+        self.success_label = QLabel()
+        self.success_label.setObjectName("success_label")
+        self.success_label.setWordWrap(True)
+        self.success_label.setVisible(False)
+        layout.addWidget(self.success_label)
+
+        # Save button (not full width)
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+
+        save_btn = QPushButton("💾 Save Patient" if not self.is_edit_mode else "💾 Update Patient")
+        save_btn.setObjectName("primary_button")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.clicked.connect(self.on_save)
+        save_btn.setMinimumHeight(44)
+        save_btn.setMinimumWidth(200)
+        button_layout.addWidget(save_btn)
+
+        button_layout.addStretch()
+        layout.addLayout(button_layout)
+
+        layout.addStretch()
+
+    def load_patient_data(self):
+        """Load patient data into form."""
+        if not self.patient:
+            return
+
+        self.name_input.setText(self.patient.name)
+        self.mobile_input.setText(self.patient.mobile_number)
+        self.age_input.setValue(self.patient.age)
+        self.city_input.setText(self.patient.city)
+        if self.patient.address:
+            self.address_input.setPlainText(self.patient.address)
+
+    def on_save(self):
+        """Save patient."""
+        # Hide previous messages
+        self.error_label.setVisible(False)
+        self.success_label.setVisible(False)
+
+        # Get form data
+        name = self.name_input.text().strip()
+        mobile = self.mobile_input.text().strip()
+        age = self.age_input.value()
+        city = self.city_input.text().strip()
+        address = self.address_input.toPlainText().strip()
+
+        # Save
+        if self.is_edit_mode:
+            success, message = self.patient_service.update_patient(
+                self.patient.id, name=name, mobile_number=mobile,
+                age=age, city=city, address=address if address else None
+            )
+        else:
+            success, message, patient_id = self.patient_service.create_patient(
+                name=name, mobile_number=mobile, age=age, city=city,
+                address=address if address else None
+            )
+
+        if success:
+            self.success_label.setText(f"✅ {message}")
+            self.success_label.setVisible(True)
+            # Go back to list after 1 second
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(1000, self.on_cancel)
+        else:
+            self.error_label.setText(f"❌ {message}")
+            self.error_label.setVisible(True)
+
+    def on_cancel(self):
+        """Cancel and go back."""
+        self.parent_widget.show_list_view()
+
+
+class PatientListWidget(QWidget):
+    """Patient list and management with inline form."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.patient_service = PatientService()
+        self.treatment_service = TreatmentService()
+        self.init_ui()
+
+    def init_ui(self):
+        """Initialize UI."""
+        # Stack widget to switch between list and form
+        self.stack = QStackedWidget()
+
+        # Create list view
+        self.list_view = self.create_list_view()
+        self.stack.addWidget(self.list_view)
+
+        # Layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.stack)
+
+    def create_list_view(self):
+        """Create the patient list view."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(24)
+
+        # Header
+        header_layout = QHBoxLayout()
+
+        title = QLabel("Patients")
+        title.setObjectName("page_title")
+        header_layout.addWidget(title)
+
+        header_layout.addStretch()
+
+        add_btn = QPushButton("➕ Add New Patient")
+        add_btn.setObjectName("primary_button")
+        add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.clicked.connect(self.show_add_form)
+        header_layout.addWidget(add_btn)
+
+        layout.addLayout(header_layout)
+
+        # Search
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("🔍 Search by name, mobile, or city...")
+        self.search_input.setMinimumWidth(400)
+        self.search_input.textChanged.connect(self.on_search)
+        layout.addWidget(self.search_input)
+
+        # Table
+        self.table = QTableWidget()
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels([
+            "ID", "Name", "Mobile", "Age", "City", "Actions"
+        ])
+
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.table.setAlternatingRowColors(True)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+
+        # Column widths
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(0, 60)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(2, 120)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(3, 60)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(5, 280)
+
+        layout.addWidget(self.table)
+
+        self.load_patients()
+
+        return widget
+
+    def load_patients(self, search_query: str = ""):
+        """Load patients."""
+        if search_query:
+            patients = self.patient_service.search_patients(search_query)
+        else:
+            patients = self.patient_service.get_all_patients()
+
+        self.table.setRowCount(0)
+
+        for patient in patients:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+
+            self.table.setItem(row, 0, QTableWidgetItem(str(patient.id)))
+            self.table.setItem(row, 1, QTableWidgetItem(patient.name))
+            self.table.setItem(row, 2, QTableWidgetItem(patient.mobile_number))
+            self.table.setItem(row, 3, QTableWidgetItem(str(patient.age)))
+            self.table.setItem(row, 4, QTableWidgetItem(patient.city))
+
+            # Actions with better buttons
+            actions = self.create_action_buttons(patient.id)
+            self.table.setCellWidget(row, 5, actions)
+
+    def create_action_buttons(self, patient_id: int):
+        """Create larger, better action buttons."""
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(8)
+
+        # View/History button
+        view_btn = QPushButton("📋 History")
+        view_btn.setObjectName("secondary_button")
+        view_btn.setMinimumWidth(90)
+        view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        view_btn.clicked.connect(lambda: self.on_view_patient(patient_id))
+        layout.addWidget(view_btn)
+
+        # Edit button
+        edit_btn = QPushButton("✏️ Edit")
+        edit_btn.setObjectName("secondary_button")
+        edit_btn.setMinimumWidth(80)
+        edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        edit_btn.clicked.connect(lambda: self.show_edit_form(patient_id))
+        layout.addWidget(edit_btn)
+
+        # Delete button
+        delete_btn = QPushButton("🗑️ Delete")
+        delete_btn.setObjectName("danger_button")
+        delete_btn.setMinimumWidth(90)
+        delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        delete_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
+        layout.addWidget(delete_btn)
+
+        return widget
+
+    def on_search(self):
+        """Handle search."""
+        self.load_patients(self.search_input.text())
+
+    def show_add_form(self):
+        """Show add patient form."""
+        form = PatientFormView(self.patient_service, self.treatment_service, self)
+        self.stack.addWidget(form)
+        self.stack.setCurrentWidget(form)
+
+    def show_edit_form(self, patient_id: int):
+        """Show edit form."""
+        patient = self.patient_service.get_patient(patient_id)
+        if patient:
+            form = PatientFormView(self.patient_service, self.treatment_service, self, patient)
+            self.stack.addWidget(form)
+            self.stack.setCurrentWidget(form)
+
+    def show_list_view(self):
+        """Show patient list."""
+        self.stack.setCurrentWidget(self.list_view)
+        self.load_patients()
+        # Remove old form widgets
+        while self.stack.count() > 1:
+            widget = self.stack.widget(1)
+            self.stack.removeWidget(widget)
+            widget.deleteLater()
+
+    def on_view_patient(self, patient_id: int):
+        """Show patient history."""
+        from .patient_details import PatientDetailsDialog
+        patient = self.patient_service.get_patient(patient_id)
+        if patient:
+            dialog = PatientDetailsDialog(patient, self)
+            dialog.exec()
+
+    def on_delete_patient(self, patient_id: int):
+        """Delete patient."""
+        patient = self.patient_service.get_patient(patient_id)
+        if not patient:
+            return
+
+        reply = QMessageBox.question(
+            self, 'Delete Patient',
+            f'Delete patient "{patient.name}"?\n\nThis will delete all treatments, payments, and prescriptions.',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            success, message = self.patient_service.delete_patient(patient_id)
+            if success:
+                QMessageBox.information(self, 'Success', message)
+                self.load_patients()
+            else:
+                QMessageBox.warning(self, 'Error', message)
+
+    def refresh_data(self):
+        """Refresh data."""
+        if self.stack.currentWidget() == self.list_view:
+            self.load_patients()
