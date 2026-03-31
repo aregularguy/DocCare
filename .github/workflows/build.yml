@@ -50,8 +50,6 @@ jobs:
             --hidden-import sqlite3 `
             --hidden-import dateutil `
             --exclude-module tkinter `
-            --exclude-module test `
-            --exclude-module unittest `
             app.py
         shell: pwsh
 
