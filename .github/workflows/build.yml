@@ -52,7 +52,7 @@ jobs:
             --exclude-module tkinter `
             --exclude-module test `
             --exclude-module unittest `
-            src/main.py
+            app.py
         shell: pwsh
 
       - name: Get version tag
