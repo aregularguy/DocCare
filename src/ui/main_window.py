@@ -1,151 +1,180 @@
 """Main application window with sidebar navigation."""
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QFrame, QStackedWidget, QScrollArea
+    QLabel, QFrame, QStackedWidget
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont
 from .styles import get_stylesheet, NAV_ICONS, COLORS
 
+_BG = COLORS['sidebar_bg']
+_HOVER = COLORS['sidebar_hover']
+_ACTIVE = COLORS['sidebar_active']
+_ACTIVE_TEXT = COLORS['sidebar_text']
+_DIM_TEXT = COLORS['sidebar_text_secondary']
+_ACCENT = COLORS['sidebar_active_border']
 
-class NavigationButton(QPushButton):
-    """Custom navigation button for sidebar."""
+
+class NavItem(QWidget):
+    """Vertical icon + label nav item — TatvaPractice style."""
+
+    clicked_signal = pyqtSignal()
 
     def __init__(self, icon: str, text: str, parent=None):
         super().__init__(parent)
-        self.setObjectName("nav_button")
-        self.icon = icon
-        self.button_text = text
-        self.setText(f"  {icon}  {text}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setMinimumHeight(44)
-        self.setProperty("active", False)
+        self.setFixedHeight(70)
+        self._active = False
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 10, 4, 10)
+        layout.setSpacing(4)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.icon_lbl = QLabel(icon)
+        self.icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon_lbl.setStyleSheet(f"font-size: 22px; background: transparent; color: white;")
+
+        self.text_lbl = QLabel(text)
+        self.text_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.text_lbl.setWordWrap(True)
+        self.text_lbl.setStyleSheet(
+            f"font-size: 10px; font-weight: 500; background: transparent; color: {_DIM_TEXT};"
+        )
+
+        layout.addWidget(self.icon_lbl)
+        layout.addWidget(self.text_lbl)
+
+        self._set_bg(_BG)
+
+    def _set_bg(self, color: str):
+        self.setStyleSheet(
+            f"QWidget {{ background-color: {color}; border-radius: 10px; }}"
+        )
 
     def set_active(self, active: bool):
-        """Set button active state."""
-        self.setProperty("active", active)
-        self.style().unpolish(self)
-        self.style().polish(self)
+        self._active = active
+        if active:
+            self._set_bg(_ACTIVE)
+            self.text_lbl.setStyleSheet(
+                f"font-size: 10px; font-weight: 700; background: transparent; color: {_ACTIVE_TEXT};"
+            )
+        else:
+            self._set_bg(_BG)
+            self.text_lbl.setStyleSheet(
+                f"font-size: 10px; font-weight: 500; background: transparent; color: {_DIM_TEXT};"
+            )
+
+    def mousePressEvent(self, event):
+        self.clicked_signal.emit()
+
+    def enterEvent(self, event):
+        if not self._active:
+            self._set_bg(_HOVER)
+
+    def leaveEvent(self, event):
+        if not self._active:
+            self._set_bg(_BG)
 
 
 class Sidebar(QWidget):
-    """Sidebar navigation widget (Cursor-style)."""
+    """Compact icon+label sidebar — TatvaPractice style."""
 
-    navigation_changed = pyqtSignal(str)  # Emits the page name
+    navigation_changed = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("sidebar")
-        self.setFixedWidth(240)
-        self.active_button = None
-        self.buttons = {}
+        self.setFixedWidth(86)
+        self.active_item = None
+        self.items = {}
         self.init_ui()
 
     def init_ui(self):
-        """Initialize the sidebar UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Header section
-        header = self.create_header()
-        layout.addWidget(header)
+        layout.addWidget(self._create_header())
 
-        # Navigation buttons
-        nav_container = QWidget()
-        nav_layout = QVBoxLayout(nav_container)
-        nav_layout.setContentsMargins(12, 12, 12, 12)
-        nav_layout.setSpacing(4)
+        # Nav items container
+        nav = QWidget()
+        nav.setStyleSheet(f"background-color: {_BG};")
+        nav_layout = QVBoxLayout(nav)
+        nav_layout.setContentsMargins(8, 12, 8, 12)
+        nav_layout.setSpacing(2)
 
-        # First group (3 items)
-        self.add_nav_button(nav_layout, 'dashboard', 'Dashboard')
-        self.add_nav_button(nav_layout, 'patients', 'Patients')
-        self.add_nav_button(nav_layout, 'treatments', 'Treatments')
-
-        # Separator
-        nav_layout.addWidget(self.create_separator())
-
-        # Second group (3 items)
-        self.add_nav_button(nav_layout, 'payments', 'Payments')
-        self.add_nav_button(nav_layout, 'prescriptions', 'Prescriptions')
-        self.add_nav_button(nav_layout, 'analytics', 'Analytics')
-
-        # Separator
-        nav_layout.addWidget(self.create_separator())
-
-        # Additional options
-        self.add_nav_button(nav_layout, 'settings', 'Settings')
-        self.add_nav_button(nav_layout, 'export', 'Export Data')
-
+        self._add_item(nav_layout, 'dashboard',    'Dashboard')
+        self._add_item(nav_layout, 'patients',     'Patients')
+        self._add_item(nav_layout, 'treatments',   'Treatments')
+        nav_layout.addWidget(self._separator())
+        self._add_item(nav_layout, 'payments',     'Payments')
+        self._add_item(nav_layout, 'prescriptions','Prescribe')
+        self._add_item(nav_layout, 'analytics',    'Analytics')
+        nav_layout.addWidget(self._separator())
+        self._add_item(nav_layout, 'settings',     'Settings')
+        self._add_item(nav_layout, 'export',       'Export')
         nav_layout.addStretch()
 
-        # Wrap in scroll area
-        scroll = QScrollArea()
-        scroll.setWidget(nav_container)
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        layout.addWidget(nav)
 
-        layout.addWidget(scroll)
-
-        # Set first button as active
-        if 'dashboard' in self.buttons:
+        if 'dashboard' in self.items:
             self.set_active_page('dashboard')
 
-    def create_header(self):
-        """Create sidebar header with app title."""
+    def _create_header(self):
         header = QFrame()
         header.setObjectName("sidebar_header")
-        header_layout = QVBoxLayout(header)
-        header_layout.setContentsMargins(20, 20, 20, 20)
+        header.setFixedHeight(62)
+        header.setStyleSheet(
+            f"background-color: {_BG}; border-bottom: 1px solid {COLORS['sidebar_border']};"
+        )
+        hlay = QVBoxLayout(header)
+        hlay.setContentsMargins(0, 8, 0, 8)
+        hlay.setSpacing(0)
+        hlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # App title
-        title = QLabel("🦷 DentNest")
-        title.setObjectName("app_title")
-        title_font = QFont("Segoe UI", 16, QFont.Weight.Bold)
-        title.setFont(title_font)
-        header_layout.addWidget(title)
+        icon = QLabel("🦷")
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setStyleSheet(f"font-size: 24px; background: transparent; color: white;")
 
-        # Subtitle
-        subtitle = QLabel("Dental Practice Manager")
-        subtitle.setObjectName("app_subtitle")
-        subtitle.setStyleSheet(f"color: {COLORS['text_secondary']};")
-        header_layout.addWidget(subtitle)
+        lbl = QLabel("DentNest")
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl.setStyleSheet(
+            f"font-size: 9px; font-weight: 700; color: {_DIM_TEXT};"
+            f" background: transparent; letter-spacing: 1px;"
+        )
 
+        hlay.addWidget(icon)
+        hlay.addWidget(lbl)
         return header
 
-    def create_separator(self):
-        """Create a horizontal separator line."""
-        separator = QFrame()
-        separator.setObjectName("separator")
-        separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setFixedHeight(1)
-        return separator
+    def _separator(self):
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFixedHeight(1)
+        sep.setStyleSheet(f"background-color: {COLORS['sidebar_border']}; border: none;")
+        return sep
 
-    def add_nav_button(self, layout, key: str, text: str):
-        """Add a navigation button to the layout."""
+    def _add_item(self, layout, key: str, label: str):
         icon = NAV_ICONS.get(key, '•')
-        button = NavigationButton(icon, text)
-        button.clicked.connect(lambda: self.on_nav_clicked(key))
-        self.buttons[key] = button
-        layout.addWidget(button)
+        item = NavItem(icon, label)
+        item.clicked_signal.connect(lambda: self._on_clicked(key))
+        self.items[key] = item
+        layout.addWidget(item)
 
-    def on_nav_clicked(self, page_name: str):
-        """Handle navigation button click."""
+    def _on_clicked(self, page_name: str):
         self.set_active_page(page_name)
         self.navigation_changed.emit(page_name)
 
-    def set_active_page(self, page_name: str):
-        """Set the active navigation button."""
-        # Deactivate previous button
-        if self.active_button:
-            self.active_button.set_active(False)
+    def on_nav_clicked(self, page_name: str):
+        """Public alias kept for compatibility with other widgets."""
+        self._on_clicked(page_name)
 
-        # Activate new button
-        if page_name in self.buttons:
-            button = self.buttons[page_name]
-            button.set_active(True)
-            self.active_button = button
+    def set_active_page(self, page_name: str):
+        if self.active_item:
+            self.active_item.set_active(False)
+        if page_name in self.items:
+            self.active_item = self.items[page_name]
+            self.active_item.set_active(True)
 
 
 class MainWindow(QMainWindow):
@@ -160,24 +189,34 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         """Initialize the main window UI."""
-        # Create central widget
+        from .widgets.top_navbar import TopNavBar
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Main layout
-        main_layout = QHBoxLayout(central_widget)
+        # Root vertical layout: navbar on top, body below
+        root_layout = QVBoxLayout(central_widget)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
+        self.navbar = TopNavBar()
+        root_layout.addWidget(self.navbar)
+
+        # Body: sidebar + content area side by side
+        body_widget = QWidget()
+        main_layout = QHBoxLayout(body_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Sidebar
         self.sidebar = Sidebar()
         self.sidebar.navigation_changed.connect(self.on_navigation_changed)
         main_layout.addWidget(self.sidebar)
 
-        # Content area
         self.content_area = QStackedWidget()
         self.content_area.setObjectName("content_area")
         main_layout.addWidget(self.content_area)
+
+        root_layout.addWidget(body_widget)
 
         # Initialize pages
         self.init_pages()

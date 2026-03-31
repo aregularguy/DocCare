@@ -2,13 +2,14 @@
 
 # Color Palette - Light Theme
 COLORS = {
-    # Sidebar
-    'sidebar_bg': '#F5F5F7',
-    'sidebar_hover': '#E8E8EA',
-    'sidebar_active': '#FFFFFF',
-    'sidebar_text': '#1D1D1F',
-    'sidebar_text_secondary': '#86868B',
-    'sidebar_border': '#D2D2D7',
+    # Sidebar — deep ocean blue (professional medical SaaS)
+    'sidebar_bg': '#0F2942',
+    'sidebar_hover': '#1A3A5C',
+    'sidebar_active': '#1E4976',
+    'sidebar_active_border': '#38BDF8',
+    'sidebar_text': '#FFFFFF',
+    'sidebar_text_secondary': '#94B8D4',
+    'sidebar_border': '#1E3A5A',
 
     # Main content
     'main_bg': '#FFFFFF',
@@ -47,7 +48,7 @@ COLORS = {
 
 # Font settings
 FONTS = {
-    'family': 'Segoe UI, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+    'family': 'Ubuntu, Nunito, Segoe UI, -apple-system, sans-serif',
     'size_small': '11px',
     'size_normal': '13px',
     'size_medium': '14px',
@@ -81,62 +82,46 @@ def get_stylesheet():
         color: {COLORS['text_primary']};
     }}
 
-    /* Sidebar Styles */
-    #sidebar {{
+    /* ── Sidebar: override global QWidget white bg/dark text for all children ── */
+    #sidebar,
+    #sidebar QWidget,
+    #sidebar QScrollArea,
+    #sidebar QScrollArea > QWidget,
+    #sidebar QScrollArea > QWidget > QWidget {{
         background-color: {COLORS['sidebar_bg']};
+        color: {COLORS['sidebar_text']};
+    }}
+
+    #sidebar {{
         border-right: 1px solid {COLORS['sidebar_border']};
     }}
 
     #sidebar_header {{
         background-color: {COLORS['sidebar_bg']};
-        padding: 20px;
+        padding: 14px 12px;
         border-bottom: 1px solid {COLORS['sidebar_border']};
     }}
 
     #app_title {{
-        font-size: {FONTS['size_xlarge']};
-        font-weight: {FONTS['weight_bold']};
-        color: {COLORS['text_primary']};
+        font-size: 14px;
+        font-weight: 700;
+        color: #FFFFFF;
+        background-color: {COLORS['sidebar_bg']};
     }}
 
     #app_subtitle {{
-        font-size: {FONTS['size_small']};
-        color: {COLORS['text_secondary']};
-        margin-top: 2px;
+        font-size: 10px;
+        color: {COLORS['sidebar_text_secondary']};
+        background-color: {COLORS['sidebar_bg']};
     }}
 
-    /* Navigation Button Styles */
-    QPushButton#nav_button {{
-        text-align: left;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 8px;
-        background-color: transparent;
-        color: {COLORS['sidebar_text']};
-        font-size: {FONTS['size_medium']};
-        font-weight: {FONTS['weight_medium']};
-    }}
-
-    QPushButton#nav_button:hover {{
-        background-color: {COLORS['sidebar_hover']};
-    }}
-
-    QPushButton#nav_button:pressed {{
-        background-color: {COLORS['sidebar_active']};
-    }}
-
-    QPushButton#nav_button[active="true"] {{
-        background-color: {COLORS['sidebar_active']};
-        color: {COLORS['primary']};
-        font-weight: {FONTS['weight_semibold']};
-        border: 1px solid {COLORS['border']};
-    }}
+    /* Nav items are now QWidget-based (NavItem class) — styled inline in Python */
 
     /* Separator Line */
     QFrame#separator {{
-        background-color: {COLORS['border']};
+        background-color: {COLORS['sidebar_border']};
         max-height: 1px;
-        margin: 8px 0px;
+        margin: 6px 0px;
     }}
 
     /* Content Area */
@@ -202,7 +187,9 @@ def get_stylesheet():
     }}
 
     QPushButton#secondary_button:hover {{
-        background-color: {COLORS['sidebar_hover']};
+        background-color: {COLORS['primary_light']};
+        border-color: {COLORS['primary']};
+        color: {COLORS['primary']};
     }}
 
     QPushButton#success_button {{
@@ -364,31 +351,38 @@ def get_stylesheet():
     /* Table Styles */
     QTableWidget {{
         background-color: {COLORS['card_bg']};
-        border: 1px solid {COLORS['border']};
-        border-radius: 8px;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
         gridline-color: {COLORS['border_light']};
         font-size: {FONTS['size_medium']};
+        alternate-background-color: #FAFAFA;
     }}
 
     QTableWidget::item {{
-        padding: 8px;
+        padding: 10px 14px;
+        min-height: 40px;
         border: none;
+    }}
+
+    QTableWidget::item:hover {{
+        background-color: #F0F9FF;
     }}
 
     QTableWidget::item:selected {{
-        background-color: {COLORS['primary_light']};
-        color: {COLORS['primary']};
+        background-color: #DBEAFE;
+        color: #0F2942;
     }}
 
     QHeaderView::section {{
-        background-color: {COLORS['content_bg']};
-        color: {COLORS['text_secondary']};
+        background-color: #EFF6FF;
+        color: #1A4A7A;
         padding: 10px;
         border: none;
-        border-bottom: 1px solid {COLORS['border']};
+        border-bottom: 2px solid #38BDF8;
         font-weight: {FONTS['weight_semibold']};
         font-size: {FONTS['size_small']};
         text-transform: uppercase;
+        letter-spacing: 0.5px;
     }}
 
     /* ScrollBar Styles */
@@ -495,12 +489,12 @@ def get_stylesheet():
 
 # Icon paths or Unicode symbols for navigation
 NAV_ICONS = {
-    'dashboard': '🏠',
-    'patients': '👤',
-    'treatments': '🦷',
-    'payments': '💰',
-    'prescriptions': '💊',
-    'analytics': '📊',
-    'settings': '⚙️',
-    'export': '📤',
+    'dashboard':    '🏠',
+    'patients':     '👥',
+    'treatments':   '🦷',
+    'payments':     '💳',
+    'prescriptions':'📋',
+    'analytics':    '📊',
+    'settings':     '⚙️',
+    'export':       '📤',
 }
