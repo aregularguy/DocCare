@@ -76,21 +76,62 @@ def seed_medicines():
         # Antifungal
         ('Fluconazole 150mg', '150mg', 'antifungal'),
         ('Nystatin Oral Drops', 'standard', 'antifungal'),
+
+        # Extended dental medicines — Antibiotics
+        ('Amoxicillin + Clavulanate 625mg', '625mg', 'antibiotic'),
+        ('Tinidazole 500mg', '500mg', 'antibiotic'),
+        ('Doxycycline 100mg', '100mg', 'antibiotic'),
+
+        # Painkillers / Anti-inflammatory
+        ('Ibuprofen 600mg', '600mg', 'analgesic'),
+        ('Paracetamol 650mg', '650mg', 'analgesic'),
+        ('Aceclofenac 100mg', '100mg', 'analgesic'),
+        ('Nimesulide 100mg', '100mg', 'analgesic'),
+        ('Tramadol 50mg', '50mg', 'analgesic'),
+        ('Ketorolac 10mg (analgesic)', '10mg', 'analgesic'),
+        ('Diclofenac 50mg (analgesic)', '50mg', 'analgesic'),
+
+        # Antifungal
+        ('Clotrimazole Mouth Gel', 'standard', 'antifungal'),
+        ('Nystatin Oral Suspension', 'standard', 'antifungal'),
+
+        # Mouthwash / Rinse
+        ('Chlorhexidine 0.2% Mouthwash', '0.2%', 'antiseptic'),
+        ('Povidone Iodine Gargle', 'standard', 'antiseptic'),
+        ('Benzydamine Mouthwash', 'standard', 'anti-inflammatory'),
+
+        # Topical / Anesthetic
+        ('Lidocaine Gel 2%', '2%', 'anesthetic'),
+        ('Benzocaine Gel', 'standard', 'anesthetic'),
+        ('Triamcinolone Acetonide Paste', 'standard', 'corticosteroid'),
+        ('Choline Salicylate Gel', 'standard', 'analgesic'),
+
+        # Vitamins / Supplements
+        ('Vitamin C 500mg', '500mg', 'supplement'),
+        ('Zinc Supplement', 'standard', 'supplement'),
+
+        # Antacids
+        ('Pantoprazole 40mg', '40mg', 'antacid'),
+        ('Omeprazole 20mg', '20mg', 'antacid'),
     ]
 
-    # Check if data already exists
-    existing = db.fetch_one("SELECT COUNT(*) as count FROM medicines")
-    if existing and existing['count'] > 0:
-        logger.info("Medicines already exist, skipping seed")
-        return
+    # Insert only medicines that don't already exist (check by name)
+    inserted = 0
+    for name, common_dosage, category in medicines:
+        existing = db.fetch_one(
+            "SELECT id FROM medicines WHERE name = ?", (name,)
+        )
+        if not existing:
+            db.execute(
+                "INSERT INTO medicines (name, common_dosage, category) VALUES (?, ?, ?)",
+                (name, common_dosage, category)
+            )
+            inserted += 1
 
-    # Insert medicines
-    db.executemany(
-        "INSERT INTO medicines (name, common_dosage, category) VALUES (?, ?, ?)",
-        medicines
-    )
-
-    logger.info(f"Seeded {len(medicines)} medicines")
+    if inserted > 0:
+        logger.info(f"Seeded {inserted} new medicines")
+    else:
+        logger.info("All medicines already exist, skipping seed")
 
 
 def seed_all():
