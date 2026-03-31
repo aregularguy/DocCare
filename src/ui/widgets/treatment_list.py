@@ -4,10 +4,10 @@ from PyQt6.QtWidgets import (
     QPushButton, QLineEdit, QTableWidget, QTableWidgetItem,
     QHeaderView, QFrame, QStackedWidget, QMessageBox,
     QFormLayout, QComboBox, QDoubleSpinBox, QTextEdit,
-    QCompleter, QDateEdit
+    QCompleter, QDateEdit, QScrollArea
 )
 from PyQt6.QtCore import Qt, QDate
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor
 from ...services.patient_service import PatientService
 from ...services.treatment_service import TreatmentService
 from datetime import date
@@ -25,143 +25,243 @@ class TreatmentFormView(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        """Initialize UI."""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
+        """Initialize UI — scrollable, non-overlapping layout."""
+        # Outer layout just holds the scroll area
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        outer.addWidget(scroll)
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(40, 32, 40, 40)
         layout.setSpacing(24)
+        scroll.setWidget(container)
 
-        # Header
+        # ── Header ──
         header_layout = QHBoxLayout()
-
         title = QLabel("New Treatment")
         title.setObjectName("page_title")
         header_layout.addWidget(title)
-
         header_layout.addStretch()
-
         cancel_btn = QPushButton("← Back")
         cancel_btn.setObjectName("secondary_button")
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.clicked.connect(self.on_cancel)
         header_layout.addWidget(cancel_btn)
-
         layout.addLayout(header_layout)
 
-        # Step 1: Search or Create Patient
+        # ── Step 1: Select Patient ──
         patient_frame = QFrame()
         patient_frame.setObjectName("card")
-        patient_layout = QVBoxLayout(patient_frame)
-        patient_layout.setContentsMargins(24, 24, 24, 24)
-        patient_layout.setSpacing(16)
+        patient_frame.setStyleSheet(
+            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            " border-radius:12px; }"
+        )
+        pl = QVBoxLayout(patient_frame)
+        pl.setContentsMargins(28, 24, 28, 24)
+        pl.setSpacing(14)
 
-        step1_label = QLabel("Step 1: Select Patient")
-        step1_label.setObjectName("section_title")
-        patient_layout.addWidget(step1_label)
+        step1_row = QHBoxLayout()
+        step1_badge = QLabel("1")
+        step1_badge.setFixedSize(28, 28)
+        step1_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        step1_badge.setStyleSheet(
+            "background:#007AFF; color:white; border-radius:14px;"
+            " font-weight:700; font-size:13px;"
+        )
+        step1_row.addWidget(step1_badge)
+        step1_lbl = QLabel("Select Patient")
+        step1_lbl.setFont(QFont("Segoe UI", 14, QFont.Weight.DemiBold))
+        step1_lbl.setStyleSheet("margin-left:8px;")
+        step1_row.addWidget(step1_lbl)
+        step1_row.addStretch()
+        pl.addLayout(step1_row)
 
-        # Search existing patient
-        search_layout = QHBoxLayout()
-
+        # Search bar + Show All
+        search_row = QHBoxLayout()
         self.patient_search = QLineEdit()
-        self.patient_search.setPlaceholderText("🔍 Type patient name or mobile number to search...")
-        self.patient_search.textChanged.connect(self.on_patient_search)
+        self.patient_search.setPlaceholderText("🔍  Search by name or mobile number...")
         self.patient_search.setMinimumHeight(44)
-        search_layout.addWidget(self.patient_search)
+        self.patient_search.textChanged.connect(self.on_patient_search)
+        search_row.addWidget(self.patient_search)
 
         show_all_btn = QPushButton("Show All")
         show_all_btn.setObjectName("secondary_button")
         show_all_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         show_all_btn.clicked.connect(self.show_all_patients)
-        show_all_btn.setMaximumWidth(120)
-        search_layout.addWidget(show_all_btn)
+        show_all_btn.setFixedWidth(100)
+        show_all_btn.setMinimumHeight(44)
+        search_row.addWidget(show_all_btn)
+        pl.addLayout(search_row)
 
-        patient_layout.addLayout(search_layout)
-
-        # Search results
+        # Patient results table
         self.search_results = QTableWidget()
         self.search_results.setColumnCount(4)
         self.search_results.setHorizontalHeaderLabels(["Name", "Mobile", "Age", "City"])
-        self.search_results.setMinimumHeight(150)
-        self.search_results.setMaximumHeight(200)
+        self.search_results.setMinimumHeight(160)
+        self.search_results.setMaximumHeight(220)
         self.search_results.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.search_results.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.search_results.cellClicked.connect(self.on_patient_selected)
         self.search_results.verticalHeader().setVisible(False)
         self.search_results.setAlternatingRowColors(True)
+        self.search_results.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.search_results.verticalHeader().setDefaultSectionSize(40)
+        h = self.search_results.horizontalHeader()
+        h.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        h.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        h.resizeSection(1, 130)
+        h.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        h.resizeSection(2, 60)
+        h.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        pl.addWidget(self.search_results)
 
-        # Set column widths
-        header = self.search_results.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(1, 120)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(2, 60)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-
-        patient_layout.addWidget(self.search_results)
-
-        # Selected patient display
+        # Selected patient banner
         self.selected_patient_label = QLabel("No patient selected")
-        self.selected_patient_label.setStyleSheet("color: #86868B; font-style: italic;")
-        patient_layout.addWidget(self.selected_patient_label)
+        self.selected_patient_label.setStyleSheet(
+            "color:#86868B; font-style:italic; padding:6px 0;"
+        )
+        pl.addWidget(self.selected_patient_label)
 
-        # OR create new patient
-        or_label = QLabel("— OR —")
-        or_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        or_label.setStyleSheet("color: #86868B; margin: 10px 0;")
-        patient_layout.addWidget(or_label)
+        # OR divider + create new
+        or_row = QHBoxLayout()
+        line_l = QFrame(); line_l.setFrameShape(QFrame.Shape.HLine)
+        line_l.setStyleSheet("color:#E5E5EA;")
+        or_row.addWidget(line_l)
+        or_lbl = QLabel("  OR  ")
+        or_lbl.setStyleSheet("color:#86868B; font-size:12px; font-weight:500;")
+        or_row.addWidget(or_lbl)
+        line_r = QFrame(); line_r.setFrameShape(QFrame.Shape.HLine)
+        line_r.setStyleSheet("color:#E5E5EA;")
+        or_row.addWidget(line_r)
+        pl.addLayout(or_row)
 
-        create_new_btn = QPushButton("➕ Create New Patient")
-        create_new_btn.setObjectName("secondary_button")
-        create_new_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        create_new_btn.clicked.connect(self.on_create_new_patient)
-        patient_layout.addWidget(create_new_btn)
+        create_btn = QPushButton("➕  Create New Patient")
+        create_btn.setObjectName("secondary_button")
+        create_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        create_btn.clicked.connect(self.on_create_new_patient)
+        create_btn.setMinimumHeight(40)
+        pl.addWidget(create_btn)
 
         layout.addWidget(patient_frame)
 
-        # Step 2: Treatment Details
+        # ── Step 2: Treatment Details ──
         treatment_frame = QFrame()
         treatment_frame.setObjectName("card")
-        treatment_layout = QFormLayout(treatment_frame)
-        treatment_layout.setContentsMargins(24, 24, 24, 24)
-        treatment_layout.setSpacing(16)
+        treatment_frame.setStyleSheet(
+            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            " border-radius:12px; }"
+        )
+        tl = QVBoxLayout(treatment_frame)
+        tl.setContentsMargins(28, 24, 28, 28)
+        tl.setSpacing(20)
 
-        step2_label = QLabel("Step 2: Treatment Details")
-        step2_label.setObjectName("section_title")
-        treatment_layout.addRow(step2_label)
+        step2_row = QHBoxLayout()
+        step2_badge = QLabel("2")
+        step2_badge.setFixedSize(28, 28)
+        step2_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        step2_badge.setStyleSheet(
+            "background:#34C759; color:white; border-radius:14px;"
+            " font-weight:700; font-size:13px;"
+        )
+        step2_row.addWidget(step2_badge)
+        step2_lbl = QLabel("Treatment Details")
+        step2_lbl.setFont(QFont("Segoe UI", 14, QFont.Weight.DemiBold))
+        step2_lbl.setStyleSheet("margin-left:8px;")
+        step2_row.addWidget(step2_lbl)
+        step2_row.addStretch()
+        tl.addLayout(step2_row)
 
-        # Treatment type
+        # Fields grid: 2 columns
+        fields_row1 = QHBoxLayout()
+        fields_row1.setSpacing(20)
+
+        # Treatment Type
+        type_col = QVBoxLayout()
+        type_col.setSpacing(6)
+        type_lbl = QLabel("Treatment Type *")
+        type_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        type_col.addWidget(type_lbl)
         self.treatment_type = QComboBox()
+        self.treatment_type.setMinimumHeight(44)
         self.load_treatment_types()
-        treatment_layout.addRow("Treatment Type *:", self.treatment_type)
+        type_col.addWidget(self.treatment_type)
+        fields_row1.addLayout(type_col)
 
-        # Cost
+        # Total Cost
+        cost_col = QVBoxLayout()
+        cost_col.setSpacing(6)
+        cost_lbl = QLabel("Total Cost (₹) *")
+        cost_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        cost_col.addWidget(cost_lbl)
         self.cost_input = QDoubleSpinBox()
         self.cost_input.setMinimum(0)
         self.cost_input.setMaximum(1000000)
         self.cost_input.setPrefix("₹ ")
         self.cost_input.setValue(0)
-        treatment_layout.addRow("Total Cost *:", self.cost_input)
+        self.cost_input.setMinimumHeight(44)
+        cost_col.addWidget(self.cost_input)
+        fields_row1.addLayout(cost_col)
 
-        # Start date
+        tl.addLayout(fields_row1)
+
+        fields_row2 = QHBoxLayout()
+        fields_row2.setSpacing(20)
+
+        # Start Date
+        date_col = QVBoxLayout()
+        date_col.setSpacing(6)
+        date_lbl = QLabel("Start Date")
+        date_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        date_col.addWidget(date_lbl)
         self.start_date = QDateEdit()
         self.start_date.setDate(QDate.currentDate())
         self.start_date.setCalendarPopup(True)
-        treatment_layout.addRow("Start Date:", self.start_date)
+        self.start_date.setMinimumHeight(44)
+        date_col.addWidget(self.start_date)
+        fields_row2.addLayout(date_col)
 
         # Status
+        status_col = QVBoxLayout()
+        status_col.setSpacing(6)
+        status_lbl = QLabel("Status")
+        status_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        status_col.addWidget(status_lbl)
         self.status = QComboBox()
-        self.status.addItems(["Planned", "In Progress", "Completed"])
-        treatment_layout.addRow("Status:", self.status)
+        self.status.setMinimumHeight(44)
+        self.status.addItem("📋  Planned")
+        self.status.addItem("⚙️  In Progress")
+        self.status.addItem("✅  Completed")
+        self.status.setItemData(0, QColor("#FFF3E0"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setItemData(1, QColor("#E5F0FF"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setItemData(2, QColor("#E8F8EC"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setStyleSheet(
+            "QComboBox QAbstractItemView::item { padding: 10px 14px; min-height:36px; }"
+        )
+        status_col.addWidget(self.status)
+        fields_row2.addLayout(status_col)
+
+        tl.addLayout(fields_row2)
 
         # Notes
+        notes_lbl = QLabel("Notes (optional)")
+        notes_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        tl.addWidget(notes_lbl)
         self.notes = QTextEdit()
-        self.notes.setPlaceholderText("Add any notes about the treatment...")
-        self.notes.setMaximumHeight(100)
-        treatment_layout.addRow("Notes:", self.notes)
+        self.notes.setPlaceholderText("Any additional notes about this treatment...")
+        self.notes.setMinimumHeight(90)
+        self.notes.setMaximumHeight(120)
+        tl.addWidget(self.notes)
 
         layout.addWidget(treatment_frame)
 
-        # Error/Success messages
+        # ── Feedback labels ──
         self.error_label = QLabel()
         self.error_label.setObjectName("error_label")
         self.error_label.setWordWrap(True)
@@ -174,20 +274,18 @@ class TreatmentFormView(QWidget):
         self.success_label.setVisible(False)
         layout.addWidget(self.success_label)
 
-        # Add to Queue button
-        button_layout = QHBoxLayout()
-        button_layout.addStretch()
-
-        add_queue_btn = QPushButton("➕ Add to Treatment Queue")
+        # ── Submit button ──
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        add_queue_btn = QPushButton("🦷  Add to Treatment Queue")
         add_queue_btn.setObjectName("primary_button")
         add_queue_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_queue_btn.clicked.connect(self.on_add_treatment)
-        add_queue_btn.setMinimumHeight(44)
-        add_queue_btn.setMinimumWidth(250)
-        button_layout.addWidget(add_queue_btn)
-
-        button_layout.addStretch()
-        layout.addLayout(button_layout)
+        add_queue_btn.setMinimumHeight(48)
+        add_queue_btn.setMinimumWidth(260)
+        btn_row.addWidget(add_queue_btn)
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
 
         layout.addStretch()
 
@@ -195,11 +293,49 @@ class TreatmentFormView(QWidget):
         self.show_all_patients()
 
     def load_treatment_types(self):
-        """Load treatment types into dropdown."""
+        """Load treatment types with icons and colors."""
+        # icon, background color, text color
+        TREATMENT_STYLE = {
+            "Root Canal":   ("🦷", "#FFE5E5", "#CC0000"),
+            "Filling":      ("🪨", "#FFF3E0", "#E65100"),
+            "Cleaning":     ("✨", "#E5F0FF", "#0055CC"),
+            "Extraction":   ("🔧", "#F3E5F5", "#7B1FA2"),
+            "Crown":        ("👑", "#FFF8E1", "#F57F17"),
+            "Implant":      ("🔩", "#E8F5E9", "#2E7D32"),
+            "Whitening":    ("⬜", "#E5F0FF", "#1565C0"),
+            "Braces":       ("📎", "#FCE4EC", "#880E4F"),
+            "Denture":      ("🦴", "#F3E5F5", "#4A148C"),
+            "Veneer":       ("💎", "#E0F7FA", "#00695C"),
+            "Bridge":       ("🌉", "#FFF3E0", "#BF360C"),
+            "Consultation": ("💬", "#E8F5E9", "#1B5E20"),
+        }
+
         treatment_types = self.treatment_service.get_all_treatment_types()
         self.treatment_type.clear()
+        self.treatment_type.setStyleSheet(
+            "QComboBox QAbstractItemView::item {"
+            "  padding: 10px 14px;"
+            "  min-height: 38px;"
+            "  font-size: 13px;"
+            "}"
+            "QComboBox QAbstractItemView::item:selected {"
+            "  background: #007AFF;"
+            "  color: white;"
+            "}"
+        )
+
         for tt in treatment_types:
-            self.treatment_type.addItem(tt.name, tt.id)
+            style = TREATMENT_STYLE.get(tt.name, ("🦷", "#F5F5F7", "#1D1D1F"))
+            icon, bg, fg = style
+            label = f"{icon}  {tt.name}"
+            self.treatment_type.addItem(label, tt.id)
+
+            idx = self.treatment_type.count() - 1
+            self.treatment_type.setItemData(idx, QColor(bg), Qt.ItemDataRole.BackgroundRole)
+            self.treatment_type.setItemData(idx, QColor(fg), Qt.ItemDataRole.ForegroundRole)
+            font = QFont("Segoe UI", 12)
+            font.setWeight(QFont.Weight.Medium)
+            self.treatment_type.setItemData(idx, font, Qt.ItemDataRole.FontRole)
 
     def show_all_patients(self):
         """Show all patients in the results table."""
@@ -304,8 +440,16 @@ class TreatmentFormView(QWidget):
 
         # Get treatment data
         treatment_type_id = self.treatment_type.currentData()
-        status_map = {"Planned": "planned", "In Progress": "in_progress", "Completed": "completed"}
-        status = status_map[self.status.currentText()]
+        status_map = {
+            "planned": "planned", "in progress": "in_progress", "completed": "completed"
+        }
+        raw_status = self.status.currentText().lower()
+        # Strip emoji prefix if present
+        for key in status_map:
+            if key in raw_status:
+                raw_status = key
+                break
+        status = status_map.get(raw_status, "planned")
         start_date_py = self.start_date.date().toPyDate()
         notes_text = self.notes.toPlainText().strip()
 
@@ -392,6 +536,7 @@ class TreatmentQueueView(QWidget):
         self.queue_table.setAlternatingRowColors(True)
         self.queue_table.verticalHeader().setVisible(False)
         self.queue_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.queue_table.verticalHeader().setDefaultSectionSize(48)
 
         # Column widths
         header = self.queue_table.horizontalHeader()
@@ -426,11 +571,29 @@ class TreatmentQueueView(QWidget):
                 row = self.queue_table.rowCount()
                 self.queue_table.insertRow(row)
 
-                self.queue_table.setItem(row, 0, QTableWidgetItem(patient.name))
-                self.queue_table.setItem(row, 1, QTableWidgetItem(patient.mobile_number))
-                self.queue_table.setItem(row, 2, QTableWidgetItem(treatment.treatment_type_name or "N/A"))
-                self.queue_table.setItem(row, 3, QTableWidgetItem(f"₹{treatment.total_cost:.2f}"))
-                self.queue_table.setItem(row, 4, QTableWidgetItem(treatment.status.upper()))
+                _f = QFont("Ubuntu", 12)
+                _f_bold = QFont("Ubuntu", 12)
+                _f_bold.setWeight(QFont.Weight.Medium)
+
+                name_item = QTableWidgetItem(patient.name)
+                name_item.setFont(_f_bold)
+                self.queue_table.setItem(row, 0, name_item)
+
+                mobile_item = QTableWidgetItem(patient.mobile_number)
+                mobile_item.setFont(_f)
+                self.queue_table.setItem(row, 1, mobile_item)
+
+                treatment_item = QTableWidgetItem(treatment.treatment_type_name or "N/A")
+                treatment_item.setFont(_f)
+                self.queue_table.setItem(row, 2, treatment_item)
+
+                cost_item = QTableWidgetItem(f"₹{treatment.total_cost:.2f}")
+                cost_item.setFont(_f)
+                self.queue_table.setItem(row, 3, cost_item)
+
+                status_item = QTableWidgetItem(treatment.status.upper())
+                status_item.setFont(_f)
+                self.queue_table.setItem(row, 4, status_item)
 
                 date_str = treatment.start_date.strftime('%Y-%m-%d') if treatment.start_date else "N/A"
                 self.queue_table.setItem(row, 5, QTableWidgetItem(date_str))
@@ -440,16 +603,24 @@ class TreatmentQueueView(QWidget):
                 self.queue_table.setCellWidget(row, 6, actions)
 
     def create_action_buttons(self, treatment_id: int):
-        """Create action buttons."""
+        """Create action buttons for each queue row."""
         widget = QWidget()
+        widget.setStyleSheet("background: transparent;")
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        view_btn = QPushButton("👁️ View")
-        view_btn.setObjectName("secondary_button")
-        view_btn.setMinimumWidth(70)
+        view_btn = QPushButton("👁  View Patient")
+        view_btn.setFixedHeight(32)
+        view_btn.setMinimumWidth(110)
         view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        view_btn.setStyleSheet(
+            "QPushButton { background: #EFF6FF; color: #1A4A7A; border: 1px solid #BFDBFE;"
+            " border-radius: 6px; padding: 0 12px; font-size: 12px; font-weight: 600; }"
+            "QPushButton:hover { background: #DBEAFE; border-color: #38BDF8; color: #0F2942; }"
+        )
+        view_btn.clicked.connect(lambda: self.on_view_treatment(treatment_id))
         layout.addWidget(view_btn)
 
         return widget
@@ -461,7 +632,26 @@ class TreatmentQueueView(QWidget):
     def refresh(self):
         """Refresh queue."""
         self.load_queue()
+        
+    def on_view_treatment(self, treatment_id: int):
+        """Navigate to the patient's profile (billing/payment history) for this treatment."""
+        treatment = self.treatment_service.get_treatment(treatment_id)
+        if not treatment:
+            return
 
+        patient = self.patient_service.get_patient(treatment.patient_id)
+        if not patient:
+            return
+
+        # Switch the main window to the Patients page
+        main_window = self.window()
+        if hasattr(main_window, 'sidebar'):
+            main_window.sidebar.on_nav_clicked('patients')
+
+        # Open the patient details widget on the Patients page
+        if hasattr(main_window, 'pages') and 'patients' in main_window.pages:
+            patient_list_widget = main_window.pages['patients']
+            patient_list_widget.show_patient_details(patient)
 
 class TreatmentListWidget(QWidget):
     """Main treatment widget with stack."""
@@ -501,6 +691,5 @@ class TreatmentListWidget(QWidget):
         self.stack.setCurrentWidget(form)
 
     def refresh_data(self):
-        """Refresh data."""
-        if self.stack.currentWidget() == self.queue_view:
-            self.queue_view.refresh()
+        """Refresh data — always reset to queue list."""
+        self.show_queue_view()
