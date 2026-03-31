@@ -888,9 +888,13 @@ class PatientDetailsWidget(QWidget):
         <style>
           body {{
             font-family: 'Noto Sans', 'Noto Sans Devanagari', 'DejaVu Sans', Arial, sans-serif;
-            margin: 36px 40px;
+            margin: 8px;
             font-size: 15pt;
             color: #1a1a1a;
+          }}
+          .page-border {{
+            border: 4px solid #0F2942;
+            padding: 28px 32px;
           }}
 
           /* ── Letterhead ── */
@@ -907,15 +911,9 @@ class PatientDetailsWidget(QWidget):
             text-align: center;
           }}
           .lh-symbol .tooth-icon {{
-            display: inline-block;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #0F2942;
-            color: white;
-            font-size: 26pt;
-            line-height: 48px;
-            text-align: center;
+            font-size: 36pt;
+            color: #0F2942;
+            line-height: 1;
           }}
           .lh-center {{
             text-align: center;
@@ -1044,6 +1042,7 @@ class PatientDetailsWidget(QWidget):
           }}
         </style>
         </head><body>
+        <div class="page-border">
 
         <!-- ═══ LETTERHEAD ═══ -->
         <table class="letterhead">
@@ -1120,6 +1119,7 @@ class PatientDetailsWidget(QWidget):
           <span class="sig-line">{doctor_name}</span>
         </div>
 
+        </div><!-- end page-border -->
         </body></html>
         """
 
