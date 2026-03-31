@@ -25,7 +25,7 @@ class PrescriptionRepository(BaseRepository[Prescription]):
         query = """
             SELECT * FROM prescriptions
             WHERE treatment_id = ?
-            ORDER BY prescribed_date DESC
+            ORDER BY prescribed_date DESC, session_id, id ASC
         """
         rows = self.db.fetch_all(query, (treatment_id,))
         return [Prescription.from_db_row(row) for row in rows]

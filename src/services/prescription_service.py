@@ -19,6 +19,7 @@ class PrescriptionService:
         self,
         treatment_id: int,
         medicine_name: str,
+        session_id: Optional[str] = None,
         dosage: Optional[str] = None,
         frequency: Optional[str] = None,
         duration: Optional[str] = None,
@@ -50,6 +51,7 @@ class PrescriptionService:
         try:
             prescription_id = self.repository.create(
                 treatment_id=treatment_id,
+                session_id=session_id,
                 medicine_name=medicine_name.strip(),
                 dosage=dosage.strip() if dosage else None,
                 frequency=frequency.strip() if frequency else None,

@@ -10,6 +10,7 @@ class Prescription:
 
     id: Optional[int] = None
     treatment_id: Optional[int] = None
+    session_id: Optional[str] = None
     medicine_name: str = ""
     dosage: Optional[str] = None
     frequency: Optional[str] = None
@@ -20,9 +21,11 @@ class Prescription:
     @classmethod
     def from_db_row(cls, row) -> 'Prescription':
         """Create Prescription instance from database row."""
+        keys = row.keys()
         return cls(
             id=row['id'],
             treatment_id=row['treatment_id'],
+            session_id=row['session_id'] if 'session_id' in keys else None,
             medicine_name=row['medicine_name'],
             dosage=row['dosage'],
             frequency=row['frequency'],

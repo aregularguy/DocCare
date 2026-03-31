@@ -73,6 +73,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS prescriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             treatment_id INTEGER NOT NULL,
+            session_id TEXT,
             medicine_name TEXT NOT NULL,
             dosage TEXT,
             frequency TEXT,
@@ -82,6 +83,13 @@ def create_tables():
             FOREIGN KEY (treatment_id) REFERENCES treatments(id) ON DELETE CASCADE
         )
     """)
+
+    # Migrate: add session_id if missing (for existing databases)
+    try:
+        db.execute("ALTER TABLE prescriptions ADD COLUMN session_id TEXT")
+        logger.info("Migrated prescriptions table: added session_id column")
+    except Exception:
+        pass  # column already exists
 
     # Medicines table (for autocomplete suggestions)
     db.execute("""

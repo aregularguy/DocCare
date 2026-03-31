@@ -49,7 +49,8 @@ class Treatment:
             id=row['id'],
             patient_id=row['patient_id'],
             treatment_type_id=row['treatment_type_id'],
-            treatment_type_name=row.get('treatment_type_name'),
+            # AFTER
+            treatment_type_name=row['treatment_type_name'] if 'treatment_type_name' in row.keys() else None,    
             total_cost=float(row['total_cost']),
             amount_paid=float(row['amount_paid']),
             status=row['status'],
