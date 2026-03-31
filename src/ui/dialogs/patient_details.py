@@ -2,7 +2,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QScrollArea, QTabWidget,
-    QDoubleSpinBox, QComboBox, QDateEdit, QSpinBox,
+    QComboBox, QDateEdit, QSpinBox,
     QMessageBox, QTextEdit, QDialog, QLineEdit,
     QSizePolicy, QCompleter
 )
@@ -1162,11 +1162,15 @@ class AddPaymentDialog(QDialog):
         layout.setSpacing(16)
         layout.setContentsMargins(24, 24, 24, 24)
 
-        layout.addWidget(QLabel("Amount (₹):"))
-        self.amount = QDoubleSpinBox()
-        self.amount.setMinimum(1)
-        self.amount.setMaximum(1000000)
-        self.amount.setPrefix("₹ ")
+        layout.addWidget(QLabel("Amount (Rs.):"))
+        self.amount = QLineEdit()
+        self.amount.setPlaceholderText("Enter amount")
+        self.amount.setFixedHeight(40)
+        self.amount.setStyleSheet(
+            "QLineEdit { border:1px solid #D1D5DB; border-radius:7px;"
+            " padding:0 12px; font-size:13px; background:white; }"
+            "QLineEdit:focus { border:2px solid #0F2942; }"
+        )
         layout.addWidget(self.amount)
 
         layout.addWidget(QLabel("Payment Method:"))
@@ -1204,7 +1208,14 @@ class AddPaymentDialog(QDialog):
         layout.addLayout(btn_row)
 
     def _on_save(self):
-        amount = self.amount.value()
+        try:
+            amount = float(self.amount.text().strip())
+            if amount <= 0:
+                raise ValueError
+        except ValueError:
+            self.error_label.setText("❌ Please enter a valid amount greater than 0.")
+            self.error_label.setVisible(True)
+            return
         method = self.method.currentText().lower()
         pay_date = self.date.date().toPyDate()
         notes = self.notes.toPlainText().strip()
