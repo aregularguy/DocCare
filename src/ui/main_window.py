@@ -4,6 +4,8 @@ from PyQt6.QtWidgets import (
     QLabel, QFrame, QStackedWidget
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QIcon
+import os
 from .styles import get_stylesheet, NAV_ICONS, COLORS
 
 _BG = COLORS['sidebar_bg']
@@ -129,12 +131,21 @@ class Sidebar(QWidget):
         )
         hlay = QVBoxLayout(header)
         hlay.setContentsMargins(0, 8, 0, 8)
-        hlay.setSpacing(0)
+        hlay.setSpacing(4)
         hlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        icon = QLabel("🦷")
+        # Use the PNG icon instead of emoji
+        from PyQt6.QtGui import QPixmap
+        icon = QLabel()
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "dentnest.png")
+        if os.path.exists(icon_path):
+            pixmap = QPixmap(icon_path).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            icon.setPixmap(pixmap)
+        else:
+            icon.setText("🦷")
+            icon.setStyleSheet(f"font-size: 24px; color: white; background: transparent;")
+
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet(f"font-size: 24px; background: transparent; color: white;")
 
         lbl = QLabel("DentNest")
         lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -184,6 +195,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("DentNest - Dental Practice Management")
         self.setMinimumSize(1280, 800)
+
+        # Set Window Icon
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "dentnest.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self.init_ui()
         self.apply_styles()
 

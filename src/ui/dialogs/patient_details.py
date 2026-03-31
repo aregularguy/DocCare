@@ -47,6 +47,7 @@ class PatientDetailsWidget(QWidget):
         self.treatment_service = TreatmentService()
         self.payment_service = PaymentService()
         self.prescription_service = PrescriptionService()
+        self._refreshing_overview = False  # guard against recursive tab-change signals
         self.treatments = self.treatment_service.get_patient_treatments(patient.id)
         self.total_charged = sum(t.total_cost for t in self.treatments)
         self.total_paid = sum(t.amount_paid for t in self.treatments)
@@ -171,13 +172,36 @@ class PatientDetailsWidget(QWidget):
             self._refresh_overview()
 
     def _refresh_overview(self):
-        """Rebuild the overview tab content in-place."""
-        old_widget = self._tabs.widget(self._overview_tab_index)
-        new_widget = self._build_overview_tab()
-        self._tabs.removeTab(self._overview_tab_index)
-        self._tabs.insertTab(self._overview_tab_index, new_widget, "Overview")
-        if old_widget:
-            old_widget.deleteLater()
+        """Rebuild the overview tab content in-place.
+
+        Guard against re-entrant calls: removeTab() fires currentChanged which
+        would recurse back here and crash the application.
+        """
+        if self._refreshing_overview:
+            return
+        self._refreshing_overview = True
+        try:
+            # Re-fetch treatments so new prescriptions/payments appear
+            self.treatments = self.treatment_service.get_patient_treatments(self.patient.id)
+            self.total_charged = sum(t.total_cost for t in self.treatments)
+            self.total_paid = sum(t.amount_paid for t in self.treatments)
+            self.total_due = self.total_charged - self.total_paid
+
+            old_widget = self._tabs.widget(self._overview_tab_index)
+            new_widget = self._build_overview_tab()
+            # Block signals while manipulating tabs to avoid currentChanged firing
+            self._tabs.blockSignals(True)
+            self._tabs.removeTab(self._overview_tab_index)
+            self._tabs.insertTab(self._overview_tab_index, new_widget, "Overview")
+            self._tabs.setCurrentIndex(self._overview_tab_index)
+            self._tabs.blockSignals(False)
+            if old_widget:
+                old_widget.deleteLater()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error refreshing overview tab: {e}")
+        finally:
+            self._refreshing_overview = False
 
     # ── Overview tab ────────────────────────────────────────────────────────
 
