@@ -3,10 +3,16 @@ import json
 import os
 from typing import Optional
 
-_SETTINGS_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data", "settings.json"
-)
+import sys as _sys
+if getattr(_sys, 'frozen', False):
+    # Running as PyInstaller .exe — store settings next to the .exe
+    _DATA_DIR = os.path.join(os.path.dirname(_sys.executable), "data")
+else:
+    _DATA_DIR = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "data"
+    )
+_SETTINGS_PATH = os.path.join(_DATA_DIR, "settings.json")
 
 _DEFAULTS = {
     "clinic_name_english": "",

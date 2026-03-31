@@ -27,8 +27,13 @@ class DatabaseManager:
 
     def _setup_database(self):
         """Set up database connection and enable foreign keys."""
-        # Get project root directory
-        project_root = Path(__file__).parent.parent.parent
+        import sys
+        if getattr(sys, 'frozen', False):
+            # Running as PyInstaller .exe — store DB next to the .exe, not in temp folder
+            project_root = Path(sys.executable).parent
+        else:
+            # Running from source
+            project_root = Path(__file__).parent.parent.parent
         db_dir = project_root / 'data'
 
         # Create data directory if it doesn't exist
