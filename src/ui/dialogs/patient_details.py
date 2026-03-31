@@ -835,27 +835,23 @@ class PatientDetailsWidget(QWidget):
         reg_number  = s.get("reg_number") or "___________"
         logo_path   = s.get("logo_path", "")
 
-        # Build centre sub-lines (only non-empty)
-        center_lines = ""
-        if clinic_mr:
-            center_lines += f"<div class='clinic-sub' style='font-size:12pt; color:#0F2942; font-weight:600;'>{clinic_mr}</div>"
-        if address:
-            center_lines += f"<div class='clinic-sub'>{address}</div>"
-        if phone:
-            center_lines += f"<div class='clinic-sub'>📞 {phone}</div>"
-        if timing:
-            center_lines += f"<div class='clinic-sub'>{timing}</div>"
+        # Row 1: optional Marathi clinic name below English
+        clinic_mr_html = f"<div class='clinic-mr'>{clinic_mr}</div>" if clinic_mr else ""
 
-        # Logo cell (right side — only if file exists)
+        # Row 3: address | phone | timing — all on one line, only non-empty parts
+        contact_parts = [p for p in [address, phone, timing] if p]
+        contact_line = "&nbsp;&nbsp;|&nbsp;&nbsp;".join(contact_parts)
+
+        # Logo cell spans all 3 rows (top-right)
         if logo_path and os.path.exists(logo_path):
             logo_cell = (
-                f"<td class='lh-logo'>"
+                f"<td class='lh-logo' rowspan='3'>"
                 f"<img src='{logo_path}' width='70' height='70'"
-                f" style='border-radius:35px; object-fit:cover;'/>"
+                f" style='object-fit:cover;'/>"
                 f"</td>"
             )
         else:
-            logo_cell = ""
+            logo_cell = "<td class='lh-logo' rowspan='3'></td>"
 
         today = self._rx_date.date()
         date_str = today.toString("dd-MMM-yyyy")
@@ -901,61 +897,75 @@ class PatientDetailsWidget(QWidget):
           .letterhead {{
             width: 100%;
             border-collapse: collapse;
-            border-bottom: 3px double #0F2942;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 0;
           }}
           .lh-symbol {{
             width: 56px;
-            vertical-align: middle;
             text-align: center;
+            vertical-align: middle;
+            padding-right: 6px;
           }}
           .lh-symbol .tooth-icon {{
             font-size: 36pt;
             color: #0F2942;
             line-height: 1;
           }}
-          .lh-center {{
+          .lh-logo {{
+            width: 80px;
             text-align: center;
             vertical-align: middle;
-            padding: 0 10px;
+            padding-left: 8px;
           }}
-          .lh-center .clinic-name {{
-            font-size: 18pt;
+
+          /* Row 1: Clinic name */
+          .lh-clinic {{
+            text-align: center;
+            vertical-align: bottom;
+            padding: 4px 8px 6px 8px;
+          }}
+          .clinic-name {{
+            font-size: 20pt;
             font-weight: 900;
             color: #0F2942;
             letter-spacing: 0.5px;
           }}
-          .lh-center .clinic-sub {{
-            font-size: 10pt;
-            color: #555;
+          .clinic-mr {{
+            font-size: 13pt;
+            color: #0F2942;
+            font-weight: 600;
             margin-top: 2px;
           }}
-          .lh-right {{
-            width: 200px;
-            vertical-align: middle;
-            text-align: right;
-            padding-right: 4px;
+
+          /* Row 2: Doctor info */
+          .lh-doctor {{
+            text-align: center;
+            padding: 6px 8px 8px 8px;
           }}
-          .lh-right .doc-name {{
-            font-size: 16pt;
+          .doc-name {{
+            font-size: 15pt;
             font-weight: 800;
             color: #0F2942;
           }}
-          .lh-right .doc-degree {{
+          .doc-degree {{
             font-size: 11pt;
             color: #444;
             margin-top: 2px;
           }}
-          .lh-right .doc-reg {{
+          .doc-reg {{
             font-size: 10pt;
             color: #888;
+            margin-top: 2px;
           }}
-          .lh-logo {{
-            width: 80px;
-            vertical-align: middle;
+
+          /* Row 3: Contact details — separated by thin border */
+          .lh-contact-row td {{
+            border-top: 1px solid #bbb;
+          }}
+          .lh-contact {{
             text-align: center;
-            padding-left: 8px;
+            padding: 6px 8px 8px 8px;
+            font-size: 10pt;
+            color: #555;
           }}
 
           /* ── Patient strip ── */
@@ -1046,20 +1056,26 @@ class PatientDetailsWidget(QWidget):
 
         <!-- ═══ LETTERHEAD ═══ -->
         <table class="letterhead">
+          <!-- Row 1: symbol | Clinic Name | logo -->
           <tr>
-            <td class="lh-symbol">
-              <span class="tooth-icon">🦷</span>
-            </td>
-            <td class="lh-center">
+            <td class="lh-symbol" rowspan="3"><span class="tooth-icon">⚕</span></td>
+            <td class="lh-clinic">
               <div class="clinic-name">{clinic_en}</div>
-              {center_lines}
+              {clinic_mr_html}
             </td>
-            <td class="lh-right">
+            {logo_cell}
+          </tr>
+          <!-- Row 2: Doctor name, degree, reg -->
+          <tr>
+            <td class="lh-doctor">
               <div class="doc-name">{doctor_name}</div>
               <div class="doc-degree">{degree}</div>
               <div class="doc-reg">Reg. No. : {reg_number}</div>
             </td>
-            {logo_cell}
+          </tr>
+          <!-- Row 3: Contact info (address | phone | timing) — thin border above -->
+          <tr class="lh-contact-row">
+            <td class="lh-contact">{contact_line}</td>
           </tr>
         </table>
 
