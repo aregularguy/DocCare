@@ -1,5 +1,6 @@
-"""Main application entry point for DentNest."""
 import sys
+import os
+import ctypes
 import logging
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
@@ -56,6 +57,16 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("DentNest")
     app.setOrganizationName("DentNest")
+
+    # Fix for taskbar icon on Windows
+    if sys.platform == 'win32':
+        myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+    # Set Application Icon
+    icon_path = os.path.join(os.path.dirname(__file__), "resources", "icons", "dentnest.png")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
 
     # Set application style
     app.setStyle('Fusion')
