@@ -1,0 +1,84 @@
+name: Build DentNest Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # allows manual trigger from GitHub UI
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Create data directory
+        run: |
+          if not exist data mkdir data
+        shell: cmd
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller --clean `
+            --onefile `
+            --windowed `
+            --name DentNest `
+            --add-data "data;data" `
+            --hidden-import PyQt6.QtCore `
+            --hidden-import PyQt6.QtGui `
+            --hidden-import PyQt6.QtWidgets `
+            --hidden-import PyQt6.QtPrintSupport `
+            --hidden-import matplotlib `
+            --hidden-import matplotlib.backends.backend_qtagg `
+            --hidden-import pandas `
+            --hidden-import numpy `
+            --hidden-import sqlite3 `
+            --hidden-import dateutil `
+            --exclude-module tkinter `
+            --exclude-module test `
+            --exclude-module unittest `
+            src/main.py
+        shell: pwsh
+
+      - name: Get version tag
+        id: version
+        run: |
+          $date = Get-Date -Format "yyyy.MM.dd"
+          $sha = "${{ github.sha }}".Substring(0, 7)
+          echo "tag=v$date-$sha" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "DentNest ${{ steps.version.outputs.tag }}"
+          body: |
+            ## DentNest - Latest Build
+
+            **Auto-built from commit:** `${{ github.sha }}`
+            **Branch:** `${{ github.ref_name }}`
+
+            ### How to install
+            1. Download `DentNest.exe` below
+            2. Double-click to run — no Python needed
+            3. If Windows shows a warning, click **"More info" → "Run anyway"**
+
+            ### What's new
+            ${{ github.event.head_commit.message }}
+          files: dist/DentNest.exe
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
