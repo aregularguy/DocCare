@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QSpinBox, QTextEdit, QFormLayout, QComboBox
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 from ...services.patient_service import PatientService
 from ...services.treatment_service import TreatmentService
 from ...models.patient import Patient
@@ -206,22 +207,36 @@ class PatientListWidget(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(24)
 
-        # Header
-        header_layout = QHBoxLayout()
+        # Hero banner
+        banner = QFrame()
+        banner.setStyleSheet(
+            "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " border-radius: 14px; }"
+        )
+        banner.setFixedHeight(110)
+        banner_layout = QHBoxLayout(banner)
+        banner_layout.setContentsMargins(28, 0, 28, 0)
 
-        title = QLabel("Patients")
-        title.setObjectName("page_title")
-        header_layout.addWidget(title)
+        banner_title = QLabel("🦷  All Patients")
+        banner_title.setStyleSheet(
+            "color: white; font-size: 22px; font-weight: 700; background: transparent;"
+        )
+        banner_layout.addWidget(banner_title)
+        banner_layout.addStretch()
 
-        header_layout.addStretch()
-
-        add_btn = QPushButton("➕ Add New Patient")
+        add_btn = QPushButton("➕  Add New Patient")
         add_btn.setObjectName("primary_button")
+        add_btn.setStyleSheet(
+            "QPushButton { background: white; color: #0F2942; border: none;"
+            " border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 13px; }"
+            "QPushButton:hover { background: #E0F2FE; }"
+        )
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.show_add_form)
-        header_layout.addWidget(add_btn)
+        banner_layout.addWidget(add_btn)
 
-        layout.addLayout(header_layout)
+        layout.addWidget(banner)
 
         # Search
         self.search_input = QLineEdit()
@@ -256,6 +271,7 @@ class PatientListWidget(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.resizeSection(5, 280)
 
+        self.table.verticalHeader().setDefaultSectionSize(46)
         layout.addWidget(self.table)
 
         self.load_patients()
@@ -276,7 +292,9 @@ class PatientListWidget(QWidget):
             self.table.insertRow(row)
 
             self.table.setItem(row, 0, QTableWidgetItem(str(patient.id)))
-            self.table.setItem(row, 1, QTableWidgetItem(patient.name))
+            name_item = QTableWidgetItem(patient.name)
+            name_item.setFont(QFont("Inter", 13, QFont.Weight.Bold))
+            self.table.setItem(row, 1, name_item)
             self.table.setItem(row, 2, QTableWidgetItem(patient.mobile_number))
             self.table.setItem(row, 3, QTableWidgetItem(str(patient.age)))
             self.table.setItem(row, 4, QTableWidgetItem(patient.city))
@@ -286,33 +304,40 @@ class PatientListWidget(QWidget):
             self.table.setCellWidget(row, 5, actions)
 
     def create_action_buttons(self, patient_id: int):
-        """Create larger, better action buttons."""
+        """Create compact, clearly visible action buttons."""
         widget = QWidget()
+        widget.setStyleSheet("background: transparent;")
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(8)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # View/History button
+        _btn_style = (
+            "QPushButton {{ background:{bg}; color:{fg}; border:none; border-radius:6px;"
+            " padding:0 10px; font-size:11px; font-weight:600; font-family:'Ubuntu',sans-serif; }}"
+            "QPushButton:hover {{ background:{hv}; }}"
+        )
+
         view_btn = QPushButton("📋 History")
-        view_btn.setObjectName("secondary_button")
-        view_btn.setMinimumWidth(90)
+        view_btn.setFixedHeight(30)
+        view_btn.setMinimumWidth(82)
         view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        view_btn.setStyleSheet(_btn_style.format(bg="#EFF6FF", fg="#1A4A7A", hv="#DBEAFE"))
         view_btn.clicked.connect(lambda: self.on_view_patient(patient_id))
         layout.addWidget(view_btn)
 
-        # Edit button
         edit_btn = QPushButton("✏️ Edit")
-        edit_btn.setObjectName("secondary_button")
-        edit_btn.setMinimumWidth(80)
+        edit_btn.setFixedHeight(30)
+        edit_btn.setMinimumWidth(64)
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        edit_btn.setStyleSheet(_btn_style.format(bg="#F0FDF4", fg="#166534", hv="#DCFCE7"))
         edit_btn.clicked.connect(lambda: self.show_edit_form(patient_id))
         layout.addWidget(edit_btn)
 
-        # Delete button
-        delete_btn = QPushButton("🗑️ Delete")
-        delete_btn.setObjectName("danger_button")
-        delete_btn.setMinimumWidth(90)
+        delete_btn = QPushButton("🗑️")
+        delete_btn.setFixedSize(30, 30)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        delete_btn.setStyleSheet(_btn_style.format(bg="#FEF2F2", fg="#991B1B", hv="#FEE2E2"))
         delete_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
         layout.addWidget(delete_btn)
 
@@ -347,12 +372,23 @@ class PatientListWidget(QWidget):
             widget.deleteLater()
 
     def on_view_patient(self, patient_id: int):
-        """Show patient history."""
-        from .patient_details import PatientDetailsDialog
+        """Show patient details as embedded page in the same window."""
         patient = self.patient_service.get_patient(patient_id)
         if patient:
-            dialog = PatientDetailsDialog(patient, self)
-            dialog.exec()
+            self.show_patient_details(patient)
+
+    def show_patient_details(self, patient):
+        """Push patient details widget onto the stack."""
+        from ..dialogs.patient_details import PatientDetailsWidget
+        # Remove any previously pushed detail pages
+        while self.stack.count() > 1:
+            w = self.stack.widget(1)
+            self.stack.removeWidget(w)
+            w.deleteLater()
+
+        details = PatientDetailsWidget(patient, self)
+        self.stack.addWidget(details)
+        self.stack.setCurrentWidget(details)
 
     def on_delete_patient(self, patient_id: int):
         """Delete patient."""
