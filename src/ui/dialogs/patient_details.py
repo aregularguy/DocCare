@@ -13,8 +13,10 @@ from ...models.patient import Patient
 from ...services.treatment_service import TreatmentService
 from ...services.payment_service import PaymentService
 from ...services.prescription_service import PrescriptionService
+from ...services.settings_service import SettingsService
 from ...utils.formatters import format_currency, format_date
 from datetime import date as date_type
+import os
 
 
 class ClickableCard(QFrame):
@@ -28,7 +30,10 @@ class ClickableCard(QFrame):
 
     def mousePressEvent(self, event):
         if self._on_click:
-            self._on_click()
+            try:
+                self._on_click()
+            except Exception:
+                pass
         super().mousePressEvent(event)
 
 
@@ -414,8 +419,16 @@ class PatientDetailsWidget(QWidget):
 
     def _build_billing_tab(self):
         """Billing tab — click any row to expand/collapse its payment history."""
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
+        outer = QWidget()
+        outer_layout = QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        inner = QWidget()
+        layout = QVBoxLayout(inner)
         layout.setContentsMargins(32, 24, 24, 24)
         layout.setSpacing(0)
 
@@ -426,10 +439,15 @@ class PatientDetailsWidget(QWidget):
             layout.addWidget(empty)
         else:
             for t in self.treatments:
-                layout.addWidget(self._build_billing_row(t))
+                try:
+                    layout.addWidget(self._build_billing_row(t))
+                except Exception:
+                    pass
 
         layout.addStretch()
-        return widget
+        scroll.setWidget(inner)
+        outer_layout.addWidget(scroll)
+        return outer
 
     def _build_billing_row(self, treatment):
         """One treatment row + collapsible payment history panel."""
@@ -467,7 +485,14 @@ class PatientDetailsWidget(QWidget):
 
             for p in payments:
                 p_row = QHBoxLayout()
-                date_str = p.payment_date.strftime("%d %b %Y") if p.payment_date else "N/A"
+                try:
+                    from datetime import date as _date, datetime as _dt
+                    pd = p.payment_date
+                    if isinstance(pd, str):
+                        pd = _dt.fromisoformat(pd).date()
+                    date_str = pd.strftime("%d %b %Y") if pd else "N/A"
+                except Exception:
+                    date_str = str(p.payment_date) if p.payment_date else "N/A"
                 date_lbl = QLabel(f"📅 {date_str}")
                 date_lbl.setStyleSheet("font-size:13px;")
                 p_row.addWidget(date_lbl)
@@ -491,13 +516,16 @@ class PatientDetailsWidget(QWidget):
             hl.addWidget(no_pay)
 
         # ── Arrow label (toggled on click) ──
-        arrow = QLabel("▼")
-        arrow.setStyleSheet("color:#86868B; margin-left:8px; font-size:11px;")
+        arrow = QLabel("v")
+        arrow.setStyleSheet("color:#86868B; margin-left:8px; font-size:11px; font-weight:700;")
 
-        def toggle():
-            visible = not history_panel.isVisible()
-            history_panel.setVisible(visible)
-            arrow.setText("▲" if visible else "▼")
+        def toggle(_hp=history_panel, _ar=arrow):
+            try:
+                visible = not _hp.isVisible()
+                _hp.setVisible(visible)
+                _ar.setText("^" if visible else "v")
+            except Exception:
+                pass
 
         # ── Main clickable row ──
         row_card = ClickableCard(toggle)
@@ -771,6 +799,40 @@ class PatientDetailsWidget(QWidget):
 
     def _print_prescription(self):
         """Generate HTML prescription and show print/PDF dialog."""
+        # ── load clinic/doctor settings ──────────────────────────────
+        s = SettingsService().get_all()
+        clinic_en   = s.get("clinic_name_english") or "DentNest Dental Clinic"
+        clinic_mr   = s.get("clinic_name_marathi", "")
+        address     = s.get("clinic_address", "")
+        phone       = s.get("clinic_phone", "")
+        timing      = s.get("clinic_timing", "")
+        doctor_name = s.get("doctor_name") or "Dr. __________"
+        degree      = s.get("degree") or "BDS / MDS"
+        reg_number  = s.get("reg_number") or "___________"
+        logo_path   = s.get("logo_path", "")
+
+        # Build centre sub-lines (only non-empty)
+        center_lines = ""
+        if clinic_mr:
+            center_lines += f"<div class='clinic-sub' style='font-size:12pt; color:#0F2942; font-weight:600;'>{clinic_mr}</div>"
+        if address:
+            center_lines += f"<div class='clinic-sub'>{address}</div>"
+        if phone:
+            center_lines += f"<div class='clinic-sub'>📞 {phone}</div>"
+        if timing:
+            center_lines += f"<div class='clinic-sub'>{timing}</div>"
+
+        # Logo cell (right side — only if file exists)
+        if logo_path and os.path.exists(logo_path):
+            logo_cell = (
+                f"<td class='lh-logo'>"
+                f"<img src='{logo_path}' width='70' height='70'"
+                f" style='border-radius:35px; object-fit:cover;'/>"
+                f"</td>"
+            )
+        else:
+            logo_cell = ""
+
         today = self._rx_date.date()
         date_str = today.toString("dd-MMM-yyyy")
 
@@ -787,7 +849,7 @@ class PatientDetailsWidget(QWidget):
             <tr>
               <td style='text-align:center;'>{i+1}</td>
               <td style='padding-left:8px;'><span class='med-name'>{d['medicine']}</span></td>
-              <td style='text-align:center; font-size:13pt; font-weight:700; letter-spacing:2px;'>{dosage_str}</td>
+              <td style='text-align:center; font-size:10pt; font-weight:700; letter-spacing:1px;'>{dosage_str}</td>
               <td style='text-align:center;'><span class='timing-mr'>{timing_mr}</span></td>
               <td style='text-align:center; font-weight:700;'>{d['days']}</td>
             </tr>"""
@@ -816,11 +878,20 @@ class PatientDetailsWidget(QWidget):
             margin-bottom: 14px;
           }}
           .lh-symbol {{
-            width: 70px;
+            width: 56px;
             vertical-align: middle;
             text-align: center;
-            font-size: 52pt;
-            color: #0F2942;
+          }}
+          .lh-symbol .tooth-icon {{
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #0F2942;
+            color: white;
+            font-size: 26pt;
+            line-height: 48px;
+            text-align: center;
           }}
           .lh-center {{
             text-align: center;
@@ -828,13 +899,13 @@ class PatientDetailsWidget(QWidget):
             padding: 0 10px;
           }}
           .lh-center .clinic-name {{
-            font-size: 26pt;
+            font-size: 18pt;
             font-weight: 900;
             color: #0F2942;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
           }}
           .lh-center .clinic-sub {{
-            font-size: 12pt;
+            font-size: 10pt;
             color: #555;
             margin-top: 2px;
           }}
@@ -858,6 +929,12 @@ class PatientDetailsWidget(QWidget):
             font-size: 10pt;
             color: #888;
           }}
+          .lh-logo {{
+            width: 80px;
+            vertical-align: middle;
+            text-align: center;
+            padding-left: 8px;
+          }}
 
           /* ── Patient strip ── */
           .header-divider {{
@@ -873,19 +950,18 @@ class PatientDetailsWidget(QWidget):
             table-layout: fixed;
           }}
           .patient-strip td {{
-            padding: 8px 12px;
+            padding: 6px 10px;
             border: none;
             width: 25%;
-            overflow: hidden;
           }}
           .patient-strip .label {{
-            font-size: 9pt;
+            font-size: 8pt;
             color: #666;
             display: block;
             white-space: nowrap;
           }}
           .patient-strip .value {{
-            font-size: 12pt;
+            font-size: 9pt;
             font-weight: 700;
             color: #0F2942;
             display: block;
@@ -904,16 +980,16 @@ class PatientDetailsWidget(QWidget):
           .rx-table th {{
             background: #0F2942;
             color: white;
-            padding: 8px 5px;
-            font-size: 10pt;
+            padding: 6px 4px;
+            font-size: 9pt;
             text-align: center;
             border: 1px solid #0a2035;
             word-break: keep-all;
             white-space: nowrap;
           }}
           .rx-table td {{
-            padding: 8px 6px;
-            font-size: 12pt;
+            padding: 6px 5px;
+            font-size: 10pt;
             border: 1px solid #D1D5DB;
             vertical-align: middle;
           }}
@@ -927,8 +1003,8 @@ class PatientDetailsWidget(QWidget):
           .rx-table tr:nth-child(even) td {{
             background: #F0F9FF;
           }}
-          .med-name {{ font-weight: 700; font-size: 13pt; word-break: normal; }}
-          .timing-mr {{ font-size: 11pt; color: #0F2942; font-weight: 600; }}
+          .med-name {{ font-weight: 700; font-size: 10pt; word-break: normal; }}
+          .timing-mr {{ font-size: 9pt; color: #0F2942; font-weight: 600; }}
 
           /* ── Footer ── */
           .footer-line {{
@@ -948,16 +1024,19 @@ class PatientDetailsWidget(QWidget):
         <!-- ═══ LETTERHEAD ═══ -->
         <table class="letterhead">
           <tr>
-            <td class="lh-symbol">⚕</td>
+            <td class="lh-symbol">
+              <span class="tooth-icon">🦷</span>
+            </td>
             <td class="lh-center">
-              <div class="clinic-name">DentNest Dental Clinic</div>
-              <div class="clinic-sub">Advanced Dental Care &amp; Practice</div>
+              <div class="clinic-name">{clinic_en}</div>
+              {center_lines}
             </td>
             <td class="lh-right">
-              <div class="doc-name">Dr. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-              <div class="doc-degree">BDS / MDS</div>
-              <div class="doc-reg">Reg. No. : ___________</div>
+              <div class="doc-name">{doctor_name}</div>
+              <div class="doc-degree">{degree}</div>
+              <div class="doc-reg">Reg. No. : {reg_number}</div>
             </td>
+            {logo_cell}
           </tr>
         </table>
 
@@ -1014,7 +1093,7 @@ class PatientDetailsWidget(QWidget):
         <div class="footer-line">
           <br/>
           <span class="sig-line">_________________________________</span><br/>
-          <span class="sig-line">Dr. &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; (Signature &amp; Stamp)</span>
+          <span class="sig-line">{doctor_name}</span>
         </div>
 
         </body></html>

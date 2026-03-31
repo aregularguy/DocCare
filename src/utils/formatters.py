@@ -12,7 +12,7 @@ def format_currency(amount: float) -> str:
     Returns:
         Formatted currency string
     """
-    return f"₹{amount:,.2f}"
+    return f"Rs.{amount:,.2f}"
 
 
 def format_date(date_obj: Optional[date]) -> str:
