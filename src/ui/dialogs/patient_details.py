@@ -1153,7 +1153,7 @@ class AddPaymentDialog(QDialog):
         self.treatment_id = treatment_id
         self.payment_service = payment_service
         self.setWindowTitle("Add Payment")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(480)
         self.setModal(True)
         self.init_ui()
 
@@ -1165,7 +1165,8 @@ class AddPaymentDialog(QDialog):
         layout.addWidget(QLabel("Amount (Rs.):"))
         self.amount = QLineEdit()
         self.amount.setPlaceholderText("Enter amount")
-        self.amount.setFixedHeight(40)
+        self.amount.setFixedHeight(44)
+        self.amount.setMinimumWidth(420)
         self.amount.setStyleSheet(
             "QLineEdit { border:1px solid #D1D5DB; border-radius:7px;"
             " padding:0 12px; font-size:13px; background:white; }"
