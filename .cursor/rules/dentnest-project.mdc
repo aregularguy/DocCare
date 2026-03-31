@@ -1,0 +1,96 @@
+---
+description: DentNest project context, architecture, conventions and current state
+alwaysApply: true
+---
+
+# DentNest — Dental Practice Management App
+
+Offline Windows desktop app for a dentist. Built with Python + PyQt6 + SQLite.
+Entry point for the `.exe` build is `app.py` (root). For dev, run `python -m src.main`.
+
+## Tech Stack
+- **UI**: PyQt6 (QWidget-based, no QML)
+- **DB**: SQLite via `src/database/db_manager.py` (singleton connection)
+- **Theme**: Light, ocean-blue sidebar (`#0F2942`), white content area
+- **Font**: Ubuntu, fallback Segoe UI
+- **Build**: PyInstaller via GitHub Actions → auto-publishes `.exe` to GitHub Releases on every push to `main`
+
+## Architecture — 4 Layers
+
+```
+UI (src/ui/)  →  Services (src/services/)  →  Repositories (src/repositories/)  →  SQLite
+```
+
+- **UI widgets** call services only — never repositories directly
+- **Services** contain validation + business logic, return `(bool, message, data)` tuples
+- **Repositories** extend `BaseRepository` (generic CRUD via `**kwargs`)
+- **Models** are `@dataclass` with a `from_db_row(row)` classmethod
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/ui/main_window.py` | Main window, sidebar (`NavItem` class), page switching via `QStackedWidget` |
+| `src/ui/styles.py` | All QSS + `COLORS` dict — always use `COLORS` for consistency |
+| `src/ui/dialogs/patient_details.py` | Patient profile: Overview/Billing/Prescription tabs, PDF print |
+| `src/ui/widgets/top_navbar.py` | Top bar with clinic logo upload and doctor profile menu |
+| `src/database/migrations.py` | Schema creation + `ALTER TABLE` migrations for existing DBs |
+| `app.py` | PyInstaller entry point (avoids relative import issue in frozen exe) |
+| `.github/workflows/build.yml` | GitHub Actions — builds Windows `.exe` on every push |
+
+## Database Tables
+`patients`, `treatment_types`, `treatments`, `payments`, `prescriptions` (has `session_id`), `medicines`
+
+- `session_id` on `prescriptions` groups medicines saved in one "Save Prescription" click together
+- Always add `ALTER TABLE` fallback in `migrations.py` when adding new columns (existing DBs won't re-run CREATE TABLE)
+
+## UI Conventions
+
+**Sidebar**: Compact 86px `NavItem` (icon above label). Call `sidebar.on_nav_clicked('page_name')` to navigate.
+
+**New page checklist**:
+1. Create `src/ui/widgets/your_page.py` extending `QWidget`
+2. Add to `main_window.py` `init_pages()` and register in sidebar
+3. Add a hero banner (`QFrame` with gradient, ~120px) at the top of the page
+
+**Hero banner pattern** (all pages use this):
+```python
+banner = QFrame()
+banner.setFixedHeight(120)
+banner.setStyleSheet("background: qlineargradient(...); border-radius: 12px;")
+```
+
+**Action buttons in tables** — always use inline stylesheet with solid background:
+```python
+btn.setStyleSheet("QPushButton { background:#EFF6FF; color:#1A4A7A; border:none; border-radius:6px; }")
+btn.setFixedHeight(30)
+```
+
+**Prescription PDF** — uses `QPrinter` + `QTextDocument` HTML. Key: use `QPageSize(QPageSize.PageSizeId.A4)` not `QPrinter.PageSize.A4` (PyQt6 API).
+
+## Current State (as of March 2026)
+
+### ✅ Done
+- Patient CRUD (side-panel form, search, edit, delete)
+- Treatment queue (add, view, styled type dropdown)
+- Payments page (summary cards with `Rs.` prefix, table, record payment dialog)
+- Prescription tab in patient details (M-A-E-N dosage, session grouping, PDF print)
+- Analytics dashboard (period selector, metric cards, matplotlib charts)
+- Top navbar (clinic logo upload, doctor profile menu)
+- GitHub Actions CI → auto-builds `DentNest.exe` on push
+
+### ❌ Not Yet Built (priority order)
+1. **Settings page** — doctor name/degree/reg no, clinic name (currently hardcoded in PDF)
+2. **Auto-updater** — check GitHub Releases API on startup, one-click in-app update
+3. **Appointment / Calendar** — daily schedule, time slots
+4. **Backup & Restore** — export/import SQLite DB file
+5. **Clinical visit notes** — per-visit notes on treatments
+
+## Known Patterns & Gotchas
+
+- **`₹` symbol** renders broken at large font sizes on Ubuntu — use `Rs.` instead
+- **Marathi text in PDF** needs `'Noto Sans Devanagari'` in the HTML font stack
+- **Overview tab refresh** — call `self._refresh_overview()` after any data save so the tab rebuilds with latest data
+- **`sqlite3.Row`** objects don't support `.get()` — use `row['key']` with `'key' in row.keys()` check
+- **`isZillowSuite` flag** — not relevant here, ignore if seen in context from search-automation project
+- The `data/` folder holds `dentnest.db` — delete it locally to reset schema during development
