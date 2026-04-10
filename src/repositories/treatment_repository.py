@@ -119,6 +119,24 @@ class TreatmentRepository(BaseRepository[Treatment]):
         """
         return self.update(treatment_id, amount_paid=amount)
 
+    def increment_amount_paid(self, treatment_id: int, delta: float) -> bool:
+        """Atomically increment amount_paid by delta using a single SQL UPDATE.
+
+        Args:
+            treatment_id: Treatment ID
+            delta: Amount to add (positive) or subtract (negative)
+
+        Returns:
+            True if updated successfully
+        """
+        from ..database.db_manager import DatabaseManager
+        db = DatabaseManager()
+        cursor = db.execute(
+            "UPDATE treatments SET amount_paid = amount_paid + ? WHERE id = ?",
+            (delta, treatment_id)
+        )
+        return cursor.rowcount > 0
+
     def get_treatment_type_stats(self, start_date: date, end_date: date) -> List[dict]:
         """Get treatment statistics by type.
 

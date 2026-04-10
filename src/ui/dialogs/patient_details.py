@@ -293,7 +293,7 @@ class PatientDetailsWidget(QWidget):
         num_lbl.setStyleSheet("color:#1D4ED8;")
         header.addWidget(num_lbl)
 
-        if meds[0].prescribed_date:
+        if meds and meds[0].prescribed_date:
             date_str = meds[0].prescribed_date.strftime("%d %b %Y")
             date_lbl = QLabel(f"  📅 {date_str}")
             date_lbl.setStyleSheet("color:#64748B; font-size:12px;")

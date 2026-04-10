@@ -56,9 +56,8 @@ class PaymentService:
                 notes=notes.strip() if notes else None
             )
 
-            # Update treatment's amount_paid
-            new_amount_paid = treatment.amount_paid + amount
-            self.treatment_repository.update_amount_paid(treatment_id, new_amount_paid)
+            # Atomically increment treatment's amount_paid in a single SQL statement
+            self.treatment_repository.increment_amount_paid(treatment_id, amount)
 
             return True, "Payment added successfully", payment_id
         except Exception as e:
@@ -134,9 +133,14 @@ class PaymentService:
             if not success:
                 return False, "Failed to delete payment"
 
-            # Update treatment's amount_paid
-            new_amount_paid = max(0, treatment.amount_paid - payment.amount)
-            self.treatment_repository.update_amount_paid(payment.treatment_id, new_amount_paid)
+            # Atomically decrement treatment's amount_paid, clamped to 0
+            self.treatment_repository.increment_amount_paid(payment.treatment_id, -payment.amount)
+            # Clamp to 0 in case of data inconsistency
+            from ..database.db_manager import DatabaseManager
+            DatabaseManager().execute(
+                "UPDATE treatments SET amount_paid = MAX(0, amount_paid) WHERE id = ?",
+                (payment.treatment_id,)
+            )
 
             return True, "Payment deleted successfully"
         except Exception as e:

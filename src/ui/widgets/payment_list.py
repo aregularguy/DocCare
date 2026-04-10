@@ -207,7 +207,7 @@ class RecordPaymentDialog(QDialog):
                 self._selected_patient = p
                 self.patient_search.setText(p.name)
                 self.patient_info_lbl.setText(
-                    f"📞 {p.mobile or '—'}  ·  ID #{p.id}"
+                    f"📞 {p.mobile_number or '—'}  ·  ID #{p.id}"
                 )
                 self._load_treatments(p.id)
                 return

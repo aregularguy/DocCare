@@ -83,9 +83,13 @@ class DatabaseManager:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute(query, params)
-        conn.commit()
-        return cursor
+        try:
+            cursor.execute(query, params)
+            conn.commit()
+            return cursor
+        except Exception:
+            conn.rollback()
+            raise
 
     def executemany(self, query: str, params_list: list) -> sqlite3.Cursor:
         """Execute query with multiple parameter sets.
@@ -99,9 +103,13 @@ class DatabaseManager:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.executemany(query, params_list)
-        conn.commit()
-        return cursor
+        try:
+            cursor.executemany(query, params_list)
+            conn.commit()
+            return cursor
+        except Exception:
+            conn.rollback()
+            raise
 
     def fetch_one(self, query: str, params: tuple = ()) -> Optional[sqlite3.Row]:
         """Fetch single row from query.
