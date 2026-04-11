@@ -16,6 +16,7 @@ from ...services.prescription_service import PrescriptionService
 from ...services.settings_service import SettingsService
 from ...utils.formatters import format_currency, format_date
 from datetime import date as date_type
+import html as html_mod
 import os
 
 
@@ -48,10 +49,16 @@ class PatientDetailsWidget(QWidget):
         self.payment_service = PaymentService()
         self.prescription_service = PrescriptionService()
         self._refreshing_overview = False  # guard against recursive tab-change signals
-        self.treatments = self.treatment_service.get_patient_treatments(patient.id)
-        self.total_charged = sum(t.total_cost for t in self.treatments)
-        self.total_paid = sum(t.amount_paid for t in self.treatments)
-        self.total_due = self.total_charged - self.total_paid
+        if not patient or not patient.id:
+            self.treatments = []
+            self.total_charged = 0
+            self.total_paid = 0
+            self.total_due = 0
+        else:
+            self.treatments = self.treatment_service.get_patient_treatments(patient.id)
+            self.total_charged = sum(t.total_cost for t in self.treatments)
+            self.total_paid = sum(t.amount_paid for t in self.treatments)
+            self.total_due = self.total_charged - self.total_paid
         self.init_ui()
 
     def init_ui(self):
@@ -868,7 +875,7 @@ class PatientDetailsWidget(QWidget):
             rows_html += f"""
             <tr>
               <td style='text-align:center;'>{i+1}</td>
-              <td style='padding-left:8px;'><span class='med-name'>{d['medicine']}</span></td>
+              <td style='padding-left:8px;'><span class='med-name'>{html_mod.escape(str(d['medicine']))}</span></td>
               <td style='text-align:center; font-size:10pt; font-weight:700; letter-spacing:1px;'>{dosage_str}</td>
               <td style='text-align:center;'><span class='timing-mr'>{timing_mr}</span></td>
               <td style='text-align:center; font-weight:700;'>{d['days']}</td>
@@ -1086,15 +1093,15 @@ class PatientDetailsWidget(QWidget):
           <tr>
             <td>
               <span class="label">Patient</span>
-              <span class="value">{self.patient.name}</span>
+              <span class="value">{html_mod.escape(str(self.patient.name))}</span>
             </td>
             <td>
               <span class="label">Age</span>
-              <span class="value">{self.patient.age} yrs</span>
+              <span class="value">{html_mod.escape(str(self.patient.age))} yrs</span>
             </td>
             <td>
               <span class="label">Mobile</span>
-              <span class="value">{self.patient.mobile_number}</span>
+              <span class="value">{html_mod.escape(str(self.patient.mobile_number))}</span>
             </td>
             <td>
               <span class="label">Date</span>

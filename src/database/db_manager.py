@@ -121,9 +121,13 @@ class DatabaseManager:
         Returns:
             Single row or None
         """
-        cursor = self.get_connection().cursor()
-        cursor.execute(query, params)
-        return cursor.fetchone()
+        try:
+            cursor = self.get_connection().cursor()
+            cursor.execute(query, params)
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"fetch_one failed: {e} | query: {query}")
+            raise
 
     def fetch_all(self, query: str, params: tuple = ()) -> list[sqlite3.Row]:
         """Fetch all rows from query.
@@ -135,9 +139,13 @@ class DatabaseManager:
         Returns:
             List of rows
         """
-        cursor = self.get_connection().cursor()
-        cursor.execute(query, params)
-        return cursor.fetchall()
+        try:
+            cursor = self.get_connection().cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"fetch_all failed: {e} | query: {query}")
+            raise
 
     def close(self):
         """Close database connection."""

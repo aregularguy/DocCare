@@ -32,44 +32,21 @@
 
 ## High Severity
 
-### 6. HTML Injection in Prescription PDF
-**File:** `src/ui/dialogs/patient_details.py` ~Line 1142-1143
-**Issue:** Patient name, medicine names, and notes are inserted directly into HTML without escaping. If any field contains `<script>` or HTML tags, the PDF output will break or render incorrectly.
-```python
-# Current:
-f'<span class="value">{self.patient.name}</span>'
+### 6. ~~HTML Injection in Prescription PDF~~ FIXED
+**File:** `src/ui/dialogs/patient_details.py`
+**Fix applied:** Added `import html as html_mod` and wrapped patient name, age, mobile, and medicine names with `html_mod.escape()` in the prescription HTML template.
 
-# Fix: Use html.escape()
-import html
-f'<span class="value">{html.escape(self.patient.name)}</span>'
-```
-
-### 7. Unprotected Data Fetch on PatientDetails Init
+### 7. ~~Unprotected Data Fetch on PatientDetails Init~~ FIXED
 **File:** `src/ui/dialogs/patient_details.py` ~Lines 51-54
-**Issue:** No null check on `patient.id` before fetching treatments. If a malformed patient object is passed, the app crashes.
-```python
-# Current:
-self.treatments = self.treatment_service.get_patient_treatments(patient.id)
-self.total_charged = sum(t.total_cost for t in self.treatments)
+**Fix applied:** Added null guard — if `patient` or `patient.id` is None, sets treatments/totals to empty/zero instead of crashing.
 
-# Fix: Guard against None
-if not patient or not patient.id:
-    self.treatments = []
-    self.total_charged = 0
-    return
-```
+### 8. ~~No Error Handling in Fetch Methods~~ FIXED
+**File:** `src/database/db_manager.py`
+**Fix applied:** Wrapped `fetch_one()` and `fetch_all()` in try/except with `logger.error()` logging the failed query, then re-raise.
 
-### 8. No Error Handling in Fetch Methods
-**File:** `src/database/db_manager.py` ~Lines 106-132
-**Issue:** `fetch_one()` and `fetch_all()` don't handle SQL errors. A bad query will crash the app with an unhandled exception instead of returning a meaningful error.
-
-### 9. Timer-Based Navigation Can Crash After Widget Deletion
-**File:** `src/ui/widgets/patient_list.py` ~Line 169-170
-**Issue:** `QTimer.singleShot(1000, self.on_cancel)` fires after 1 second. If the widget is deleted before the timer fires (e.g., user navigates away quickly), calling `self.on_cancel` on a deleted object causes a crash.
-```python
-# Fix: Use a guard or check widget validity
-QTimer.singleShot(1000, lambda: self.on_cancel() if not sip.isdeleted(self) else None)
-```
+### 9. ~~Timer-Based Navigation Can Crash After Widget Deletion~~ FIXED
+**File:** `src/ui/widgets/patient_list.py`
+**Fix applied:** Replaced direct `self.on_cancel` callback with a `_safe_cancel` wrapper that catches `RuntimeError` (deleted widget) gracefully.
 
 ---
 

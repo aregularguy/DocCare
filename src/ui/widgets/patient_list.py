@@ -165,9 +165,15 @@ class PatientFormView(QWidget):
         if success:
             self.success_label.setText(f"✅ {message}")
             self.success_label.setVisible(True)
-            # Go back to list after 1 second
+            # Go back to list after 1 second (guard against deleted widget)
             from PyQt6.QtCore import QTimer
-            QTimer.singleShot(1000, self.on_cancel)
+            def _safe_cancel():
+                try:
+                    if self and self.parent_widget:
+                        self.on_cancel()
+                except RuntimeError:
+                    pass  # widget already deleted
+            QTimer.singleShot(1000, _safe_cancel)
         else:
             self.error_label.setText(f"❌ {message}")
             self.error_label.setVisible(True)
