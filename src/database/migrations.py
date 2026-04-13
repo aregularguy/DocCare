@@ -88,8 +88,12 @@ def create_tables():
     try:
         db.execute("ALTER TABLE prescriptions ADD COLUMN session_id TEXT")
         logger.info("Migrated prescriptions table: added session_id column")
-    except Exception:
-        pass  # column already exists
+    except Exception as e:
+        if "duplicate column name" in str(e).lower():
+            pass  # column already exists, expected
+        else:
+            logger.error(f"Migration failed for session_id column: {e}")
+            raise
 
     # Medicines table (for autocomplete suggestions)
     db.execute("""

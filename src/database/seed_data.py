@@ -115,21 +115,23 @@ def seed_medicines():
         ('Omeprazole 20mg', '20mg', 'antacid'),
     ]
 
-    # Insert only medicines that don't already exist (check by name)
-    inserted = 0
-    for name, common_dosage, category in medicines:
-        existing = db.fetch_one(
-            "SELECT id FROM medicines WHERE name = ?", (name,)
-        )
-        if not existing:
-            db.execute(
-                "INSERT INTO medicines (name, common_dosage, category) VALUES (?, ?, ?)",
-                (name, common_dosage, category)
-            )
-            inserted += 1
+    # Batch check: fetch all existing medicine names in one query
+    existing_rows = db.fetch_all("SELECT name FROM medicines")
+    existing_names = {row['name'] for row in existing_rows}
 
-    if inserted > 0:
-        logger.info(f"Seeded {inserted} new medicines")
+    # Filter to only new medicines and batch insert
+    new_medicines = [
+        (name, common_dosage, category)
+        for name, common_dosage, category in medicines
+        if name not in existing_names
+    ]
+
+    if new_medicines:
+        db.executemany(
+            "INSERT INTO medicines (name, common_dosage, category) VALUES (?, ?, ?)",
+            new_medicines
+        )
+        logger.info(f"Seeded {len(new_medicines)} new medicines")
     else:
         logger.info("All medicines already exist, skipping seed")
 
