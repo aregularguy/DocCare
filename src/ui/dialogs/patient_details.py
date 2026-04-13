@@ -204,6 +204,9 @@ class PatientDetailsWidget(QWidget):
             self._tabs.blockSignals(False)
             if old_widget:
                 old_widget.deleteLater()
+                # Process deferred deletions immediately to prevent memory buildup
+                from PyQt6.QtWidgets import QApplication
+                QApplication.processEvents()
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Error refreshing overview tab: {e}")

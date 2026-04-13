@@ -652,7 +652,9 @@ class TreatmentQueueView(QWidget):
             if self._current_filter == "week":
                 week_start = today - timedelta(days=today.weekday())
                 return week_start <= t_date <= today + timedelta(days=6 - today.weekday())
-        except Exception:
+        except (ValueError, AttributeError) as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Date filter error for treatment {treatment.id}: {e}")
             return True
         return True
 
@@ -709,7 +711,9 @@ class TreatmentQueueView(QWidget):
                         from datetime import datetime
                         t_date = datetime.fromisoformat(t_date).date()
                     date_str = t_date.strftime('%d %b %Y') if t_date else "N/A"
-                except Exception:
+                except (ValueError, AttributeError) as e:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Date parse error for treatment {treatment.id}: {e}")
                     date_str = str(treatment.start_date) if treatment.start_date else "N/A"
                 self.queue_table.setItem(row, 5, QTableWidgetItem(date_str))
 
