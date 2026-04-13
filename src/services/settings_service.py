@@ -1,7 +1,11 @@
 """Clinic & doctor settings — persisted as JSON in data/settings.json."""
 import json
 import os
+import tempfile
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 import sys as _sys
 if getattr(_sys, 'frozen', False):
@@ -57,12 +61,28 @@ class SettingsService:
     # ── internal ───────────────────────────────────────────────────────
 
     def _read(self) -> dict:
+        if not os.path.exists(_SETTINGS_PATH):
+            return {}
         try:
             with open(_SETTINGS_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except json.JSONDecodeError as e:
+            logger.warning(f"Settings file is corrupted ({e}), using defaults")
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to read settings: {e}")
             return {}
 
     def _write(self, data: dict):
-        with open(_SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        # Atomic write: write to temp file, then rename
+        dir_name = os.path.dirname(_SETTINGS_PATH)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_path, _SETTINGS_PATH)
+        except Exception:
+            # Clean up temp file on failure
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
