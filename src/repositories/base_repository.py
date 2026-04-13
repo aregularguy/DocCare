@@ -1,8 +1,19 @@
 """Base repository with generic CRUD operations."""
+import re
 from typing import Optional, List, TypeVar, Generic, Type
 from ..database.db_manager import DatabaseManager
 
 T = TypeVar('T')
+
+# Only allow simple alphanumeric table/column names and underscores
+_SAFE_IDENTIFIER = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+
+def _validate_identifier(name: str) -> str:
+    """Validate that a SQL identifier is safe (no injection risk)."""
+    if not _SAFE_IDENTIFIER.match(name):
+        raise ValueError(f"Unsafe SQL identifier: {name!r}")
+    return name
 
 
 class BaseRepository(Generic[T]):
@@ -15,7 +26,7 @@ class BaseRepository(Generic[T]):
             table_name: Database table name
             model_class: Model class with from_db_row method
         """
-        self.table_name = table_name
+        self.table_name = _validate_identifier(table_name)
         self.model_class = model_class
         self.db = DatabaseManager()
 
@@ -28,7 +39,7 @@ class BaseRepository(Generic[T]):
         Returns:
             ID of created record
         """
-        fields = ', '.join(kwargs.keys())
+        fields = ', '.join(_validate_identifier(k) for k in kwargs.keys())
         placeholders = ', '.join('?' * len(kwargs))
         values = tuple(kwargs.values())
 
@@ -72,7 +83,7 @@ class BaseRepository(Generic[T]):
         if not kwargs:
             return False
 
-        set_clause = ', '.join(f"{field} = ?" for field in kwargs.keys())
+        set_clause = ', '.join(f"{_validate_identifier(field)} = ?" for field in kwargs.keys())
         values = tuple(kwargs.values()) + (id,)
 
         query = f"UPDATE {self.table_name} SET {set_clause} WHERE id = ?"
