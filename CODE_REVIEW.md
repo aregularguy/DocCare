@@ -52,88 +52,45 @@
 
 ## Medium Severity
 
-### 10. Float Comparison Tolerance Issue for Payment Status
-**File:** `src/models/treatment.py` ~Line 71
-**Issue:** `self.pending_amount <= 0.01` uses a hardcoded tolerance. For large bills, 0.01 is fine. But for micro-amounts or bulk operations, this could incorrectly mark treatments as fully paid when they still have pending balance.
-```python
-# Current:
-return self.pending_amount <= 0.01
+### 10. ~~Float Comparison Tolerance Issue for Payment Status~~ FIXED
+**File:** `src/models/treatment.py`
+**Fix applied:** Changed `self.pending_amount <= 0.01` to `round(self.pending_amount, 2) <= 0` for precise paisa-level comparison.
 
-# Better: Use exact comparison after rounding
-return round(self.pending_amount, 2) <= 0
-```
+### 11. ~~Silent Data Loss on Payment Deletion~~ FIXED
+**File:** `src/services/payment_service.py`
+**Fix applied:** After atomic decrement, checks if `amount_paid` went negative. If so, logs a warning with treatment ID and values, then clamps to 0.
 
-### 11. Silent Data Loss on Payment Deletion
-**File:** `src/services/payment_service.py` ~Line 138
-**Issue:** `max(0, treatment.amount_paid - payment.amount)` silently truncates to 0 if data is already inconsistent (payment amount > recorded amount_paid). This hides data corruption instead of flagging it.
-```python
-# Fix: Log a warning when data inconsistency detected
-new_paid = treatment.amount_paid - payment.amount
-if new_paid < 0:
-    logger.warning(f"Data inconsistency: treatment {treatment.id} amount_paid "
-                   f"({treatment.amount_paid}) < payment ({payment.amount})")
-    new_paid = 0
-```
+### 12. ~~Non-Atomic Settings File Write~~ FIXED
+**File:** `src/services/settings_service.py`
+**Fix applied:** Write to `tempfile.mkstemp()` temp file first, then `os.replace()` to atomically swap. Cleans up temp file on failure.
 
-### 12. Non-Atomic Settings File Write
-**File:** `src/services/settings_service.py` ~Lines 66-68
-**Issue:** Writes directly to the settings file. If the app crashes during write, the settings file is corrupted and unreadable on next startup.
-```python
-# Fix: Write to temp file, then rename (atomic on most OS)
-import tempfile
-tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(_SETTINGS_PATH))
-with os.fdopen(tmp_fd, 'w', encoding='utf-8') as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
-os.replace(tmp_path, _SETTINGS_PATH)
-```
+### 13. ~~Corrupted Settings File Silently Returns Empty Dict~~ FIXED
+**File:** `src/services/settings_service.py`
+**Fix applied:** Now distinguishes missing file (returns `{}`), corrupt JSON (`json.JSONDecodeError` — logs warning, returns `{}`), and other errors (logs error, returns `{}`).
 
-### 13. Corrupted Settings File Silently Returns Empty Dict
-**File:** `src/services/settings_service.py` ~Line 62
-**Issue:** `except Exception: return {}` swallows all errors. A corrupted JSON file is treated the same as a missing file — no way to know settings were lost.
+### 14. ~~Silent Exception Swallowing in Date Conversion~~ FIXED
+**File:** `src/ui/widgets/treatment_list.py`
+**Fix applied:** Changed both `except Exception` blocks to `except (ValueError, AttributeError)` with `logger.warning()` logging treatment ID and error.
 
-### 14. Silent Exception Swallowing in Date Conversion
-**File:** `src/ui/widgets/treatment_list.py` ~Lines 707-713
-**Issue:** Generic `except Exception` hides real errors in date parsing. Bad dates silently fall through to a string representation.
-```python
-# Fix: Catch specific exceptions and log
-except (ValueError, AttributeError) as e:
-    logger.warning(f"Date parse error for treatment {treatment.id}: {e}")
-    date_str = str(treatment.start_date) if treatment.start_date else "N/A"
-```
+### 15. ~~Silent Migration Errors~~ FIXED
+**File:** `src/database/migrations.py`
+**Fix applied:** Now checks if error message contains "duplicate column name". If yes, silently passes (expected). If no, logs error and re-raises.
 
-### 15. Silent Migration Errors
-**File:** `src/database/migrations.py` ~Lines 88-92
-**Issue:** `ALTER TABLE` migrations use `except Exception: pass`. Real errors (disk full, permissions, corruption) are silently ignored — schema changes might not apply.
-```python
-# Fix: Only catch the specific "column already exists" error
-except sqlite3.OperationalError as e:
-    if "duplicate column name" not in str(e).lower():
-        raise
-```
+### 16. ~~N+1 Query Problem in Seed Data~~ FIXED
+**File:** `src/database/seed_data.py`
+**Fix applied:** Replaced 100+ individual queries with one `SELECT name FROM medicines` to get all existing names, then one `executemany()` batch insert for new medicines.
 
-### 16. N+1 Query Problem in Seed Data
-**File:** `src/database/seed_data.py` ~Lines 120-129
-**Issue:** Loops through 50+ medicines with individual SELECT + INSERT per item. Should batch check and insert.
+### 17. ~~SQL Injection Pattern in Repositories~~ FIXED
+**File:** `src/repositories/base_repository.py`, `src/repositories/payment_repository.py`
+**Fix applied:** Added `_validate_identifier()` regex whitelist (`^[a-zA-Z_][a-zA-Z0-9_]*$`) for table/column names in base_repository. Parameterized `LIMIT` value in payment_repository.
 
-### 17. SQL Injection Pattern in Repositories
-**File:** `src/repositories/base_repository.py` ~Line 35, `payment_repository.py` ~Line 119
-**Issue:** Dynamic table/column names and LIMIT values use f-strings instead of parameterized queries. While currently fed from internal code (not user input), this pattern is dangerous if the code evolves.
-```python
-# Current:
-query = f"SELECT * FROM payments LIMIT {limit}"
+### 18. ~~Widget Memory Leak on Tab Switches~~ FIXED
+**File:** `src/ui/dialogs/patient_details.py`
+**Fix applied:** Added `QApplication.processEvents()` after `deleteLater()` to force immediate processing of deferred widget deletions.
 
-# Fix: Parameterize
-query = "SELECT * FROM payments LIMIT ?"
-db.fetch_all(query, (limit,))
-```
-
-### 18. Widget Memory Leak on Tab Switches
-**File:** `src/ui/dialogs/patient_details.py` ~Lines 198-199
-**Issue:** `old_widget.deleteLater()` is called on tab switch, but rapid switching can queue up multiple deletions. Qt's deferred deletion might not keep up, leading to gradual memory growth during long sessions.
-
-### 19. Thread Safety with `check_same_thread=False`
-**File:** `src/database/db_manager.py` ~Line 49
-**Issue:** SQLite connection allows multi-thread access. While WAL mode helps, concurrent writes from different threads can still cause `database is locked` errors. App currently appears single-threaded, but any future background tasks will break.
+### 19. ~~Thread Safety with `check_same_thread=False`~~ FIXED
+**File:** `src/database/db_manager.py`
+**Fix applied:** Added thread check in `get_connection()` — logs a warning if accessed from non-main thread, alerting developers to the risk before it causes silent corruption.
 
 ---
 
@@ -179,17 +136,15 @@ db.fetch_all(query, (limit,))
 
 ## Summary
 
-| Severity | Count |
-|----------|-------|
-| Critical | 5 |
-| High | 4 |
-| Medium | 10 |
-| Low | 6 |
-| Design | 7 |
-| **Total** | **32** |
+| Severity | Total | Fixed | Remaining |
+|----------|-------|-------|-----------|
+| Critical | 5 | 5 | 0 |
+| High | 4 | 4 | 0 |
+| Medium | 10 | 10 | 0 |
+| Low | 6 | 0 | 6 |
+| Design | 7 | 0 | 7 |
+| **Total** | **32** | **19** | **13** |
 
-**Priority order for fixes:**
-1. Items #1-5 (Critical) — can cause crashes or data corruption
-2. Items #6-9 (High) — can cause crashes in specific scenarios
-3. Items #10-19 (Medium) — data integrity and robustness
-4. Items #20-25 (Low) — polish and edge cases
+**Remaining items:**
+- Items #20-25 (Low) — polish and edge cases
+- Design concerns — architectural improvements for future

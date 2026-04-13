@@ -1,6 +1,7 @@
 """Database connection manager for DentNest application."""
 import sqlite3
 import os
+import threading
 from pathlib import Path
 from typing import Optional
 import logging
@@ -69,6 +70,12 @@ class DatabaseManager:
         """
         if self._connection is None:
             self._setup_database()
+        # Warn if accessed from a non-main thread (SQLite is not thread-safe)
+        if threading.current_thread() is not threading.main_thread():
+            logger.warning(
+                f"Database accessed from non-main thread '{threading.current_thread().name}'. "
+                "SQLite is not fully thread-safe — this may cause 'database is locked' errors."
+            )
         return self._connection
 
     def execute(self, query: str, params: tuple = ()) -> sqlite3.Cursor:
