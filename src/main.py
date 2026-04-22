@@ -87,6 +87,22 @@ def main():
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
     app.setPalette(palette)
 
+    # Auto-backup on every startup (non-blocking, silent)
+    try:
+        from .services.backup_service import BackupService
+        BackupService().auto_backup()
+    except Exception as e:
+        logger.warning(f"Auto-backup skipped: {e}")
+
+    # Show login screen if password is configured
+    from .services.settings_service import SettingsService
+    if SettingsService().is_password_set():
+        from .ui.dialogs.login_dialog import LoginDialog
+        login = LoginDialog()
+        if login.exec() != LoginDialog.DialogCode.Accepted:
+            logger.info("Login cancelled — exiting.")
+            sys.exit(0)
+
     # Create and show main window
     window = MainWindow()
     window.show()

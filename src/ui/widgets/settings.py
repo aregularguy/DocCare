@@ -1,13 +1,14 @@
-"""Settings page — clinic info, doctor details, logo upload."""
+"""Settings page — clinic info, doctor details, logo upload, backup, security."""
 import os
 import shutil
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QFrame, QFileDialog, QMessageBox
+    QPushButton, QScrollArea, QFrame, QFileDialog, QMessageBox, QInputDialog
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPixmap
 from ...services.settings_service import SettingsService
+from ...services.backup_service import BackupService
 
 
 class SettingsWidget(QWidget):
@@ -16,7 +17,9 @@ class SettingsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.service = SettingsService()
+        self.backup_service = BackupService()
         self._logo_preview = None
+        self._backup_status_label = None
         self.init_ui()
 
     # ── init ─────────────────────────────────────────────────────────────
@@ -54,6 +57,8 @@ class SettingsWidget(QWidget):
         ]))
 
         bl.addWidget(self._build_logo_section())
+        bl.addWidget(self._build_backup_section())
+        bl.addWidget(self._build_security_section())
         bl.addStretch()
 
         save_btn = QPushButton("💾  Save Settings")
@@ -210,6 +215,214 @@ class SettingsWidget(QWidget):
         row.addLayout(right)
         vl.addLayout(row)
         return card
+
+    def _build_backup_section(self) -> QFrame:
+        card = QFrame()
+        card.setStyleSheet(
+            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+        )
+        vl = QVBoxLayout(card)
+        vl.setContentsMargins(24, 20, 24, 24)
+        vl.setSpacing(14)
+
+        hdr = QLabel("🗄️  Database Backup")
+        hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
+        hdr.setStyleSheet("color:#0F2942; border:none;")
+        vl.addWidget(hdr)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        vl.addWidget(sep)
+
+        info = QLabel(
+            "Keep your patient data safe. Backup creates a copy of your database file.\n"
+            "Auto-backup runs every time the app starts (last 7 kept automatically)."
+        )
+        info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        info.setWordWrap(True)
+        vl.addWidget(info)
+
+        # DB size + last backup info
+        db_size = self.backup_service.get_db_size()
+        last = self.backup_service.get_last_backup_info()
+        last_text = f"Last backup: {last['time']}" if last["exists"] else "Last backup: Never"
+
+        self._backup_status_label = QLabel(f"Database size: {db_size}   ·   {last_text}")
+        self._backup_status_label.setStyleSheet("color:#374151; font-size:12px; border:none;")
+        vl.addWidget(self._backup_status_label)
+
+        btns = QHBoxLayout()
+        btns.setSpacing(10)
+
+        backup_btn = QPushButton("💾  Backup Now")
+        backup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        backup_btn.setFixedHeight(38)
+        backup_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border:none;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
+            "QPushButton:hover { background:#1A4A7A; }"
+        )
+        backup_btn.clicked.connect(self._do_backup)
+        btns.addWidget(backup_btn)
+
+        open_folder_btn = QPushButton("📂  Open Backup Folder")
+        open_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        open_folder_btn.setFixedHeight(38)
+        open_folder_btn.setStyleSheet(
+            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
+            "QPushButton:hover { background:#DBEAFE; }"
+        )
+        open_folder_btn.clicked.connect(self._open_backup_folder)
+        btns.addWidget(open_folder_btn)
+        btns.addStretch()
+        vl.addLayout(btns)
+        return card
+
+    def _build_security_section(self) -> QFrame:
+        card = QFrame()
+        card.setStyleSheet(
+            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+        )
+        vl = QVBoxLayout(card)
+        vl.setContentsMargins(24, 20, 24, 24)
+        vl.setSpacing(14)
+
+        hdr = QLabel("🔐  App Security")
+        hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
+        hdr.setStyleSheet("color:#0F2942; border:none;")
+        vl.addWidget(hdr)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        vl.addWidget(sep)
+
+        is_set = self.service.is_password_set()
+        status_text = "🔒 Password is set — app is locked on startup." if is_set else "🔓 No password set — anyone can open the app."
+        status_color = "#166534" if is_set else "#92400E"
+        status_bg    = "#F0FDF4" if is_set else "#FFFBEB"
+        status_border = "#BBF7D0" if is_set else "#FDE68A"
+
+        self._security_status = QLabel(status_text)
+        self._security_status.setStyleSheet(
+            f"color:{status_color}; background:{status_bg}; border:1px solid {status_border};"
+            " border-radius:7px; padding:8px 12px; font-size:12px; font-weight:600;"
+        )
+        vl.addWidget(self._security_status)
+
+        btns = QHBoxLayout()
+        btns.setSpacing(10)
+
+        set_btn = QPushButton("🔑  Set / Change Password")
+        set_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        set_btn.setFixedHeight(38)
+        set_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border:none;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
+            "QPushButton:hover { background:#1A4A7A; }"
+        )
+        set_btn.clicked.connect(self._set_password)
+        btns.addWidget(set_btn)
+
+        if is_set:
+            remove_btn = QPushButton("🗑  Remove Password")
+            remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            remove_btn.setFixedHeight(38)
+            remove_btn.setStyleSheet(
+                "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+                " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
+                "QPushButton:hover { background:#FEE2E2; }"
+            )
+            remove_btn.clicked.connect(self._remove_password)
+            btns.addWidget(remove_btn)
+
+        btns.addStretch()
+        vl.addLayout(btns)
+        return card
+
+    # ── backup actions ────────────────────────────────────────────────────
+
+    def _do_backup(self):
+        folder = QFileDialog.getExistingDirectory(self, "Choose Backup Location")
+        if not folder:
+            return
+        success, result = self.backup_service.backup_now(folder)
+        if success:
+            # Update status label
+            last = self.backup_service.get_last_backup_info()
+            db_size = self.backup_service.get_db_size()
+            if self._backup_status_label:
+                last_text = f"Last backup: {last['time']}" if last["exists"] else "Last backup: Never"
+                self._backup_status_label.setText(f"Database size: {db_size}   ·   {last_text}")
+            QMessageBox.information(
+                self, "Backup Successful",
+                f"✅ Backup saved to:\n{result}"
+            )
+        else:
+            QMessageBox.warning(self, "Backup Failed", f"❌ {result}")
+
+    def _open_backup_folder(self):
+        import sys
+        if getattr(sys, 'frozen', False):
+            data_dir = os.path.join(os.path.dirname(sys.executable), "data")
+        else:
+            data_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(
+                    os.path.dirname(os.path.abspath(__file__))))), "data"
+            )
+        backup_dir = os.path.join(data_dir, "backups")
+        os.makedirs(backup_dir, exist_ok=True)
+        import subprocess, sys as _sys
+        if _sys.platform == "win32":
+            os.startfile(backup_dir)
+        elif _sys.platform == "darwin":
+            subprocess.Popen(["open", backup_dir])
+        else:
+            subprocess.Popen(["xdg-open", backup_dir])
+
+    # ── security actions ──────────────────────────────────────────────────
+
+    def _set_password(self):
+        new_pw, ok = QInputDialog.getText(
+            self, "Set Password", "Enter new password:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or not new_pw.strip():
+            return
+        confirm, ok2 = QInputDialog.getText(
+            self, "Confirm Password", "Re-enter new password:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok2:
+            return
+        if new_pw != confirm:
+            QMessageBox.warning(self, "Mismatch", "❌ Passwords do not match.")
+            return
+        if len(new_pw) < 4:
+            QMessageBox.warning(self, "Too Short", "❌ Password must be at least 4 characters.")
+            return
+        self.service.set_password(new_pw)
+        QMessageBox.information(
+            self, "Password Set",
+            "✅ Password set successfully!\nThe app will ask for this password on next startup."
+        )
+        self.refresh_data()
+
+    def _remove_password(self):
+        current, ok = QInputDialog.getText(
+            self, "Remove Password", "Enter current password to confirm removal:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok:
+            return
+        if not self.service.verify_password(current):
+            QMessageBox.warning(self, "Wrong Password", "❌ Incorrect password.")
+            return
+        self.service.set_password("")
+        QMessageBox.information(self, "Password Removed", "🔓 Password removed. App will open without a lock.")
+        self.refresh_data()
 
     # ── data ─────────────────────────────────────────────────────────────
 

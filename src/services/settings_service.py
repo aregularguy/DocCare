@@ -2,6 +2,7 @@
 import json
 import os
 import tempfile
+import hashlib
 import logging
 from typing import Optional
 
@@ -28,6 +29,7 @@ _DEFAULTS = {
     "degree": "",
     "reg_number": "",
     "logo_path": "",
+    "app_password_hash": "",   # SHA-256 hex of the login password; empty = no lock
 }
 
 
@@ -57,6 +59,22 @@ class SettingsService:
             return True
         except Exception:
             return False
+
+    # ── password helpers ───────────────────────────────────────────────
+
+    def is_password_set(self) -> bool:
+        return bool(self.get("app_password_hash"))
+
+    def set_password(self, plain_password: str) -> bool:
+        """Hash and store a new password. Pass empty string to remove."""
+        hashed = hashlib.sha256(plain_password.encode()).hexdigest() if plain_password else ""
+        return self.save({"app_password_hash": hashed})
+
+    def verify_password(self, plain_password: str) -> bool:
+        stored = self.get("app_password_hash")
+        if not stored:
+            return True  # no password set = always allow
+        return hashlib.sha256(plain_password.encode()).hexdigest() == stored
 
     # ── internal ───────────────────────────────────────────────────────
 
