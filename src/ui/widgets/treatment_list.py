@@ -197,13 +197,13 @@ class TreatmentFormView(QWidget):
         # Total Cost
         cost_col = QVBoxLayout()
         cost_col.setSpacing(6)
-        cost_lbl = QLabel("Total Cost (₹) *")
+        cost_lbl = QLabel("Total Cost (Rs.) *")
         cost_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
         cost_col.addWidget(cost_lbl)
         self.cost_input = QDoubleSpinBox()
         self.cost_input.setMinimum(0)
         self.cost_input.setMaximum(1000000)
-        self.cost_input.setPrefix("₹ ")
+        self.cost_input.setPrefix("Rs. ")
         self.cost_input.setValue(0)
         self.cost_input.setMinimumHeight(44)
         cost_col.addWidget(self.cost_input)
@@ -308,6 +308,7 @@ class TreatmentFormView(QWidget):
             "Veneer":       ("💎", "#E0F7FA", "#00695C"),
             "Bridge":       ("🌉", "#FFF3E0", "#BF360C"),
             "Consultation": ("💬", "#E8F5E9", "#1B5E20"),
+            "X-Ray":        ("🩻", "#F3E5F5", "#6A1B9A"),
         }
 
         treatment_types = self.treatment_service.get_all_treatment_types()
