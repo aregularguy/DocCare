@@ -114,45 +114,53 @@ class PatientDetailsWidget(QWidget):
 
         top.addStretch()
 
-        name_label = QLabel(f"👤  {self.patient.name}")
-        name_label.setFont(QFont("Inter", 20, QFont.Weight.Bold))
-        name_label.setStyleSheet("color:#1D1D1F;")
+        name_label = QLabel(self.patient.name)
+        name_label.setFont(QFont("Ubuntu", 20, QFont.Weight.Bold))
+        name_label.setStyleSheet("color:#FFFFFF; background:transparent;")
         top.addWidget(name_label)
 
         top.addStretch()
 
         hl.addLayout(top)
 
-        # Meta pills row
+        # Meta pills row — info chips in a uniform horizontal strip
         meta_row = QHBoxLayout()
-        meta_row.setSpacing(0)
+        meta_row.setSpacing(8)
+        meta_row.setContentsMargins(0, 4, 0, 0)
 
-        def make_pill(text, text_color="#4A4A4F", bg="#F2F2F7"):
-            lbl = QLabel(text)
-            lbl.setStyleSheet(
-                f"color:{text_color}; background:{bg}; padding:4px 10px;"
-                f"border-radius:12px; font-size:12px; font-weight:500;"
+        def make_chip(label, value, val_color="#0F2942", bg="#EFF6FF"):
+            """Two-part chip: grey label + colored value."""
+            chip = QFrame()
+            chip.setStyleSheet(
+                f"QFrame {{ background:{bg}; border-radius:8px; }}"
             )
-            return lbl
+            cl = QHBoxLayout(chip)
+            cl.setContentsMargins(10, 4, 10, 4)
+            cl.setSpacing(4)
+            lbl = QLabel(label)
+            lbl.setStyleSheet("color:#86868B; font-size:11px; background:transparent;")
+            val = QLabel(value)
+            val.setStyleSheet(
+                f"color:{val_color}; font-size:12px; font-weight:700; background:transparent;"
+            )
+            cl.addWidget(lbl)
+            cl.addWidget(val)
+            return chip
 
-        def make_sep():
-            s = QLabel("•")
-            s.setStyleSheet("color:#C7C7CC; padding:0 8px; font-size:13px; background:transparent;")
-            return s
+        meta_row.addWidget(make_chip("Age", str(self.patient.age)))
+        meta_row.addWidget(make_chip("Mobile", self.patient.mobile_number))
 
-        meta_row.addWidget(make_pill(f"Age {self.patient.age}"))
-        meta_row.addWidget(make_sep())
-        meta_row.addWidget(make_pill(self.patient.city))
-        meta_row.addWidget(make_sep())
-        meta_row.addWidget(make_pill(f"📱 {self.patient.mobile_number}"))
-        meta_row.addWidget(make_sep())
-        meta_row.addWidget(make_pill(f"Charged: {format_currency(self.total_charged)}", "#1D1D1F", "#F2F2F7"))
-        meta_row.addWidget(make_sep())
-        meta_row.addWidget(make_pill(f"Paid: {format_currency(self.total_paid)}", "#34C759", "#E8F8EC"))
-        meta_row.addWidget(make_sep())
+        med_hist = (self.patient.city or "").strip()
+        if med_hist:
+            short = med_hist[:30] + "…" if len(med_hist) > 30 else med_hist
+            meta_row.addWidget(make_chip("History", short, "#6D1B7B", "#F3E5F5"))
+
+        meta_row.addWidget(make_chip("Charged", format_currency(self.total_charged), "#0F2942"))
+        meta_row.addWidget(make_chip("Paid", format_currency(self.total_paid), "#34C759", "#E8F8EC"))
+
         due_color = "#FF3B30" if self.total_due > 0 else "#34C759"
-        due_bg = "#FFE5E5" if self.total_due > 0 else "#E8F8EC"
-        meta_row.addWidget(make_pill(f"Due: {format_currency(self.total_due)}", due_color, due_bg))
+        due_bg    = "#FFE5E5" if self.total_due > 0 else "#E8F8EC"
+        meta_row.addWidget(make_chip("Due", format_currency(self.total_due), due_color, due_bg))
         meta_row.addStretch()
 
         hl.addLayout(meta_row)
@@ -456,6 +464,35 @@ class PatientDetailsWidget(QWidget):
         outer = QWidget()
         outer_layout = QVBoxLayout(outer)
         outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # ── Toolbar with Print Bill button ──
+        toolbar = QWidget()
+        toolbar.setFixedHeight(56)
+        toolbar.setStyleSheet(
+            "QWidget { background:#EFF6FF; border-bottom:2px solid #BFDBFE; }"
+        )
+        tb_layout = QHBoxLayout(toolbar)
+        tb_layout.setContentsMargins(24, 8, 24, 8)
+        tb_lbl = QLabel("Billing Summary")
+        tb_lbl.setStyleSheet(
+            "color:#0F2942; font-size:14px; font-weight:700; background:transparent; border:none;"
+        )
+        tb_layout.addWidget(tb_lbl)
+        tb_layout.addStretch()
+        print_bill_btn = QPushButton("Print Bill as PDF")
+        print_bill_btn.setFixedHeight(36)
+        print_bill_btn.setFixedWidth(160)
+        print_bill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        print_bill_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border-radius:7px;"
+            " font-size:13px; font-weight:600; border:none; }"
+            "QPushButton:hover { background:#1a3a5c; }"
+            "QPushButton:pressed { background:#0a1f33; }"
+        )
+        print_bill_btn.clicked.connect(self._print_bill)
+        tb_layout.addWidget(print_bill_btn)
+        outer_layout.addWidget(toolbar)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -564,10 +601,11 @@ class PatientDetailsWidget(QWidget):
         # ── Main clickable row ──
         row_card = ClickableCard(toggle)
         row_card.setStyleSheet("QFrame:hover { background:#F5F9FF; }")
+        row_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         rl = QHBoxLayout(row_card)
         rl.setContentsMargins(4, 12, 4, 12)
 
-        name_lbl = QLabel(f"🦷  {treatment.treatment_type_name or 'Treatment'}")
+        name_lbl = QLabel(f"  {treatment.treatment_type_name or 'Treatment'}")
         name_lbl.setStyleSheet("font-size:13px; font-weight:500;")
         rl.addWidget(name_lbl)
         rl.addStretch()
@@ -588,7 +626,27 @@ class PatientDetailsWidget(QWidget):
 
         rl.addWidget(arrow)
 
-        cl.addWidget(row_card)
+        # ── Per-treatment "Bill" button (outside the card so it doesn't toggle) ──
+        bill_btn = QPushButton("Bill")
+        bill_btn.setFixedSize(52, 28)
+        bill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        bill_btn.setToolTip(f"Print bill for {treatment.treatment_type_name} only")
+        bill_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border-radius:5px;"
+            " font-size:11px; font-weight:600; border:none; }"
+            "QPushButton:hover { background:#1a3a5c; }"
+        )
+        bill_btn.clicked.connect(lambda _checked, t=treatment: self._print_bill([t]))
+
+        row_wrapper = QWidget()
+        row_wrapper.setStyleSheet("background:transparent;")
+        rw_layout = QHBoxLayout(row_wrapper)
+        rw_layout.setContentsMargins(0, 0, 8, 0)
+        rw_layout.setSpacing(0)
+        rw_layout.addWidget(row_card)
+        rw_layout.addWidget(bill_btn)
+
+        cl.addWidget(row_wrapper)
         cl.addWidget(history_panel)
         return container
 
@@ -596,34 +654,62 @@ class PatientDetailsWidget(QWidget):
 
     def _build_billing_panel(self):
         panel = QFrame()
-        panel.setStyleSheet("background:#FAFAFA; border-left:1px solid #E5E5EA;")
-        panel.setFixedWidth(260)
+        panel.setStyleSheet(
+            "QFrame { background:#F8FAFC; border-left:1px solid #E2E8F0; }"
+        )
+        panel.setFixedWidth(270)
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(20, 24, 20, 24)
-        layout.setSpacing(12)
+        layout.setContentsMargins(16, 20, 16, 20)
+        layout.setSpacing(0)
 
+        # Title
         title = QLabel("Client Billing")
-        title.setFont(QFont("Segoe UI", 13, QFont.Weight.DemiBold))
+        title.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
+        title.setStyleSheet("color:#0F2942; background:transparent; padding-bottom:10px;")
         layout.addWidget(title)
 
-        layout.addWidget(self._billing_row_label("Total Charged", format_currency(self.total_charged), "#1D1D1F"))
-        layout.addWidget(self._billing_row_label("Total Paid", format_currency(self.total_paid), "#34C759"))
-        layout.addWidget(self._billing_row_label("Total Due", format_currency(self.total_due), "#FF3B30"))
+        # Summary cards
+        due_color = "#FF3B30" if self.total_due > 0 else "#34C759"
+        for lbl_txt, val_txt, col in [
+            ("Total Charged", format_currency(self.total_charged), "#1D1D1F"),
+            ("Total Paid",    format_currency(self.total_paid),    "#34C759"),
+            ("Total Due",     format_currency(self.total_due),     due_color),
+        ]:
+            layout.addWidget(self._billing_row_label(lbl_txt, val_txt, col))
 
+        # Divider
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color:#E5E5EA;")
+        sep.setStyleSheet("color:#E2E8F0; margin-top:8px; margin-bottom:8px;")
         layout.addWidget(sep)
 
-        sel_label = QLabel("Select Treatment:")
-        sel_label.setStyleSheet("font-size:12px; color:#86868B;")
+        # Treatment selector
+        sel_label = QLabel("Add payment for:")
+        sel_label.setStyleSheet(
+            "font-size:11px; font-weight:600; color:#86868B;"
+            " background:transparent; padding-bottom:4px;"
+        )
         layout.addWidget(sel_label)
 
+        self.treatment_combo.setFixedHeight(36)
+        self.treatment_combo.setStyleSheet(
+            "QComboBox { border:1px solid #CBD5E1; border-radius:7px; padding:0 10px;"
+            " background:white; font-size:12px; color:#0F2942; }"
+            "QComboBox::drop-down { border:none; width:20px; }"
+        )
         layout.addWidget(self.treatment_combo)
 
-        add_btn = QPushButton("➕ Add Payment")
-        add_btn.setObjectName("primary_button")
+        layout.addSpacing(10)
+
+        add_btn = QPushButton("+ Add Payment")
+        add_btn.setFixedHeight(38)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border-radius:8px;"
+            " font-size:13px; font-weight:600; border:none; }"
+            "QPushButton:hover { background:#1a3a5c; }"
+            "QPushButton:pressed { background:#0a1f33; }"
+        )
         add_btn.clicked.connect(self._show_add_payment)
         layout.addWidget(add_btn)
 
@@ -632,12 +718,15 @@ class PatientDetailsWidget(QWidget):
 
     def _billing_row_label(self, label, value, color):
         row = QFrame()
+        row.setStyleSheet("QFrame { background:transparent; }")
         rl = QHBoxLayout(row)
-        rl.setContentsMargins(0, 0, 0, 0)
+        rl.setContentsMargins(0, 4, 0, 4)
         lbl = QLabel(label)
-        lbl.setStyleSheet("color:#86868B; font-size:13px;")
+        lbl.setStyleSheet("color:#86868B; font-size:12px; background:transparent;")
         val = QLabel(value)
-        val.setStyleSheet(f"color:{color}; font-weight:600; font-size:13px;")
+        val.setStyleSheet(
+            f"color:{color}; font-weight:700; font-size:13px; background:transparent;"
+        )
         rl.addWidget(lbl)
         rl.addStretch()
         rl.addWidget(val)
@@ -830,6 +919,289 @@ class PatientDetailsWidget(QWidget):
             self._refresh_overview()
         else:
             QMessageBox.warning(self, "Nothing saved", "Please fill at least one medicine row.")
+
+    def _print_bill(self, treatments=None):
+        """Generate HTML bill/invoice and show print/PDF preview dialog.
+
+        Args:
+            treatments: list of Treatment objects to include. Defaults to all self.treatments.
+        """
+        from datetime import date as _date
+        treatments = treatments if treatments is not None else self.treatments
+
+        # ── Load settings ──────────────────────────────────────────────
+        s = SettingsService().get_all()
+        clinic_en   = s.get("clinic_name_english") or "DentNest Dental Clinic"
+        clinic_mr   = s.get("clinic_name_marathi", "")
+        address     = s.get("clinic_address", "")
+        phone       = s.get("clinic_phone", "")
+        timing      = s.get("clinic_timing", "")
+        doctor_name = s.get("doctor_name") or "Dr. __________"
+        degree      = s.get("degree") or "BDS / MDS"
+        reg_number  = s.get("reg_number") or "___________"
+        logo_path   = s.get("logo_path", "")
+
+        clinic_mr_html = f"<div class='clinic-mr'>{clinic_mr}</div>" if clinic_mr else ""
+        contact_parts  = [p for p in [address, phone, timing] if p]
+        contact_line   = "&nbsp;&nbsp;|&nbsp;&nbsp;".join(contact_parts)
+
+        if logo_path and os.path.exists(logo_path):
+            logo_cell = (
+                f"<td class='lh-logo' rowspan='3'>"
+                f"<img src='{logo_path}' width='70' height='70'"
+                f" style='object-fit:cover;'/></td>"
+            )
+        else:
+            logo_cell = "<td class='lh-logo' rowspan='3'></td>"
+
+        today_str = _date.today().strftime("%d-%b-%Y")
+
+        # ── Treatment rows ─────────────────────────────────────────────
+        bill_charged = sum(t.total_cost for t in treatments)
+        bill_paid    = sum(t.amount_paid for t in treatments)
+        bill_due     = bill_charged - bill_paid
+
+        treatment_rows_html = ""
+        for i, t in enumerate(treatments):
+            try:
+                from datetime import datetime as _dt
+                sd = t.start_date
+                if isinstance(sd, str):
+                    sd = _dt.fromisoformat(sd).date()
+                date_str = sd.strftime("%d %b %Y") if sd else "—"
+            except Exception:
+                date_str = str(t.start_date) if t.start_date else "—"
+
+            row_bg = "#F0F9FF" if i % 2 == 0 else "#FFFFFF"
+            treatment_rows_html += f"""
+            <tr style="background:{row_bg};">
+              <td style="text-align:center;">{i+1}</td>
+              <td style="padding-left:8px; font-weight:600;">
+                  {html_mod.escape(str(t.treatment_type_name or 'Treatment'))}
+              </td>
+              <td style="text-align:center;">{date_str}</td>
+              <td style="text-align:right; padding-right:10px; font-weight:700;">
+                  Rs.{t.total_cost:,.0f}
+              </td>
+            </tr>"""
+
+        if not treatment_rows_html:
+            QMessageBox.warning(self, "No Treatments", "No treatments to print.")
+            return
+
+        # ── Payment summary rows (Balance Due hidden when zero) ─────────
+        summary_html = f"""
+        <tr>
+          <td colspan="2" style="text-align:right; padding-right:16px; font-weight:600; color:#555;">
+              Total Charged
+          </td>
+          <td style="text-align:right; padding-right:10px; font-weight:700; font-size:11pt;">
+              Rs.{bill_charged:,.0f}
+          </td>
+        </tr>
+        <tr style="background:#F0FFF4;">
+          <td colspan="2" style="text-align:right; padding-right:16px; font-weight:600; color:#34C759;">
+              Amount Paid
+          </td>
+          <td style="text-align:right; padding-right:10px; font-weight:700; font-size:11pt; color:#34C759;">
+              Rs.{bill_paid:,.0f}
+          </td>
+        </tr>"""
+
+        if bill_due > 0:
+            summary_html += f"""
+        <tr style="background:#FFF5F5;">
+          <td colspan="2" style="text-align:right; padding-right:16px; font-weight:700;
+              font-size:11pt; color:#FF3B30;">
+              Balance Due
+          </td>
+          <td style="text-align:right; padding-right:10px; font-weight:900;
+              font-size:12pt; color:#FF3B30;">
+              Rs.{bill_due:,.0f}
+          </td>
+        </tr>"""
+
+        html = f"""
+        <html><head>
+        <meta charset="UTF-8"/>
+        <style>
+          body {{
+            font-family: 'Noto Sans', 'DejaVu Sans', Arial, sans-serif;
+            margin: 8px;
+            font-size: 12pt;
+            color: #1a1a1a;
+          }}
+          .page-border {{
+            border: 4px solid #0F2942;
+            padding: 28px 32px;
+          }}
+
+          /* ── Letterhead (identical to prescription) ── */
+          .letterhead {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+          }}
+          .lh-symbol {{ width:56px; text-align:center; vertical-align:middle; padding-right:6px; }}
+          .lh-symbol .tooth-icon {{ font-size:36pt; color:#0F2942; line-height:1; }}
+          .lh-logo {{ width:80px; text-align:center; vertical-align:middle; padding-left:8px; }}
+          .lh-clinic {{ text-align:center; vertical-align:bottom; padding:4px 8px 6px 8px; }}
+          .clinic-name {{ font-size:20pt; font-weight:900; color:#0F2942; letter-spacing:0.5px; }}
+          .clinic-mr {{ font-size:13pt; color:#0F2942; font-weight:600; margin-top:2px; }}
+          .lh-doctor {{ text-align:center; padding:6px 8px 8px 8px; }}
+          .doc-name {{ font-size:15pt; font-weight:800; color:#0F2942; }}
+          .doc-degree {{ font-size:11pt; color:#444; margin-top:2px; }}
+          .doc-reg {{ font-size:10pt; color:#888; margin-top:2px; }}
+          .lh-contact-row td {{ border-top:1px solid #bbb; }}
+          .lh-contact {{ text-align:center; padding:6px 8px 8px 8px; font-size:10pt; color:#555; }}
+
+          /* ── Dividers ── */
+          .header-divider {{ border:none; border-top:2px solid #0F2942; margin:10px 0 0 0; }}
+
+          /* ── Patient strip ── */
+          .patient-strip {{
+            width:100%; border-collapse:collapse; background:#EFF6FF;
+            margin:10px 0 14px 0; table-layout:fixed;
+          }}
+          .patient-strip td {{ padding:6px 10px; width:25%; }}
+          .patient-strip .label {{ font-size:8pt; color:#666; display:block; white-space:nowrap; }}
+          .patient-strip .value {{
+            font-size:9pt; font-weight:700; color:#0F2942;
+            display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+          }}
+
+          /* ── Bill title ── */
+          .bill-title {{
+            text-align:center; font-size:14pt; font-weight:900; color:#0F2942;
+            letter-spacing:2px; margin:14px 0 10px 0;
+            border-top:1px dashed #aaa; border-bottom:1px dashed #aaa;
+            padding:6px 0;
+          }}
+
+          /* ── Treatment table ── */
+          .bill-table {{
+            width:100%; border-collapse:collapse; margin-top:6px; table-layout:fixed;
+          }}
+          .bill-table th {{
+            background:#0F2942; color:white; padding:7px 6px;
+            font-size:10pt; text-align:center;
+            border:1px solid #0a2035;
+          }}
+          .bill-table td {{
+            padding:7px 6px; font-size:10pt;
+            border:1px solid #D1D5DB; vertical-align:middle;
+          }}
+          .bill-table .summary-sep td {{
+            border-top:2px solid #0F2942; border-bottom:none;
+            border-left:none; border-right:none;
+          }}
+
+          /* ── Footer ── */
+          .footer-line {{
+            border-top:1px dashed #aaa; margin-top:50px;
+            padding-top:8px; text-align:right;
+          }}
+          .sig-line {{ font-size:13pt; color:#0F2942; font-weight:700; }}
+        </style>
+        </head><body>
+        <div class="page-border">
+
+        <!-- LETTERHEAD (no ⚕ symbol — logo already on right) -->
+        <table class="letterhead">
+          <tr>
+            <td class="lh-clinic">
+              <div class="clinic-name">{clinic_en}</div>
+              {clinic_mr_html}
+            </td>
+            {logo_cell}
+          </tr>
+          <tr>
+            <td class="lh-doctor">
+              <div class="doc-name">{doctor_name}</div>
+              <div class="doc-degree">{degree}</div>
+              <div class="doc-reg">Reg. No. : {reg_number}</div>
+            </td>
+          </tr>
+          <tr class="lh-contact-row">
+            <td class="lh-contact">{contact_line}</td>
+          </tr>
+        </table>
+
+        <hr class="header-divider"/>
+
+        <!-- PATIENT DETAILS -->
+        <table class="patient-strip">
+          <tr>
+            <td>
+              <span class="label">Patient</span>
+              <span class="value">{html_mod.escape(str(self.patient.name))}</span>
+            </td>
+            <td>
+              <span class="label">Age</span>
+              <span class="value">{html_mod.escape(str(self.patient.age))} yrs</span>
+            </td>
+            <td>
+              <span class="label">Mobile</span>
+              <span class="value">{html_mod.escape(str(self.patient.mobile_number))}</span>
+            </td>
+            <td>
+              <span class="label">Date</span>
+              <span class="value">{today_str}</span>
+            </td>
+          </tr>
+        </table>
+
+        <!-- BILL TITLE -->
+        <div class="bill-title">INVOICE / BILL</div>
+
+        <!-- TREATMENT TABLE -->
+        <table class="bill-table">
+          <colgroup>
+            <col style="width:34px;"/>
+            <col style="width:50%;"/>
+            <col style="width:22%;"/>
+            <col style="width:24%;"/>
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style="text-align:left; padding-left:8px;">Treatment</th>
+              <th>Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {treatment_rows_html}
+            <!-- Summary separator -->
+            <tr class="summary-sep"><td colspan="4" style="border-top:2px solid #0F2942; padding:0;"></td></tr>
+            {summary_html}
+          </tbody>
+        </table>
+
+        <!-- FOOTER / SIGNATURE -->
+        <div class="footer-line">
+          <br/>
+          <span class="sig-line">_________________________________</span><br/>
+          <span class="sig-line">{doctor_name}</span>
+        </div>
+
+        </div><!-- end page-border -->
+        </body></html>
+        """
+
+        doc = QTextDocument()
+        doc.setHtml(html)
+
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        printer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+        doc.setPageSize(printer.pageRect(QPrinter.Unit.Point).size())
+
+        preview = QPrintPreviewDialog(printer, self)
+        preview.setWindowTitle("🖨  Print / Save Bill as PDF")
+        preview.paintRequested.connect(lambda p: doc.print(p))
+        preview.resize(1000, 760)
+        preview.exec()
 
     def _print_prescription(self):
         """Generate HTML prescription and show print/PDF dialog."""
@@ -1202,7 +1574,9 @@ class AddPaymentDialog(QDialog):
 
         layout.addWidget(QLabel("Payment Method:"))
         self.method = QComboBox()
-        self.method.addItems(["Cash", "UPI", "Card", "Bank Transfer", "Cheque"])
+        for _label, _key in [("Cash", "cash"), ("UPI", "upi"),
+                               ("Card", "card"), ("Cheque", "cheque"), ("Other", "other")]:
+            self.method.addItem(_label, _key)
         layout.addWidget(self.method)
 
         layout.addWidget(QLabel("Date:"))
@@ -1243,7 +1617,7 @@ class AddPaymentDialog(QDialog):
             self.error_label.setText("❌ Please enter a valid amount greater than 0.")
             self.error_label.setVisible(True)
             return
-        method = self.method.currentText().lower()
+        method = self.method.currentData() or "cash"
         pay_date = self.date.date().toPyDate()
         notes = self.notes.toPlainText().strip()
 
