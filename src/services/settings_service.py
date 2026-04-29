@@ -22,18 +22,18 @@ else:
 _SETTINGS_PATH = os.path.join(_DATA_DIR, "settings.json")
 
 _DEFAULTS = {
-    "clinic_name_english": "",
-    "clinic_name_marathi": "",
-    "clinic_address": "",
-    "clinic_phone": "",
-    "clinic_timing": "",
-    "doctor_name": "",
-    "degree": "",
-    "reg_number": "",
-    "logo_path": "",
-    "app_password_hash": "",   # SHA-256 hex of the login password; empty = no lock
-    "recovery_key_hash": "",   # SHA-256 hex of recovery key; empty = none
-    "cloud_backup_folder": "", # Path to cloud-synced folder for auto-backup
+    "clinic_name_english": "Dr. Abrar's Dental Care and Implant Centre",
+    "clinic_name_marathi": "दातांचा दवाखाना",
+    "clinic_address":      "Plot 12, Main Road, Phaltan, Maharashtra",
+    "clinic_phone":        "7620962937 / 7588606132",
+    "clinic_timing":       "सकाळी ९ ते दुपारी २  |  सायं. ५ ते रात्री ८",
+    "doctor_name":         "Dr. Abrar Pharuk Shaikh",
+    "degree":              "B.D.S (RGUHS)",
+    "reg_number":          "A-51710",
+    "logo_path":           "",
+    "app_password_hash":   "",   # SHA-256 hex of the login password; empty = no lock
+    "recovery_key_hash":   "",   # SHA-256 hex of recovery key; empty = none
+    "cloud_backup_folder": "",   # Path to cloud-synced folder for auto-backup
 }
 
 
@@ -49,7 +49,14 @@ class SettingsService:
 
     def get_all(self) -> dict:
         data = _DEFAULTS.copy()
-        data.update(self._read())
+        # Only override defaults with saved values that are non-empty,
+        # so defaults always show on a fresh install or for unset fields.
+        saved = self._read()
+        for k, v in saved.items():
+            if k in data and v != "":
+                data[k] = v
+            elif k not in data:
+                data[k] = v   # keep unknown keys (e.g. password hashes)
         return data
 
     def get(self, key: str, fallback: str = "") -> str:

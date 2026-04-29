@@ -42,18 +42,18 @@ class SettingsWidget(QWidget):
         bl.setContentsMargins(40, 32, 40, 40)
         bl.setSpacing(24)
 
-        bl.addWidget(self._build_section("🏥  Clinic Information", [
-            ("clinic_name_english", "Clinic Name (English)", "e.g. Dr. Abrar's Dental Care and Implant Centre"),
-            ("clinic_name_marathi", "Clinic Name (Marathi)", "e.g. दातांचा दवाखाना  (optional)"),
-            ("clinic_address",      "Address",               "e.g. Plot 12, Main Road, Phaltan, Maharashtra"),
-            ("clinic_phone",        "Phone / Mobile",        "e.g. 7620962937 / 7588606132"),
-            ("clinic_timing",       "Clinic Timing",         "e.g. सकाळी ९ ते दुपारी २  |  सायं. ५ ते रात्री ८  (optional)"),
+        bl.addWidget(self._build_section("Clinic Information", [
+            ("clinic_name_english", "Clinic Name (English)", "Enter clinic name in English"),
+            ("clinic_name_marathi", "Clinic Name (Marathi)", "Enter clinic name in Marathi (optional)"),
+            ("clinic_address",      "Address",               "Enter full clinic address"),
+            ("clinic_phone",        "Phone / Mobile",        "Enter phone or mobile number"),
+            ("clinic_timing",       "Clinic Timing",         "Enter clinic hours (optional)"),
         ]))
 
-        bl.addWidget(self._build_section("👨‍⚕️  Doctor Information", [
-            ("doctor_name", "Doctor Full Name", "e.g. Dr. Abrar Pharuk Shaikh"),
-            ("degree",      "Degree",           "e.g. B.D.S (RGUHS)"),
-            ("reg_number",  "Registration No.", "e.g. A-51710"),
+        bl.addWidget(self._build_section("Doctor Information", [
+            ("doctor_name", "Doctor Full Name", "Enter doctor's full name"),
+            ("degree",      "Degree",           "Enter degree (e.g. B.D.S)"),
+            ("reg_number",  "Registration No.", "Enter registration number"),
         ]))
 
         bl.addWidget(self._build_logo_section())
