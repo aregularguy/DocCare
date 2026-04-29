@@ -24,15 +24,23 @@ METHOD_COLORS = {
 }
 
 
+_METHOD_DISPLAY = {
+    'cash': 'Cash', 'card': 'Card', 'upi': 'UPI',
+    'cheque': 'Cheque', 'other': 'Other',
+}
+
 def _method_badge(method: str) -> QLabel:
-    key = (method or 'other').lower()
+    key = (method or 'other').lower().strip()
     bg, fg = METHOD_COLORS.get(key, METHOD_COLORS['other'])
-    lbl = QLabel(method.upper() if method else 'OTHER')
+    # Use canonical display name; fall back to "Other" for unknown legacy values
+    display = _METHOD_DISPLAY.get(key, 'Other')
+    lbl = QLabel(display)
     lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    lbl.setFixedHeight(24)
+    lbl.setFixedHeight(26)
+    lbl.setMinimumWidth(56)
     lbl.setStyleSheet(
-        f"background:{bg}; color:{fg}; border-radius:12px;"
-        f" padding:0 10px; font-weight:700; font-size:11px;"
+        f"background:{bg}; color:{fg}; border-radius:13px;"
+        f" padding:0 12px; font-weight:700; font-size:11px;"
     )
     return lbl
 
@@ -122,7 +130,7 @@ class RecordPaymentDialog(QDialog):
 
         # Amount
         self.amount_spin = QDoubleSpinBox()
-        self.amount_spin.setPrefix("₹ ")
+        self.amount_spin.setPrefix("Rs. ")
         self.amount_spin.setRange(0.01, 9_999_999.0)
         self.amount_spin.setDecimals(2)
         self.amount_spin.setValue(0.01)
@@ -227,7 +235,7 @@ class RecordPaymentDialog(QDialog):
         self.treatment_combo.setEnabled(True)
         self.treatment_combo.addItem("— select treatment —", -1)
         for t in payable:
-            label = f"{t.treatment_type_name}  (₹{t.pending_amount:,.2f} pending)"
+            label = f"{t.treatment_type_name}  (Rs.{t.pending_amount:,.2f} pending)"
             self.treatment_combo.addItem(label, t.id)
 
     def _on_treatment_changed(self, idx: int):
@@ -244,7 +252,7 @@ class RecordPaymentDialog(QDialog):
                 self.amount_spin.setValue(t.pending_amount)
                 self.amount_spin.setEnabled(True)
                 self.pending_lbl.setText(
-                    f"Pending: ₹{t.pending_amount:,.2f}  ·  Total cost: ₹{t.total_cost:,.2f}"
+                    f"Pending: Rs.{t.pending_amount:,.2f}  ·  Total cost: Rs.{t.total_cost:,.2f}"
                 )
                 return
 
@@ -358,13 +366,13 @@ class PaymentListWidget(QWidget):
         cards_row.setSpacing(16)
 
         self.card_today = self._make_summary_card(
-            "Total Collected Today", "Rs.0", "#34C759", "💰"
+            "Total Collected Today", "Rs.0", "#34C759", "Today"
         )
         self.card_month = self._make_summary_card(
-            "Total Collected This Month", "Rs.0", "#007AFF", "📅"
+            "Total Collected This Month", "Rs.0", "#007AFF", "Month"
         )
         self.card_pending = self._make_summary_card(
-            "Total Outstanding", "Rs.0", "#FF9500", "⏳"
+            "Total Outstanding", "Rs.0", "#FF9500", "Due"
         )
         cards_row.addWidget(self.card_today)
         cards_row.addWidget(self.card_month)
@@ -411,7 +419,8 @@ class PaymentListWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(3, 90)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self.table.setColumnWidth(0, 180)
         self.table.setColumnWidth(1, 200)
@@ -467,8 +476,10 @@ class PaymentListWidget(QWidget):
         top_row = QHBoxLayout()
         icon_lbl = QLabel(icon)
         icon_lbl.setStyleSheet(
-            f"font-size:22px; background:transparent; color:{accent};"
+            f"font-size:10px; font-weight:bold; color:#fff;"
+            f" background:{accent}; border-radius:9px; padding:2px 8px;"
         )
+        icon_lbl.setMaximumWidth(54)
         top_row.addWidget(icon_lbl)
         top_row.addStretch()
         cl.addLayout(top_row)
@@ -593,7 +604,7 @@ class PaymentListWidget(QWidget):
             )
 
             # Amount
-            amt_item = QTableWidgetItem(f"₹{row['amount']:,.2f}")
+            amt_item = QTableWidgetItem(f"Rs.{row['amount']:,.2f}")
             amt_item.setTextAlignment(
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )

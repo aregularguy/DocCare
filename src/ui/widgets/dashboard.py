@@ -24,10 +24,10 @@ class MetricCard(QFrame):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(8)
 
-        # Value (large number)
-        value_label = QLabel(value)
-        value_label.setObjectName("metric_value")
-        layout.addWidget(value_label)
+        # Value (large number) — store reference directly so update_value is reliable
+        self._value_label = QLabel(value)
+        self._value_label.setObjectName("metric_value")
+        layout.addWidget(self._value_label)
 
         # Title
         title_label = QLabel(title)
@@ -42,9 +42,7 @@ class MetricCard(QFrame):
 
     def update_value(self, value: str):
         """Update the metric value."""
-        value_label = self.findChild(QLabel, "metric_value")
-        if value_label:
-            value_label.setText(value)
+        self._value_label.setText(value)
 
 
 class DashboardWidget(QWidget):
