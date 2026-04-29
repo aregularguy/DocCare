@@ -3,6 +3,8 @@ import json
 import os
 import tempfile
 import hashlib
+import secrets
+import string
 import logging
 from typing import Optional
 
@@ -30,6 +32,8 @@ _DEFAULTS = {
     "reg_number": "",
     "logo_path": "",
     "app_password_hash": "",   # SHA-256 hex of the login password; empty = no lock
+    "recovery_key_hash": "",   # SHA-256 hex of recovery key; empty = none
+    "cloud_backup_folder": "", # Path to cloud-synced folder for auto-backup
 }
 
 
@@ -75,6 +79,27 @@ class SettingsService:
         if not stored:
             return True  # no password set = always allow
         return hashlib.sha256(plain_password.encode()).hexdigest() == stored
+
+    # ── recovery key helpers ───────────────────────────────────────────
+
+    def generate_recovery_key(self) -> str:
+        """Generate a random 12-char recovery key, store its hash, return plaintext.
+
+        Format: XXX-XXX-XXX-XXX (uppercase alphanumeric).
+        """
+        raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(12))
+        formatted = '-'.join(raw[i:i+3] for i in range(0, 12, 3))
+        hashed = hashlib.sha256(raw.encode()).hexdigest()
+        self.save({"recovery_key_hash": hashed})
+        return formatted
+
+    def verify_recovery_key(self, key: str) -> bool:
+        """Verify a recovery key against the stored hash."""
+        stored = self.get("recovery_key_hash")
+        if not stored:
+            return False
+        clean = key.replace('-', '').replace(' ', '').upper()
+        return hashlib.sha256(clean.encode()).hexdigest() == stored
 
     # ── internal ───────────────────────────────────────────────────────
 

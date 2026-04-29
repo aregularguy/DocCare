@@ -1,10 +1,10 @@
 """App login screen — shown on startup when a password is configured."""
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QPushButton, QFrame
+    QLineEdit, QPushButton, QFrame, QMessageBox
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QKeyEvent
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont
 from ...services.settings_service import SettingsService
 
 
@@ -17,7 +17,7 @@ class LoginDialog(QDialog):
         self._attempts = 0
         self.setWindowTitle("DentNest — Login")
         self.setModal(True)
-        self.setFixedSize(420, 340)
+        self.setFixedSize(420, 380)
         # Remove the close (X) button so the user can't bypass login
         self.setWindowFlags(
             Qt.WindowType.Dialog |
@@ -80,7 +80,7 @@ class LoginDialog(QDialog):
         self.error_label.setVisible(False)
         vl.addWidget(self.error_label)
 
-        unlock_btn = QPushButton("🔓  Unlock")
+        unlock_btn = QPushButton("Unlock")
         unlock_btn.setFixedHeight(46)
         unlock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         unlock_btn.setStyleSheet(
@@ -90,6 +90,17 @@ class LoginDialog(QDialog):
         )
         unlock_btn.clicked.connect(self._on_unlock)
         vl.addWidget(unlock_btn)
+
+        # ── Forgot Password link ──
+        forgot_btn = QPushButton("Forgot Password?")
+        forgot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        forgot_btn.setStyleSheet(
+            "QPushButton { background:transparent; border:none;"
+            " color:#007AFF; font-size:12px; font-weight:600; text-decoration:underline; }"
+            "QPushButton:hover { color:#0051D5; }"
+        )
+        forgot_btn.clicked.connect(self._on_forgot_password)
+        vl.addWidget(forgot_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         vl.addStretch()
         layout.addWidget(body)
@@ -104,17 +115,16 @@ class LoginDialog(QDialog):
             self._attempts += 1
             self.password_input.clear()
             self.password_input.setFocus()
-            msg = f"Incorrect password. Please try again."
+            msg = "Incorrect password. Please try again."
             if self._attempts >= 3:
                 msg = f"Incorrect password ({self._attempts} attempts)."
-            self.error_label.setText(f"❌ {msg}")
+            self.error_label.setText(msg)
             self.error_label.setVisible(True)
-            # Shake animation — red border flash
+            # Red border flash
             self.password_input.setStyleSheet(
                 "QLineEdit { border:2px solid #DC2626; border-radius:8px;"
                 " padding:0 14px; font-size:14px; background:#FEF2F2; }"
             )
-            from PyQt6.QtCore import QTimer
             QTimer.singleShot(800, self._reset_input_style)
 
     def _reset_input_style(self):
@@ -123,3 +133,218 @@ class LoginDialog(QDialog):
             " padding:0 14px; font-size:14px; background:white; }"
             "QLineEdit:focus { border:2px solid #0F2942; }"
         )
+
+    def _on_forgot_password(self):
+        """Handle Forgot Password — recovery key flow."""
+        if not self.service.get("recovery_key_hash"):
+            QMessageBox.warning(
+                self, "No Recovery Key",
+                "No recovery key has been configured.\n\n"
+                "A recovery key is generated when you set a password in Settings.\n"
+                "If you cannot remember your password, you may need to manually "
+                "delete the app_password_hash from data/settings.json."
+            )
+            return
+
+        # Step 1: Ask for recovery key
+        dialog = _RecoveryKeyDialog(self.service, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Step 2: Set new password
+            pw_dialog = _SetNewPasswordDialog(self.service, self)
+            if pw_dialog.exec() == QDialog.DialogCode.Accepted:
+                # Password has been reset, accept login
+                self.accept()
+
+
+class _RecoveryKeyDialog(QDialog):
+    """Dialog that asks for the recovery key."""
+
+    def __init__(self, service, parent=None):
+        super().__init__(parent)
+        self.service = service
+        self.setWindowTitle("Recovery Key")
+        self.setFixedSize(400, 240)
+        self.setModal(True)
+        self._build_ui()
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setSpacing(16)
+
+        title = QLabel("Enter Recovery Key")
+        title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        title.setStyleSheet("color:#0F2942;")
+        layout.addWidget(title)
+
+        info = QLabel("Enter the recovery key that was shown when you set your password.")
+        info.setStyleSheet("color:#64748B; font-size:12px;")
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        self.key_input = QLineEdit()
+        self.key_input.setPlaceholderText("XXX-XXX-XXX-XXX")
+        self.key_input.setFixedHeight(44)
+        self.key_input.setStyleSheet(
+            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            " padding:0 14px; font-size:16px; font-family:monospace;"
+            " letter-spacing:2px; background:white; }"
+            "QLineEdit:focus { border:2px solid #0F2942; }"
+        )
+        self.key_input.returnPressed.connect(self._on_verify)
+        layout.addWidget(self.key_input)
+
+        self.error_label = QLabel()
+        self.error_label.setStyleSheet("color:#DC2626; font-size:12px;")
+        self.error_label.setVisible(False)
+        layout.addWidget(self.error_label)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(
+            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB;"
+            " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:600; }"
+            "QPushButton:hover { background:#E5E7EB; }"
+        )
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        verify_btn = QPushButton("Verify")
+        verify_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        verify_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border:none;"
+            " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:700; }"
+            "QPushButton:hover { background:#1A4A7A; }"
+        )
+        verify_btn.clicked.connect(self._on_verify)
+        btn_layout.addWidget(verify_btn)
+
+        layout.addLayout(btn_layout)
+        self.key_input.setFocus()
+
+    def _on_verify(self):
+        key = self.key_input.text().strip()
+        if not key:
+            self.error_label.setText("Please enter the recovery key.")
+            self.error_label.setVisible(True)
+            return
+
+        if self.service.verify_recovery_key(key):
+            self.accept()
+        else:
+            self.error_label.setText("Invalid recovery key. Please try again.")
+            self.error_label.setVisible(True)
+            self.key_input.selectAll()
+            self.key_input.setFocus()
+
+
+class _SetNewPasswordDialog(QDialog):
+    """Dialog to set a new password after successful recovery."""
+
+    def __init__(self, service, parent=None):
+        super().__init__(parent)
+        self.service = service
+        self.setWindowTitle("Set New Password")
+        self.setFixedSize(400, 300)
+        self.setModal(True)
+        self._build_ui()
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setSpacing(16)
+
+        title = QLabel("Set New Password")
+        title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        title.setStyleSheet("color:#0F2942;")
+        layout.addWidget(title)
+
+        info = QLabel("Recovery key verified. Enter your new password below.")
+        info.setStyleSheet("color:#166534; font-size:12px; font-weight:600;")
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        self.pw_input = QLineEdit()
+        self.pw_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.pw_input.setPlaceholderText("New password (min 4 characters)")
+        self.pw_input.setFixedHeight(44)
+        self.pw_input.setStyleSheet(
+            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            " padding:0 14px; font-size:14px; background:white; }"
+            "QLineEdit:focus { border:2px solid #0F2942; }"
+        )
+        layout.addWidget(self.pw_input)
+
+        self.confirm_input = QLineEdit()
+        self.confirm_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.confirm_input.setPlaceholderText("Confirm new password")
+        self.confirm_input.setFixedHeight(44)
+        self.confirm_input.setStyleSheet(
+            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            " padding:0 14px; font-size:14px; background:white; }"
+            "QLineEdit:focus { border:2px solid #0F2942; }"
+        )
+        self.confirm_input.returnPressed.connect(self._on_save)
+        layout.addWidget(self.confirm_input)
+
+        self.error_label = QLabel()
+        self.error_label.setStyleSheet("color:#DC2626; font-size:12px;")
+        self.error_label.setVisible(False)
+        layout.addWidget(self.error_label)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(
+            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB;"
+            " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:600; }"
+            "QPushButton:hover { background:#E5E7EB; }"
+        )
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        save_btn = QPushButton("Set Password")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border:none;"
+            " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:700; }"
+            "QPushButton:hover { background:#1A4A7A; }"
+        )
+        save_btn.clicked.connect(self._on_save)
+        btn_layout.addWidget(save_btn)
+
+        layout.addLayout(btn_layout)
+        self.pw_input.setFocus()
+
+    def _on_save(self):
+        pw = self.pw_input.text()
+        confirm = self.confirm_input.text()
+
+        if len(pw) < 4:
+            self.error_label.setText("Password must be at least 4 characters.")
+            self.error_label.setVisible(True)
+            return
+
+        if pw != confirm:
+            self.error_label.setText("Passwords do not match.")
+            self.error_label.setVisible(True)
+            return
+
+        self.service.set_password(pw)
+        recovery_key = self.service.generate_recovery_key()
+
+        QMessageBox.information(
+            self,
+            "Password Reset",
+            f"Password has been reset successfully.\n\n"
+            f"Your new recovery key:\n\n"
+            f"    {recovery_key}\n\n"
+            f"Write this down and keep it safe.\n"
+            f"You will need it if you forget your password again."
+        )
+        self.accept()

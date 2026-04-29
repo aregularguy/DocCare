@@ -102,6 +102,31 @@ class BackupService:
         except Exception:
             return "Unknown"
 
+    def cloud_backup(self) -> tuple[bool, str]:
+        """Backup to the user-configured cloud-synced folder (if set).
+
+        Returns (success, message/path).
+        """
+        from .settings_service import SettingsService
+        folder = SettingsService().get("cloud_backup_folder")
+        if not folder:
+            return False, "No cloud backup folder configured."
+        if not os.path.isdir(folder):
+            return False, f"Cloud backup folder does not exist: {folder}"
+        if not os.path.exists(_DB_PATH):
+            return False, "Database file not found."
+
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            dest_file = os.path.join(folder, f"dentnest_cloud_{timestamp}.db")
+            shutil.copy2(_DB_PATH, dest_file)
+            logger.info(f"Cloud backup created: {dest_file}")
+            self._prune_cloud_backups(folder)
+            return True, dest_file
+        except Exception as e:
+            logger.warning(f"Cloud backup failed: {e}")
+            return False, str(e)
+
     # ── internal ─────────────────────────────────────────────────────────
 
     def _prune_old_backups(self):
@@ -117,3 +142,17 @@ class BackupService:
                 logger.info(f"Pruned old auto-backup: {oldest}")
         except Exception as e:
             logger.warning(f"Failed to prune old backups: {e}")
+
+    def _prune_cloud_backups(self, folder: str):
+        """Delete oldest cloud backups beyond _MAX_AUTO_BACKUPS."""
+        try:
+            backups = sorted(
+                Path(folder).glob("dentnest_cloud_*.db"),
+                key=lambda p: p.stat().st_mtime
+            )
+            while len(backups) > _MAX_AUTO_BACKUPS:
+                oldest = backups.pop(0)
+                oldest.unlink()
+                logger.info(f"Pruned old cloud backup: {oldest}")
+        except Exception as e:
+            logger.warning(f"Failed to prune cloud backups: {e}")

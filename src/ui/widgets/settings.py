@@ -58,6 +58,7 @@ class SettingsWidget(QWidget):
 
         bl.addWidget(self._build_logo_section())
         bl.addWidget(self._build_backup_section())
+        bl.addWidget(self._build_cloud_backup_section())
         bl.addWidget(self._build_security_section())
         bl.addStretch()
 
@@ -280,6 +281,100 @@ class SettingsWidget(QWidget):
         vl.addLayout(btns)
         return card
 
+    def _build_cloud_backup_section(self) -> QFrame:
+        card = QFrame()
+        card.setStyleSheet(
+            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+        )
+        vl = QVBoxLayout(card)
+        vl.setContentsMargins(24, 20, 24, 24)
+        vl.setSpacing(14)
+
+        hdr = QLabel("Cloud Backup")
+        hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
+        hdr.setStyleSheet("color:#0F2942; border:none;")
+        vl.addWidget(hdr)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        vl.addWidget(sep)
+
+        info = QLabel(
+            "Choose a cloud-synced folder (Google Drive, OneDrive, Dropbox) for automatic backup.\n"
+            "The app will copy the database to this folder every time it starts."
+        )
+        info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        info.setWordWrap(True)
+        vl.addWidget(info)
+
+        # Current folder status
+        current_folder = self.service.get("cloud_backup_folder")
+        if current_folder and os.path.isdir(current_folder):
+            status_text = f"Folder: {current_folder}"
+            status_color, status_bg, status_border = "#166534", "#F0FDF4", "#BBF7D0"
+        elif current_folder:
+            status_text = f"Folder not found: {current_folder}"
+            status_color, status_bg, status_border = "#92400E", "#FFFBEB", "#FDE68A"
+        else:
+            status_text = "Not configured"
+            status_color, status_bg, status_border = "#64748B", "#F8FAFC", "#E2E8F0"
+
+        self._cloud_status = QLabel(status_text)
+        self._cloud_status.setStyleSheet(
+            f"color:{status_color}; background:{status_bg}; border:1px solid {status_border};"
+            " border-radius:7px; padding:8px 12px; font-size:12px; font-weight:600;"
+        )
+        self._cloud_status.setWordWrap(True)
+        vl.addWidget(self._cloud_status)
+
+        btns = QHBoxLayout()
+        btns.setSpacing(10)
+
+        choose_btn = QPushButton("Choose Folder")
+        choose_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        choose_btn.setFixedHeight(38)
+        choose_btn.setStyleSheet(
+            "QPushButton { background:#0F2942; color:white; border:none;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
+            "QPushButton:hover { background:#1A4A7A; }"
+        )
+        choose_btn.clicked.connect(self._choose_cloud_folder)
+        btns.addWidget(choose_btn)
+
+        if current_folder:
+            remove_btn = QPushButton("Remove")
+            remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            remove_btn.setFixedHeight(38)
+            remove_btn.setStyleSheet(
+                "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+                " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
+                "QPushButton:hover { background:#FEE2E2; }"
+            )
+            remove_btn.clicked.connect(self._remove_cloud_folder)
+            btns.addWidget(remove_btn)
+
+        btns.addStretch()
+        vl.addLayout(btns)
+        return card
+
+    def _choose_cloud_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Choose Cloud Backup Folder")
+        if not folder:
+            return
+        self.service.save({"cloud_backup_folder": folder})
+        QMessageBox.information(
+            self, "Cloud Backup Configured",
+            f"Cloud backup folder set to:\n{folder}\n\n"
+            "The database will be backed up here on every app startup."
+        )
+        self.refresh_data()
+
+    def _remove_cloud_folder(self):
+        self.service.save({"cloud_backup_folder": ""})
+        QMessageBox.information(self, "Removed", "Cloud backup folder has been removed.")
+        self.refresh_data()
+
     def _build_security_section(self) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
@@ -398,15 +493,21 @@ class SettingsWidget(QWidget):
         if not ok2:
             return
         if new_pw != confirm:
-            QMessageBox.warning(self, "Mismatch", "❌ Passwords do not match.")
+            QMessageBox.warning(self, "Mismatch", "Passwords do not match.")
             return
         if len(new_pw) < 4:
-            QMessageBox.warning(self, "Too Short", "❌ Password must be at least 4 characters.")
+            QMessageBox.warning(self, "Too Short", "Password must be at least 4 characters.")
             return
         self.service.set_password(new_pw)
+        recovery_key = self.service.generate_recovery_key()
         QMessageBox.information(
             self, "Password Set",
-            "✅ Password set successfully!\nThe app will ask for this password on next startup."
+            f"Password set successfully!\n"
+            f"The app will ask for this password on next startup.\n\n"
+            f"Your recovery key:\n\n"
+            f"    {recovery_key}\n\n"
+            f"Write this down and keep it safe.\n"
+            f"You will need it if you forget your password."
         )
         self.refresh_data()
 

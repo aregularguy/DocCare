@@ -46,14 +46,7 @@ def main():
 
     logger.info("Starting DentNest application...")
 
-    # Initialize database
-    try:
-        initialize_database()
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-        sys.exit(1)
-
-    # Create Qt application
+    # Create Qt application FIRST so we can show error dialogs if startup fails
     app = QApplication(sys.argv)
     app.setApplicationName("DentNest")
     app.setOrganizationName("DentNest")
@@ -87,6 +80,21 @@ def main():
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
     app.setPalette(palette)
 
+    # Initialize database AFTER QApplication exists so error dialogs can show
+    try:
+        initialize_database()
+    except Exception as e:
+        from PyQt6.QtWidgets import QMessageBox
+        logger.error(f"Failed to initialize database: {e}")
+        QMessageBox.critical(
+            None,
+            "DentNest — Startup Error",
+            f"Database could not be initialized.\n\n"
+            f"Error: {e}\n\n"
+            f"Please contact support or check the log file.",
+        )
+        sys.exit(1)
+
     # Auto-backup on every startup (non-blocking, silent)
     try:
         from .services.backup_service import BackupService
@@ -94,7 +102,18 @@ def main():
     except Exception as e:
         logger.warning(f"Auto-backup skipped: {e}")
 
-    # Show login screen if password is configured
+    # Cloud backup to user-configured synced folder (non-blocking, silent)
+    try:
+        BackupService().cloud_backup()
+    except Exception as e:
+        logger.warning(f"Cloud backup skipped: {e}")
+
+    # ── Splash screen ───────────────────────────────────────────────────
+    from .ui.dialogs.splash_screen import SplashScreen
+    splash = SplashScreen()
+    splash.exec()   # blocks until progress finishes (~1.5 s)
+
+    # ── Login screen (if password is set) ───────────────────────────────
     from .services.settings_service import SettingsService
     if SettingsService().is_password_set():
         from .ui.dialogs.login_dialog import LoginDialog
