@@ -38,7 +38,9 @@ jobs:
             --onefile `
             --windowed `
             --name DentNest `
+            --icon "src/resources/icons/dentnest.ico" `
             --add-data "data;data" `
+            --add-data "src/resources/icons;src/resources/icons" `
             --hidden-import PyQt6.QtCore `
             --hidden-import PyQt6.QtGui `
             --hidden-import PyQt6.QtWidgets `

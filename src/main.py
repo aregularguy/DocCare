@@ -51,15 +51,29 @@ def main():
     app.setApplicationName("DentNest")
     app.setOrganizationName("DentNest")
 
-    # Fix for taskbar icon on Windows
+    # Fix for taskbar icon on Windows — must be set before any window is shown
     if sys.platform == 'win32':
-        myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                u'DrAbrar.DentNest.DentalPractice.1'
+            )
+        except Exception:
+            pass
 
-    # Set Application Icon
-    icon_path = os.path.join(os.path.dirname(__file__), "resources", "icons", "dentnest.png")
+    # Load app icon — .ico for Windows (best taskbar quality), .png for Linux
+    _icon_dir = os.path.join(os.path.dirname(__file__), "resources", "icons")
+    if sys.platform == 'win32':
+        icon_path = os.path.join(_icon_dir, "dentnest.ico")
+    else:
+        icon_path = os.path.join(_icon_dir, "dentnest_256.png")
+
+    if not os.path.exists(icon_path):
+        # fallback to whichever exists
+        icon_path = os.path.join(_icon_dir, "dentnest.png")
+
     if os.path.exists(icon_path):
-        app.setWindowIcon(QIcon(icon_path))
+        app_icon = QIcon(icon_path)
+        app.setWindowIcon(app_icon)
 
     # Set application style
     app.setStyle('Fusion')
