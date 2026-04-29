@@ -95,6 +95,98 @@ class PrescriptionService:
         """
         return self.medicine_repository.get_all()
 
+    def add_medicine(
+        self,
+        name: str,
+        medicine_type: Optional[str] = None,
+        brand_name: Optional[str] = None,
+        common_dosage: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Tuple[bool, str, Optional[int]]:
+        """Add a new medicine to the catalog.
+
+        Returns:
+            Tuple of (success, message, medicine_id)
+        """
+        is_valid, error = validate_required_field(name, "Medicine name")
+        if not is_valid:
+            return False, error, None
+
+        try:
+            medicine_id = self.medicine_repository.create(
+                name=name.strip(),
+                medicine_type=medicine_type.strip() if medicine_type else None,
+                brand_name=brand_name.strip() if brand_name else None,
+                common_dosage=common_dosage.strip() if common_dosage else None,
+                category=category.strip() if category else None,
+            )
+            return True, "Medicine added successfully", medicine_id
+        except Exception as e:
+            if "UNIQUE constraint failed" in str(e):
+                return False, "A medicine with this name already exists", None
+            return False, f"Error adding medicine: {str(e)}", None
+
+    def update_medicine(
+        self,
+        medicine_id: int,
+        name: str,
+        medicine_type: Optional[str] = None,
+        brand_name: Optional[str] = None,
+        common_dosage: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Tuple[bool, str]:
+        """Update an existing medicine.
+
+        Returns:
+            Tuple of (success, message)
+        """
+        is_valid, error = validate_required_field(name, "Medicine name")
+        if not is_valid:
+            return False, error
+
+        if not self.medicine_repository.exists(medicine_id):
+            return False, "Medicine not found"
+
+        try:
+            self.medicine_repository.update(
+                medicine_id,
+                name=name.strip(),
+                medicine_type=medicine_type.strip() if medicine_type else None,
+                brand_name=brand_name.strip() if brand_name else None,
+                common_dosage=common_dosage.strip() if common_dosage else None,
+                category=category.strip() if category else None,
+            )
+            return True, "Medicine updated successfully"
+        except Exception as e:
+            if "UNIQUE constraint failed" in str(e):
+                return False, "A medicine with this name already exists"
+            return False, f"Error updating medicine: {str(e)}"
+
+    def delete_medicine(self, medicine_id: int) -> Tuple[bool, str]:
+        """Delete a medicine from the catalog.
+
+        Returns:
+            Tuple of (success, message)
+        """
+        if not self.medicine_repository.exists(medicine_id):
+            return False, "Medicine not found"
+
+        try:
+            success = self.medicine_repository.delete(medicine_id)
+            if success:
+                return True, "Medicine deleted successfully"
+            return False, "Failed to delete medicine"
+        except Exception as e:
+            return False, f"Error deleting medicine: {str(e)}"
+
+    def get_medicine(self, medicine_id: int) -> Optional[Medicine]:
+        """Get a single medicine by ID.
+
+        Returns:
+            Medicine instance or None
+        """
+        return self.medicine_repository.get_by_id(medicine_id)
+
     def delete_prescription(self, prescription_id: int) -> Tuple[bool, str]:
         """Delete a prescription.
 

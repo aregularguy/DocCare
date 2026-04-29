@@ -110,7 +110,7 @@ class Sidebar(QWidget):
         self._add_item(nav_layout, 'treatments',   'Treatments')
         nav_layout.addWidget(self._separator())
         self._add_item(nav_layout, 'payments',     'Payments')
-        self._add_item(nav_layout, 'prescriptions','Prescribe')
+        self._add_item(nav_layout, 'prescriptions','Medicines')
         self._add_item(nav_layout, 'analytics',    'Analytics')
         nav_layout.addWidget(self._separator())
         self._add_item(nav_layout, 'settings',     'Settings')

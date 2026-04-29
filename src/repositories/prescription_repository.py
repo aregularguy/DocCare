@@ -121,3 +121,13 @@ class MedicineRepository(BaseRepository[Medicine]):
         query = "SELECT DISTINCT category FROM medicines ORDER BY category"
         rows = self.db.fetch_all(query)
         return [row['category'] for row in rows if row['category']]
+
+    def get_all_types(self) -> List[str]:
+        """Get list of all distinct medicine types.
+
+        Returns:
+            List of medicine type names
+        """
+        query = "SELECT DISTINCT medicine_type FROM medicines WHERE medicine_type IS NOT NULL AND medicine_type != '' ORDER BY medicine_type"
+        rows = self.db.fetch_all(query)
+        return [row['medicine_type'] for row in rows]
