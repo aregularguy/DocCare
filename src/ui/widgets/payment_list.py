@@ -48,7 +48,7 @@ def _method_badge(method: str) -> QLabel:
 class RecordPaymentDialog(QDialog):
     """Dialog to record a payment against a treatment."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, prefill_patient_id=None, prefill_treatment_id=None):
         super().__init__(parent)
         self.setWindowTitle("Record Payment")
         self.setMinimumWidth(480)
@@ -62,9 +62,15 @@ class RecordPaymentDialog(QDialog):
         self._treatments = []
         self._selected_patient = None
         self._selected_treatment = None
+        self._prefill_patient_id = prefill_patient_id
+        self._prefill_treatment_id = prefill_treatment_id
 
         self._build_ui()
         self._load_patients()
+
+        # Auto-fill patient and treatment if provided
+        if self._prefill_patient_id is not None:
+            self._auto_select_patient(self._prefill_patient_id)
 
     # ── Build UI ─────────────────────────────────────────────────────────────
 
@@ -220,6 +226,28 @@ class RecordPaymentDialog(QDialog):
                 self._load_treatments(p.id)
                 return
 
+    def _auto_select_patient(self, patient_id: int):
+        """Pre-fill patient and optionally treatment when opened from Due Payments."""
+        for p in self._patients:
+            if p.id == patient_id:
+                self._selected_patient = p
+                self.patient_search.setText(p.name)
+                self.patient_search.setReadOnly(True)
+                self.patient_search.setStyleSheet(
+                    "background:#F2F2F7; color:#1D1D1F;"
+                )
+                self.patient_info_lbl.setText(
+                    f"📞 {p.mobile_number or '—'}  ·  ID #{p.id}"
+                )
+                self._load_treatments(p.id)
+                # Auto-select the specific treatment if provided
+                if self._prefill_treatment_id is not None:
+                    for i in range(self.treatment_combo.count()):
+                        if self.treatment_combo.itemData(i) == self._prefill_treatment_id:
+                            self.treatment_combo.setCurrentIndex(i)
+                            break
+                return
+
     def _load_treatments(self, patient_id: int):
         self._treatments = self.treatment_service.get_patient_treatments(patient_id)
         self.treatment_combo.clear()
@@ -237,6 +265,7 @@ class RecordPaymentDialog(QDialog):
         for t in payable:
             label = f"{t.treatment_type_name}  (Rs.{t.pending_amount:,.2f} pending)"
             self.treatment_combo.addItem(label, t.id)
+        self.treatment_combo.setMaxVisibleItems(15)
 
     def _on_treatment_changed(self, idx: int):
         t_id = self.treatment_combo.currentData()

@@ -1,4 +1,5 @@
 """Due Payments page — dedicated view of all outstanding patient balances."""
+import math
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QLineEdit, QTableWidget, QTableWidgetItem,
@@ -11,6 +12,8 @@ from PyQt6.QtGui import QFont, QColor, QBrush
 from ...services.treatment_service import TreatmentService
 from .payment_list import RecordPaymentDialog
 
+ROWS_PER_PAGE = 25
+
 
 class DuePaymentsWidget(QWidget):
     """Full-featured due payments tracking page."""
@@ -19,6 +22,8 @@ class DuePaymentsWidget(QWidget):
         super().__init__(parent)
         self.treatment_service = TreatmentService()
         self._all_rows: list[dict] = []
+        self._filtered_rows: list[dict] = []
+        self._current_page = 0
         self.init_ui()
 
     # ── UI construction ───────────────────────────────────────────────────────
@@ -35,9 +40,9 @@ class DuePaymentsWidget(QWidget):
         outer.addWidget(scroll)
 
         container = QWidget()
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(32, 28, 32, 32)
-        layout.setSpacing(20)
+        self._layout = QVBoxLayout(container)
+        self._layout.setContentsMargins(32, 28, 32, 32)
+        self._layout.setSpacing(20)
         scroll.setWidget(container)
 
         # ── Hero banner ──
@@ -75,25 +80,25 @@ class DuePaymentsWidget(QWidget):
         )
         banner_layout.addWidget(self.total_badge)
 
-        layout.addWidget(banner)
+        self._layout.addWidget(banner)
 
         # ── Summary cards ──
         cards_row = QHBoxLayout()
         cards_row.setSpacing(16)
 
         self.card_outstanding = self._make_summary_card(
-            "Total Outstanding", "Rs.0", "#FF9500", "Due"
+            "Total Outstanding", "Rs.0", "#FF9500", "Rs"
         )
         self.card_patients = self._make_summary_card(
-            "Patients with Dues", "0", "#007AFF", "Patients"
+            "Patients with Dues", "0", "#007AFF", "P"
         )
         self.card_treatments = self._make_summary_card(
-            "Treatments with Dues", "0", "#FF3B30", "Pending"
+            "Treatments with Dues", "0", "#FF3B30", "T"
         )
         cards_row.addWidget(self.card_outstanding)
         cards_row.addWidget(self.card_patients)
         cards_row.addWidget(self.card_treatments)
-        layout.addLayout(cards_row)
+        self._layout.addLayout(cards_row)
 
         # ── Search row ──
         filter_row = QHBoxLayout()
@@ -102,10 +107,10 @@ class DuePaymentsWidget(QWidget):
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search by patient name or treatment…")
         self.search_input.setFixedHeight(40)
-        self.search_input.textChanged.connect(self._apply_filter)
+        self.search_input.textChanged.connect(self._on_search_changed)
         filter_row.addWidget(self.search_input, 1)
 
-        layout.addLayout(filter_row)
+        self._layout.addLayout(filter_row)
 
         # ── Due payments table ──
         table_frame = QFrame()
@@ -123,7 +128,7 @@ class DuePaymentsWidget(QWidget):
         self.table.setHorizontalHeaderLabels(
             ["Patient", "Treatment", "Total Cost", "Paid", "Due Amount", ""]
         )
-        self.table.horizontalHeader().setStretchLastSection(False)
+        self.table.horizontalHeader().setStretchLastSection(True)
         self.table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
         )
@@ -140,9 +145,8 @@ class DuePaymentsWidget(QWidget):
             4, QHeaderView.ResizeMode.ResizeToContents
         )
         self.table.horizontalHeader().setSectionResizeMode(
-            5, QHeaderView.ResizeMode.Fixed
+            5, QHeaderView.ResizeMode.ResizeToContents
         )
-        self.table.setColumnWidth(5, 120)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(
@@ -153,6 +157,9 @@ class DuePaymentsWidget(QWidget):
         self.table.setShowGrid(False)
         self.table.verticalHeader().setDefaultSectionSize(50)
         self.table.setFrameShape(QFrame.Shape.NoFrame)
+        # Disable table's own scrollbar — the outer QScrollArea handles scrolling
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         # Style the header
         self.table.horizontalHeader().setStyleSheet(
@@ -164,7 +171,57 @@ class DuePaymentsWidget(QWidget):
         )
 
         tbl_layout.addWidget(self.table)
-        layout.addWidget(table_frame)
+        self._layout.addWidget(table_frame)
+
+        # ── Pagination bar ──
+        self.pagination_frame = QFrame()
+        self.pagination_frame.setStyleSheet(
+            "QFrame { background:transparent; }"
+        )
+        pag_layout = QHBoxLayout(self.pagination_frame)
+        pag_layout.setContentsMargins(0, 4, 0, 0)
+        pag_layout.setSpacing(12)
+
+        self.prev_btn = QPushButton("Previous")
+        self.prev_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.prev_btn.setFixedSize(100, 36)
+        self.prev_btn.setStyleSheet(
+            "QPushButton {"
+            "  background:#F2F2F7; color:#1D1D1F; border:1px solid #E5E5EA;"
+            "  border-radius:8px; font-weight:600; font-size:12px;"
+            "}"
+            "QPushButton:hover { background:#E5E5EA; }"
+            "QPushButton:disabled { color:#C7C7CC; background:#FAFAFA; border-color:#F2F2F7; }"
+        )
+        self.prev_btn.clicked.connect(self._prev_page)
+        pag_layout.addWidget(self.prev_btn)
+
+        pag_layout.addStretch()
+
+        self.page_label = QLabel("Page 1 of 1")
+        self.page_label.setStyleSheet(
+            "color:#86868B; font-size:12px; font-weight:500;"
+        )
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        pag_layout.addWidget(self.page_label)
+
+        pag_layout.addStretch()
+
+        self.next_btn = QPushButton("Next")
+        self.next_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.next_btn.setFixedSize(100, 36)
+        self.next_btn.setStyleSheet(
+            "QPushButton {"
+            "  background:#007AFF; color:white; border:none;"
+            "  border-radius:8px; font-weight:600; font-size:12px;"
+            "}"
+            "QPushButton:hover { background:#0056D6; }"
+            "QPushButton:disabled { background:#B0D4FF; }"
+        )
+        self.next_btn.clicked.connect(self._next_page)
+        pag_layout.addWidget(self.next_btn)
+
+        self._layout.addWidget(self.pagination_frame)
 
         # ── Empty state ──
         self.empty_lbl = QLabel("No outstanding payments. All treatments are fully paid!")
@@ -173,9 +230,7 @@ class DuePaymentsWidget(QWidget):
             "color:#86868B; font-size:15px; padding:40px;"
         )
         self.empty_lbl.hide()
-        layout.addWidget(self.empty_lbl)
-
-        layout.addStretch()
+        self._layout.addWidget(self.empty_lbl)
 
         self.refresh_data()
 
@@ -193,36 +248,37 @@ class DuePaymentsWidget(QWidget):
         card.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
-        card.setFixedHeight(100)
+        card.setFixedHeight(110)
 
         cl = QVBoxLayout(card)
-        cl.setContentsMargins(20, 14, 20, 14)
-        cl.setSpacing(6)
+        cl.setContentsMargins(16, 12, 16, 12)
+        cl.setSpacing(4)
 
         top_row = QHBoxLayout()
         icon_lbl = QLabel(icon)
         icon_lbl.setStyleSheet(
-            f"font-size:10px; font-weight:bold; color:#fff;"
-            f" background:{accent}; border-radius:9px; padding:2px 8px;"
+            f"font-size:11px; font-weight:bold; color:#fff;"
+            f" background:{accent}; border-radius:10px; padding:2px 7px;"
         )
-        icon_lbl.setMaximumWidth(70)
+        icon_lbl.setMaximumWidth(50)
         top_row.addWidget(icon_lbl)
         top_row.addStretch()
         cl.addLayout(top_row)
 
         val_lbl = QLabel(value)
         val_lbl.setObjectName("metric_value")
+        val_lbl.setFont(QFont("Noto Sans", 18, QFont.Weight.Bold))
         val_lbl.setStyleSheet(
-            f"font-size:22px; font-weight:700; color:{accent}; background:transparent;"
-            f" font-family: 'Noto Sans', 'DejaVu Sans', 'Segoe UI', sans-serif;"
+            f"color:{accent}; background:transparent;"
         )
+        val_lbl.setWordWrap(False)
+        val_lbl.setMinimumWidth(80)
         cl.addWidget(val_lbl)
 
         lbl_lbl = QLabel(label)
         lbl_lbl.setObjectName("metric_label")
         lbl_lbl.setStyleSheet(
             "font-size:11px; color:#86868B; background:transparent;"
-            " font-family: 'Ubuntu', 'Segoe UI', sans-serif;"
         )
         cl.addWidget(lbl_lbl)
 
@@ -234,6 +290,7 @@ class DuePaymentsWidget(QWidget):
     def refresh_data(self):
         self._load_data()
         self._update_summary()
+        self._current_page = 0
         self._apply_filter()
 
     def _load_data(self):
@@ -272,10 +329,14 @@ class DuePaymentsWidget(QWidget):
 
     # ── Filtering ─────────────────────────────────────────────────────────────
 
+    def _on_search_changed(self):
+        self._current_page = 0
+        self._apply_filter()
+
     def _apply_filter(self):
         search_text = self.search_input.text().strip().lower()
 
-        filtered = []
+        self._filtered_rows = []
         for row in self._all_rows:
             if search_text:
                 haystack = (
@@ -284,9 +345,47 @@ class DuePaymentsWidget(QWidget):
                 )
                 if search_text not in haystack:
                     continue
-            filtered.append(row)
+            self._filtered_rows.append(row)
 
-        self._populate_table(filtered)
+        self._render_page()
+
+    # ── Pagination ────────────────────────────────────────────────────────────
+
+    def _total_pages(self) -> int:
+        return max(1, math.ceil(len(self._filtered_rows) / ROWS_PER_PAGE))
+
+    def _prev_page(self):
+        if self._current_page > 0:
+            self._current_page -= 1
+            self._render_page()
+
+    def _next_page(self):
+        if self._current_page < self._total_pages() - 1:
+            self._current_page += 1
+            self._render_page()
+
+    def _render_page(self):
+        total = len(self._filtered_rows)
+        total_pages = self._total_pages()
+
+        if self._current_page >= total_pages:
+            self._current_page = max(0, total_pages - 1)
+
+        start = self._current_page * ROWS_PER_PAGE
+        end = start + ROWS_PER_PAGE
+        page_rows = self._filtered_rows[start:end]
+
+        self._populate_table(page_rows)
+
+        # Update pagination controls
+        self.prev_btn.setEnabled(self._current_page > 0)
+        self.next_btn.setEnabled(self._current_page < total_pages - 1)
+        self.page_label.setText(
+            f"Page {self._current_page + 1} of {total_pages}  ({total} total)"
+        )
+
+        # Hide pagination if only 1 page
+        self.pagination_frame.setVisible(total_pages > 1)
 
     def _populate_table(self, rows: list[dict]):
         self.table.setRowCount(0)
@@ -294,6 +393,7 @@ class DuePaymentsWidget(QWidget):
         if not rows:
             self.table.hide()
             self.empty_lbl.show()
+            self.pagination_frame.hide()
             return
 
         self.table.show()
@@ -343,29 +443,34 @@ class DuePaymentsWidget(QWidget):
             # Pay Now button
             pay_btn = QPushButton("Pay Now")
             pay_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            pay_btn.setFixedSize(100, 34)
+            pay_btn.setFixedHeight(32)
             pay_btn.setStyleSheet(
                 "QPushButton {"
                 "  background:#007AFF; color:white; border:none;"
                 "  border-radius:8px; font-weight:600; font-size:12px;"
+                "  padding:0 16px;"
                 "}"
                 "QPushButton:hover { background:#0056D6; }"
                 "QPushButton:pressed { background:#004BB5; }"
             )
             pay_btn.clicked.connect(
-                lambda _, tid=row_data['treatment_id']: self._on_pay_now(tid)
+                lambda _, pid=row_data['patient_id'], tid=row_data['treatment_id']: self._on_pay_now(pid, tid)
             )
-            # Center the button in the cell
-            btn_container = QWidget()
-            btn_layout = QHBoxLayout(btn_container)
-            btn_layout.setContentsMargins(8, 4, 8, 4)
-            btn_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            btn_layout.addWidget(pay_btn)
-            self.table.setCellWidget(row_idx, 5, btn_container)
+            self.table.setCellWidget(row_idx, 5, pay_btn)
+
+        # Resize table height to fit its content — no internal scrolling
+        row_count = self.table.rowCount()
+        header_h = self.table.horizontalHeader().height()
+        rows_h = row_count * self.table.verticalHeader().defaultSectionSize()
+        self.table.setFixedHeight(header_h + rows_h + 4)
 
     # ── Pay Now action ────────────────────────────────────────────────────────
 
-    def _on_pay_now(self, treatment_id: int):
-        dialog = RecordPaymentDialog(parent=self)
+    def _on_pay_now(self, patient_id: int, treatment_id: int):
+        dialog = RecordPaymentDialog(
+            parent=self,
+            prefill_patient_id=patient_id,
+            prefill_treatment_id=treatment_id,
+        )
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.refresh_data()
