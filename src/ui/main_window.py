@@ -110,6 +110,7 @@ class Sidebar(QWidget):
         self._add_item(nav_layout, 'treatments',   'Treatments')
         nav_layout.addWidget(self._separator())
         self._add_item(nav_layout, 'payments',     'Payments')
+        self._add_item(nav_layout, 'due_payments', 'Due Payments')
         self._add_item(nav_layout, 'prescriptions','Medicines')
         self._add_item(nav_layout, 'analytics',    'Analytics')
         nav_layout.addWidget(self._separator())
@@ -245,6 +246,7 @@ class MainWindow(QMainWindow):
         from .widgets.patient_list import PatientListWidget
         from .widgets.treatment_list import TreatmentListWidget
         from .widgets.payment_list import PaymentListWidget
+        from .widgets.due_payments import DuePaymentsWidget
         from .widgets.prescription_list import PrescriptionListWidget
         from .widgets.analytics_dashboard import AnalyticsDashboardWidget
         from .widgets.settings import SettingsWidget
@@ -256,6 +258,7 @@ class MainWindow(QMainWindow):
             'patients': PatientListWidget(),
             'treatments': TreatmentListWidget(),
             'payments': PaymentListWidget(),
+            'due_payments': DuePaymentsWidget(),
             'prescriptions': PrescriptionListWidget(),
             'analytics': AnalyticsDashboardWidget(),
             'settings': SettingsWidget(),

@@ -493,6 +493,7 @@ NAV_ICONS = {
     'patients':     '👥',
     'treatments':   '🦷',
     'payments':     '💳',
+    'due_payments': '⏳',
     'prescriptions':'📋',
     'analytics':    '📊',
     'settings':     '⚙️',
