@@ -24,19 +24,14 @@ def seed_treatment_types():
         ('Consultation', 'General dental consultation'),
     ]
 
-    # Check if data already exists
-    existing = db.fetch_one("SELECT COUNT(*) as count FROM treatment_types")
-    if existing and existing['count'] > 0:
-        logger.info("Treatment types already exist, skipping seed")
-        return
-
-    # Insert treatment types
+    # Use INSERT OR IGNORE so missing types are always added
+    # (even if some already exist from migration or a partial import)
     db.executemany(
-        "INSERT INTO treatment_types (name, description) VALUES (?, ?)",
+        "INSERT OR IGNORE INTO treatment_types (name, description) VALUES (?, ?)",
         treatment_types
     )
 
-    logger.info(f"Seeded {len(treatment_types)} treatment types")
+    logger.info(f"Ensured {len(treatment_types)} treatment types exist")
 
 
 def seed_medicines():

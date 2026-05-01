@@ -1,7 +1,8 @@
 """Dashboard widget - Home screen with quick stats."""
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QFrame, QGridLayout, QScrollArea
+    QFrame, QGridLayout, QScrollArea, QTableWidget,
+    QTableWidgetItem, QHeaderView, QAbstractItemView, QSizePolicy
 )
 from PyQt6.QtCore import Qt
 from datetime import date
@@ -123,7 +124,7 @@ class DashboardWidget(QWidget):
         return grid
 
     def create_recent_activity_section(self):
-        """Create recent activity section."""
+        """Create recent activity section with today's patients and payments."""
         section = QFrame()
         section.setObjectName("card")
         layout = QVBoxLayout(section)
@@ -133,11 +134,47 @@ class DashboardWidget(QWidget):
         title.setObjectName("section_title")
         layout.addWidget(title)
 
-        # Activity list (placeholder)
-        activity_label = QLabel("No recent activity")
-        activity_label.setStyleSheet("color: #86868B; padding: 20px; font-size: 14px;")
-        activity_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(activity_label)
+        # --- Today's Patients sub-section ---
+        patients_title = QLabel("Today's Patients")
+        patients_title.setStyleSheet("font-size: 14px; font-weight: 600; margin-top: 8px;")
+        layout.addWidget(patients_title)
+
+        self.patients_table = QTableWidget()
+        self.patients_table.setColumnCount(4)
+        self.patients_table.setHorizontalHeaderLabels(["Name", "Mobile", "City", "Time"])
+        self.patients_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.patients_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.patients_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.patients_table.verticalHeader().setVisible(False)
+        self.patients_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.patients_table.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        layout.addWidget(self.patients_table)
+
+        self.no_patients_label = QLabel("No patients today")
+        self.no_patients_label.setStyleSheet("color: #86868B; padding: 12px; font-size: 13px;")
+        self.no_patients_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.no_patients_label)
+
+        # --- Today's Payments sub-section ---
+        payments_title = QLabel("Today's Payments")
+        payments_title.setStyleSheet("font-size: 14px; font-weight: 600; margin-top: 12px;")
+        layout.addWidget(payments_title)
+
+        self.payments_table = QTableWidget()
+        self.payments_table.setColumnCount(4)
+        self.payments_table.setHorizontalHeaderLabels(["Patient", "Treatment", "Amount", "Method"])
+        self.payments_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.payments_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.payments_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.payments_table.verticalHeader().setVisible(False)
+        self.payments_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.payments_table.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        layout.addWidget(self.payments_table)
+
+        self.no_payments_label = QLabel("No payments today")
+        self.no_payments_label.setStyleSheet("color: #86868B; padding: 12px; font-size: 13px;")
+        self.no_payments_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.no_payments_label)
 
         return section
 
@@ -197,6 +234,54 @@ class DashboardWidget(QWidget):
 
         treatments_data = dashboard_data['treatments']
         self.pending_payments_card.update_value(format_currency(treatments_data['pending_amount']))
+
+        # Update today's activity tables
+        activity = self.analytics_service.get_todays_activity()
+
+        # Populate patients table
+        today_patients = activity['patients']
+        self.patients_table.setRowCount(len(today_patients))
+        if today_patients:
+            self.patients_table.setVisible(True)
+            self.no_patients_label.setVisible(False)
+            for row_idx, p in enumerate(today_patients):
+                self.patients_table.setItem(row_idx, 0, QTableWidgetItem(p.get('name', '')))
+                self.patients_table.setItem(row_idx, 1, QTableWidgetItem(p.get('mobile_number', '')))
+                self.patients_table.setItem(row_idx, 2, QTableWidgetItem(p.get('city', '')))
+                created = p.get('created_at', '')
+                if created and ' ' in str(created):
+                    created = str(created).split(' ')[1][:5]  # HH:MM
+                self.patients_table.setItem(row_idx, 3, QTableWidgetItem(str(created)))
+            self._fit_table_height(self.patients_table)
+        else:
+            self.patients_table.setVisible(False)
+            self.no_patients_label.setVisible(True)
+
+        # Populate payments table
+        today_payments = activity['payments']
+        self.payments_table.setRowCount(len(today_payments))
+        if today_payments:
+            self.payments_table.setVisible(True)
+            self.no_payments_label.setVisible(False)
+            for row_idx, pay in enumerate(today_payments):
+                self.payments_table.setItem(row_idx, 0, QTableWidgetItem(pay.get('patient_name', '')))
+                self.payments_table.setItem(row_idx, 1, QTableWidgetItem(pay.get('treatment_name', '')))
+                amount_item = QTableWidgetItem(format_currency(pay.get('amount', 0)))
+                amount_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.payments_table.setItem(row_idx, 2, amount_item)
+                self.payments_table.setItem(row_idx, 3, QTableWidgetItem(pay.get('payment_method', '')))
+            self._fit_table_height(self.payments_table)
+        else:
+            self.payments_table.setVisible(False)
+            self.no_payments_label.setVisible(True)
+
+    @staticmethod
+    def _fit_table_height(table: QTableWidget):
+        """Resize table height to exactly fit all rows (no scrollbar needed)."""
+        height = table.horizontalHeader().height() + 2  # header + border
+        for i in range(table.rowCount()):
+            height += table.rowHeight(i)
+        table.setFixedHeight(height)
 
     def on_add_patient_clicked(self):
         """Navigate to patients page to add new patient."""
