@@ -64,15 +64,20 @@ class MetricCard(QFrame):
         layout.addLayout(top)
 
         self.value_lbl = QLabel(value)
-        # Use setFont for reliable cross-platform rendering; QSS only sets color
-        self.value_lbl.setFont(QFont("Ubuntu", 18, QFont.Weight.Bold))
-        self.value_lbl.setStyleSheet(f"color:{accent}; background:transparent;")
+        # All font properties must be in the widget's OWN stylesheet to beat
+        # the global "* { font-size: 13px }" wildcard rule in styles.py.
+        self.value_lbl.setStyleSheet(
+            f"font-size: 20pt; font-weight: 700; font-family: Ubuntu;"
+            f" color: {accent}; background: transparent;"
+        )
         self.value_lbl.setWordWrap(False)
         layout.addWidget(self.value_lbl)
 
         title_lbl = QLabel(title)
-        title_lbl.setFont(QFont("Ubuntu", 11))
-        title_lbl.setStyleSheet(f"color:{SUBTEXT}; background:transparent;")
+        title_lbl.setStyleSheet(
+            f"font-size: 10pt; font-weight: 400; font-family: Ubuntu;"
+            f" color: {SUBTEXT}; background: transparent;"
+        )
         layout.addWidget(title_lbl)
 
     def update_value(self, v):
