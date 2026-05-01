@@ -13,6 +13,7 @@ from PyQt6.QtGui import QFont, QColor, QBrush
 from ...services.patient_service import PatientService
 from ...services.treatment_service import TreatmentService
 from ...services.payment_service import PaymentService
+from ...utils.formatters import format_currency
 
 
 METHOD_COLORS = {
@@ -496,11 +497,11 @@ class PaymentListWidget(QWidget):
         card.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
-        card.setFixedHeight(100)
+        card.setFixedHeight(120)
 
         cl = QVBoxLayout(card)
-        cl.setContentsMargins(20, 14, 20, 14)
-        cl.setSpacing(6)
+        cl.setContentsMargins(20, 12, 20, 12)
+        cl.setSpacing(4)
 
         top_row = QHBoxLayout()
         icon_lbl = QLabel(icon)
@@ -514,19 +515,18 @@ class PaymentListWidget(QWidget):
         cl.addLayout(top_row)
 
         val_lbl = QLabel(value)
-        val_lbl.setObjectName("metric_value")
-        # Use Noto Sans / DejaVu Sans for full ₹ Unicode glyph support at large sizes
+        val_lbl.setFont(QFont("Ubuntu", 18, QFont.Weight.Bold))
         val_lbl.setStyleSheet(
-            f"font-size:22px; font-weight:700; color:{accent}; background:transparent;"
-            f" font-family: 'Noto Sans', 'DejaVu Sans', 'Segoe UI', sans-serif;"
+            f"color: {accent}; background: transparent;"
         )
+        val_lbl.setWordWrap(False)
+        val_lbl.setMinimumHeight(32)
         cl.addWidget(val_lbl)
 
         lbl_lbl = QLabel(label)
-        lbl_lbl.setObjectName("metric_label")
+        lbl_lbl.setFont(QFont("Ubuntu", 10))
         lbl_lbl.setStyleSheet(
-            "font-size:11px; color:#86868B; background:transparent;"
-            " font-family: 'Ubuntu', 'Segoe UI', sans-serif;"
+            "color: #86868B; background: transparent;"
         )
         cl.addWidget(lbl_lbl)
 
@@ -554,10 +554,10 @@ class PaymentListWidget(QWidget):
                 t.pending_amount for t in pending_treatments if t.pending_amount > 0
             )
 
-            self.card_today._value_label.setText(f"Rs.{total_today:,.0f}")
-            self.card_month._value_label.setText(f"Rs.{total_month:,.0f}")
-            self.card_pending._value_label.setText(f"Rs.{total_outstanding:,.0f}")
-        except Exception as e:
+            self.card_today._value_label.setText(format_currency(total_today))
+            self.card_month._value_label.setText(format_currency(total_month))
+            self.card_pending._value_label.setText(format_currency(total_outstanding))
+        except Exception:
             self.card_today._value_label.setText("Rs.0")
             self.card_month._value_label.setText("Rs.0")
             self.card_pending._value_label.setText("Rs.0")
