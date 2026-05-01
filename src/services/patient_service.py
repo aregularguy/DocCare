@@ -1,8 +1,14 @@
 """Patient business logic service."""
+import re
 from typing import List, Optional, Tuple
 from ..models.patient import Patient
 from ..repositories.patient_repository import PatientRepository
 from ..utils.validators import validate_mobile_number, validate_age, validate_required_field
+
+
+def _normalize_mobile(mobile: str) -> str:
+    """Strip spaces, hyphens, and whitespace from a mobile number."""
+    return re.sub(r'[\s\-]', '', mobile).strip()
 
 
 class PatientService:
@@ -41,26 +47,20 @@ class PatientService:
         if not is_valid:
             return False, error, None
 
+        # Normalize mobile number (strip spaces/hyphens) so storage is consistent
+        mobile_number = _normalize_mobile(mobile_number)
+
         is_valid, error = validate_age(age)
         if not is_valid:
             return False, error, None
-
-        is_valid, error = validate_required_field(city, "City")
-        if not is_valid:
-            return False, error, None
-
-        # Check if mobile number already exists
-        existing = self.repository.find_by_mobile(mobile_number)
-        if existing:
-            return False, f"Patient with mobile number {mobile_number} already exists", None
 
         # Create patient
         try:
             patient_id = self.repository.create(
                 name=name.strip(),
-                mobile_number=mobile_number.strip(),
+                mobile_number=mobile_number,
                 age=age,
-                city=city.strip(),
+                city=city.strip() if city else "",
                 address=address.strip() if address else None
             )
             return True, "Patient created successfully", patient_id
@@ -98,11 +98,10 @@ class PatientService:
         if not is_valid:
             return False, error
 
-        is_valid, error = validate_age(age)
-        if not is_valid:
-            return False, error
+        # Normalize mobile number
+        mobile_number = _normalize_mobile(mobile_number)
 
-        is_valid, error = validate_required_field(city, "City")
+        is_valid, error = validate_age(age)
         if not is_valid:
             return False, error
 
@@ -110,19 +109,14 @@ class PatientService:
         if not self.repository.exists(patient_id):
             return False, "Patient not found"
 
-        # Check if new mobile number conflicts with another patient
-        existing = self.repository.find_by_mobile(mobile_number)
-        if existing and existing.id != patient_id:
-            return False, f"Mobile number {mobile_number} is already used by another patient"
-
         # Update patient
         try:
             success = self.repository.update(
                 patient_id,
                 name=name.strip(),
-                mobile_number=mobile_number.strip(),
+                mobile_number=mobile_number,
                 age=age,
-                city=city.strip(),
+                city=city.strip() if city else "",
                 address=address.strip() if address else None
             )
 
