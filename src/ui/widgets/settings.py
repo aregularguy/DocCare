@@ -279,6 +279,48 @@ class SettingsWidget(QWidget):
         btns.addWidget(open_folder_btn)
         btns.addStretch()
         vl.addLayout(btns)
+
+        # ── Restore & Merge row ──────────────────────────────────────
+        sep2 = QFrame()
+        sep2.setFrameShape(QFrame.Shape.HLine)
+        sep2.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        vl.addWidget(sep2)
+
+        restore_info = QLabel(
+            "Restore a backup to replace current data, or import & merge "
+            "records from another machine without losing existing data."
+        )
+        restore_info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        restore_info.setWordWrap(True)
+        vl.addWidget(restore_info)
+
+        btns2 = QHBoxLayout()
+        btns2.setSpacing(10)
+
+        restore_btn = QPushButton("Restore Backup")
+        restore_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        restore_btn.setFixedHeight(38)
+        restore_btn.setStyleSheet(
+            "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
+            "QPushButton:hover { background:#FEE2E2; }"
+        )
+        restore_btn.clicked.connect(self._do_restore)
+        btns2.addWidget(restore_btn)
+
+        merge_btn = QPushButton("Import && Merge")
+        merge_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        merge_btn.setFixedHeight(38)
+        merge_btn.setStyleSheet(
+            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
+            "QPushButton:hover { background:#DBEAFE; }"
+        )
+        merge_btn.clicked.connect(self._do_merge)
+        btns2.addWidget(merge_btn)
+
+        btns2.addStretch()
+        vl.addLayout(btns2)
         return card
 
     def _build_cloud_backup_section(self) -> QFrame:
@@ -476,6 +518,94 @@ class SettingsWidget(QWidget):
             subprocess.Popen(["open", backup_dir])
         else:
             subprocess.Popen(["xdg-open", backup_dir])
+
+    # ── restore & merge actions ──────────────────────────────────────────
+
+    def _do_restore(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Backup File", "", "SQLite Database (*.db)"
+        )
+        if not path:
+            return
+
+        ok, msg = BackupService._validate_dentnest_db(path)
+        if not ok:
+            QMessageBox.warning(self, "Invalid File", f"Cannot restore:\n{msg}")
+            return
+
+        counts = BackupService._get_record_counts(path)
+        preview = "\n".join(f"  {t}: {c} records" for t, c in counts.items())
+
+        reply = QMessageBox.warning(
+            self, "Confirm Restore",
+            f"This will REPLACE all current data with:\n\n{preview}\n\n"
+            "A safety backup of your current database will be created first.\n\n"
+            "Are you sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        success, result = self.backup_service.restore_backup(path)
+        if success:
+            QMessageBox.information(
+                self, "Restore Successful",
+                "Database restored successfully!\nAll pages will now refresh."
+            )
+            self._refresh_all_app_pages()
+        else:
+            QMessageBox.critical(self, "Restore Failed", f"Error: {result}")
+
+    def _do_merge(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Database to Import", "", "SQLite Database (*.db)"
+        )
+        if not path:
+            return
+
+        ok, msg = BackupService._validate_dentnest_db(path)
+        if not ok:
+            QMessageBox.warning(self, "Invalid File", f"Cannot import:\n{msg}")
+            return
+
+        counts = BackupService._get_record_counts(path)
+        preview = "\n".join(f"  {t}: {c} records" for t, c in counts.items())
+
+        reply = QMessageBox.question(
+            self, "Confirm Import & Merge",
+            f"Source database contains:\n\n{preview}\n\n"
+            "Only NEW records will be imported. Existing data will NOT be changed.\n"
+            "A safety backup will be created first.\n\n"
+            "Proceed?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        success, result = self.backup_service.smart_merge(path)
+        if success:
+            summary = "\n".join(
+                f"  {t}: {c} imported" for t, c in result.items() if c > 0
+            )
+            if not summary:
+                summary = "  No new records found — databases already in sync."
+            QMessageBox.information(
+                self, "Import Complete",
+                f"Merge finished!\n\n{summary}"
+            )
+            self._refresh_all_app_pages()
+        else:
+            QMessageBox.critical(
+                self, "Import Failed",
+                f"Error: {result.get('error', 'Unknown error')}"
+            )
+
+    def _refresh_all_app_pages(self):
+        main_window = self.window()
+        if hasattr(main_window, 'refresh_all_pages'):
+            main_window.refresh_all_pages()
 
     # ── security actions ──────────────────────────────────────────────────
 

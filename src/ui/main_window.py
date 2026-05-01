@@ -282,6 +282,12 @@ class MainWindow(QMainWindow):
             if hasattr(page_widget, 'refresh_data'):
                 page_widget.refresh_data()
 
+    def refresh_all_pages(self):
+        """Refresh data on all pages after DB restore/merge."""
+        for page in self.pages.values():
+            if hasattr(page, 'refresh_data'):
+                page.refresh_data()
+
     def apply_styles(self):
         """Apply the stylesheet to the window."""
         self.setStyleSheet(get_stylesheet())

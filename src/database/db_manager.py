@@ -57,6 +57,11 @@ class DatabaseManager:
         # Enable WAL mode for better concurrent performance
         self._connection.execute("PRAGMA journal_mode = WAL")
 
+        # Flush WAL into main .db file after every ~40KB of writes
+        # (default 1000 pages ≈ 4MB is too large for a clinic app —
+        #  data would sit in the -wal file and a raw .db copy would be stale)
+        self._connection.execute("PRAGMA wal_autocheckpoint = 10")
+
         # Set row factory for dict-like access
         self._connection.row_factory = sqlite3.Row
 
