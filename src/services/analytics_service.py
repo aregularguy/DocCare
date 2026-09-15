@@ -172,6 +172,39 @@ class AnalyticsService:
             'prescriptions': self.get_prescription_metrics(start_date, end_date)
         }
 
+    def get_todays_activity(self) -> Dict:
+        """Get today's patients and payments for the dashboard.
+
+        Returns:
+            Dictionary with 'patients' and 'payments' lists
+        """
+        from ..database.db_manager import DatabaseManager
+        db = DatabaseManager()
+
+        patients_query = """
+            SELECT id, name, mobile_number, age, city, created_at
+            FROM patients
+            WHERE DATE(created_at) = DATE('now')
+            ORDER BY created_at DESC
+        """
+        patient_rows = db.fetch_all(patients_query)
+        patients = [dict(row) for row in patient_rows]
+
+        payments_query = """
+            SELECT p.amount, p.payment_method, p.payment_date,
+                   pat.name AS patient_name, tt.name AS treatment_name
+            FROM payments p
+            JOIN treatments t ON p.treatment_id = t.id
+            JOIN patients pat ON t.patient_id = pat.id
+            JOIN treatment_types tt ON t.treatment_type_id = tt.id
+            WHERE DATE(p.payment_date) = DATE('now')
+            ORDER BY p.created_at DESC
+        """
+        payment_rows = db.fetch_all(payments_query)
+        payments = [dict(row) for row in payment_rows]
+
+        return {"patients": patients, "payments": payments}
+
     def get_daily_payments(self, start_date: date, end_date: date) -> List[Dict]:
         """Get daily payment totals for charting.
 

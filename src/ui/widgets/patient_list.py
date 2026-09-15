@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QSpinBox, QTextEdit, QFormLayout, QComboBox
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor
 from ...services.patient_service import PatientService
 from ...services.treatment_service import TreatmentService
 from ...models.patient import Patient
@@ -81,16 +81,19 @@ class PatientFormView(QWidget):
         self.age_input.setValue(30)
         form_layout.addRow("Age *:", self.age_input)
 
-        # City
-        self.city_input = QLineEdit()
-        self.city_input.setPlaceholderText("Enter city")
-        form_layout.addRow("City *:", self.city_input)
-
         # Address
-        self.address_input = QTextEdit()
-        self.address_input.setPlaceholderText("Enter full address (optional)")
-        self.address_input.setMaximumHeight(80)
+        self.address_input = QLineEdit()
+        self.address_input.setPlaceholderText("e.g. Plot 12, Main Road, Phaltan")
         form_layout.addRow("Address:", self.address_input)
+
+        # Medical History (stored in city column)
+        self.city_input = QTextEdit()
+        self.city_input.setPlaceholderText(
+            "e.g. Diabetic patient, BP medicine, allergic to penicillin, heart condition..."
+        )
+        self.city_input.setMinimumHeight(80)
+        self.city_input.setMaximumHeight(120)
+        form_layout.addRow("Medical History:", self.city_input)
 
         layout.addWidget(form_frame)
 
@@ -133,9 +136,10 @@ class PatientFormView(QWidget):
         self.name_input.setText(self.patient.name)
         self.mobile_input.setText(self.patient.mobile_number)
         self.age_input.setValue(self.patient.age)
-        self.city_input.setText(self.patient.city)
+        if self.patient.city:
+            self.city_input.setPlainText(self.patient.city)
         if self.patient.address:
-            self.address_input.setPlainText(self.patient.address)
+            self.address_input.setText(self.patient.address)
 
     def on_save(self):
         """Save patient."""
@@ -147,8 +151,8 @@ class PatientFormView(QWidget):
         name = self.name_input.text().strip()
         mobile = self.mobile_input.text().strip()
         age = self.age_input.value()
-        city = self.city_input.text().strip()
-        address = self.address_input.toPlainText().strip()
+        city = self.city_input.toPlainText().strip()   # Medical History
+        address = self.address_input.text().strip()
 
         # Save
         if self.is_edit_mode:
@@ -165,9 +169,15 @@ class PatientFormView(QWidget):
         if success:
             self.success_label.setText(f"✅ {message}")
             self.success_label.setVisible(True)
-            # Go back to list after 1 second
+            # Go back to list after 1 second (guard against deleted widget)
             from PyQt6.QtCore import QTimer
-            QTimer.singleShot(1000, self.on_cancel)
+            def _safe_cancel():
+                try:
+                    if self and self.parent_widget:
+                        self.on_cancel()
+                except RuntimeError:
+                    pass  # widget already deleted
+            QTimer.singleShot(1000, _safe_cancel)
         else:
             self.error_label.setText(f"❌ {message}")
             self.error_label.setVisible(True)
@@ -249,7 +259,7 @@ class PatientListWidget(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Name", "Mobile", "Age", "City", "Actions"
+            "ID", "Name", "Mobile", "Age", "Medical History", "Actions"
         ])
 
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -261,17 +271,17 @@ class PatientListWidget(QWidget):
         # Column widths
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(0, 60)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.resizeSection(0, 48)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)   # Name
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(2, 120)
+        header.resizeSection(2, 130)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(3, 60)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        header.resizeSection(3, 52)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)   # Medical History
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(5, 280)
+        header.resizeSection(5, 200)   # Actions — 68+52+40+6+6+8+8 = fits exactly
 
-        self.table.verticalHeader().setDefaultSectionSize(46)
+        self.table.verticalHeader().setDefaultSectionSize(48)
         layout.addWidget(self.table)
 
         self.load_patients()
@@ -287,59 +297,78 @@ class PatientListWidget(QWidget):
 
         self.table.setRowCount(0)
 
+        _name_font   = QFont("Ubuntu", 13, QFont.Weight.Bold)
+        _detail_font = QFont("Ubuntu", 12)
+        _id_font     = QFont("Ubuntu", 11)
+
         for patient in patients:
             row = self.table.rowCount()
             self.table.insertRow(row)
 
-            self.table.setItem(row, 0, QTableWidgetItem(str(patient.id)))
-            name_item = QTableWidgetItem(patient.name)
-            name_item.setFont(QFont("Inter", 13, QFont.Weight.Bold))
-            self.table.setItem(row, 1, name_item)
-            self.table.setItem(row, 2, QTableWidgetItem(patient.mobile_number))
-            self.table.setItem(row, 3, QTableWidgetItem(str(patient.age)))
-            self.table.setItem(row, 4, QTableWidgetItem(patient.city))
+            id_item = QTableWidgetItem(str(patient.id))
+            id_item.setFont(_id_font)
+            id_item.setForeground(QColor("#5B6B73"))
+            id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            self.table.setItem(row, 0, id_item)
 
-            # Actions with better buttons
+            name_item = QTableWidgetItem(patient.name)
+            name_item.setFont(_name_font)
+            name_item.setForeground(QColor("#1F4E5A"))
+            self.table.setItem(row, 1, name_item)
+
+            mob_item = QTableWidgetItem(patient.mobile_number)
+            mob_item.setFont(_detail_font)
+            mob_item.setForeground(QColor("#3A3A3A"))
+            mob_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            self.table.setItem(row, 2, mob_item)
+
+            age_item = QTableWidgetItem(str(patient.age))
+            age_item.setFont(_detail_font)
+            age_item.setForeground(QColor("#3A3A3A"))
+            age_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            self.table.setItem(row, 3, age_item)
+
+            med_history = (patient.city or "")
+            display_history = med_history[:38] + "…" if len(med_history) > 38 else med_history
+            hist_item = QTableWidgetItem(display_history)
+            hist_item.setFont(_detail_font)
+            hist_item.setForeground(QColor("#555"))
+            self.table.setItem(row, 4, hist_item)
+
             actions = self.create_action_buttons(patient.id)
             self.table.setCellWidget(row, 5, actions)
 
     def create_action_buttons(self, patient_id: int):
-        """Create compact, clearly visible action buttons."""
+        """Create compact action buttons — text-only, single line guaranteed."""
         widget = QWidget()
         widget.setStyleSheet("background: transparent;")
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setContentsMargins(8, 0, 8, 0)
         layout.setSpacing(6)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
 
-        _btn_style = (
-            "QPushButton {{ background:{bg}; color:{fg}; border:none; border-radius:6px;"
-            " padding:0 10px; font-size:11px; font-weight:600; font-family:'Ubuntu',sans-serif; }}"
-            "QPushButton:hover {{ background:{hv}; }}"
-        )
+        def _make_btn(text, bg, fg, hv, w=72):
+            b = QPushButton(text)
+            b.setFixedSize(w, 28)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setStyleSheet(
+                f"QPushButton {{ background:{bg}; color:{fg}; border:none; border-radius:5px;"
+                f" font-size:11px; font-weight:600; font-family:'Ubuntu',sans-serif; }}"
+                f"QPushButton:hover {{ background:{hv}; }}"
+            )
+            return b
 
-        view_btn = QPushButton("📋 History")
-        view_btn.setFixedHeight(30)
-        view_btn.setMinimumWidth(82)
-        view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        view_btn.setStyleSheet(_btn_style.format(bg="#E3F3F6", fg="#2A6674", hv="#CDEAF0"))
+        view_btn = _make_btn("History", "#E3F3F6", "#2A6674", "#CDEAF0", w=68)
         view_btn.clicked.connect(lambda: self.on_view_patient(patient_id))
         layout.addWidget(view_btn)
 
-        edit_btn = QPushButton("✏️ Edit")
-        edit_btn.setFixedHeight(30)
-        edit_btn.setMinimumWidth(64)
-        edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        edit_btn.setStyleSheet(_btn_style.format(bg="#F0FDF4", fg="#166534", hv="#DCFCE7"))
+        edit_btn = _make_btn("Edit", "#F0FDF4", "#166534", "#DCFCE7", w=52)
         edit_btn.clicked.connect(lambda: self.show_edit_form(patient_id))
         layout.addWidget(edit_btn)
 
-        delete_btn = QPushButton("🗑️")
-        delete_btn.setFixedSize(30, 30)
-        delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        delete_btn.setStyleSheet(_btn_style.format(bg="#FBEBEA", fg="#9E3B38", hv="#F8DEDD"))
-        delete_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
-        layout.addWidget(delete_btn)
+        del_btn = _make_btn("Del", "#FBEBEA", "#9E3B38", "#F8DEDD", w=40)
+        del_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
+        layout.addWidget(del_btn)
 
         return widget
 

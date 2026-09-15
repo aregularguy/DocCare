@@ -147,3 +147,23 @@ class TreatmentService:
             List of treatments
         """
         return self.repository.get_pending_payments()
+
+    def get_pending_with_patient_names(self) -> list[dict]:
+        """Get all treatments with pending amounts, including patient name."""
+        treatments = self.repository.get_pending_payments()
+        from .patient_service import PatientService
+        patient_svc = PatientService()
+        result = []
+        patient_cache = {}
+        for t in treatments:
+            if t.patient_id not in patient_cache:
+                p = patient_svc.get_patient(t.patient_id)
+                patient_cache[t.patient_id] = p
+            patient = patient_cache[t.patient_id]
+            result.append({
+                'treatment': t,
+                'patient_name': patient.name if patient else '—',
+                'patient_mobile': patient.mobile_number if patient else '',
+                'patient_id': t.patient_id,
+            })
+        return result

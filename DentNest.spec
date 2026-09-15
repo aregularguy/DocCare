@@ -10,7 +10,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        # App icon + dropdown/spin-box arrow SVGs used by the stylesheet
+        # App icons (.png/.ico) + dropdown/spin-box arrow SVGs used by the stylesheet
         ('src/resources', 'src/resources'),
     ],
     hiddenimports=[
@@ -42,7 +42,7 @@ exe = EXE(
     a.datas,
     [],
     name='DentNest',
-    icon='src/resources/icons/dentnest.png',
+    icon='src/resources/icons/dentnest.ico',  # Windows taskbar + title bar icon
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

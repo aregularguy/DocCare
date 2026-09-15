@@ -88,8 +88,20 @@ def create_tables():
     try:
         db.execute("ALTER TABLE prescriptions ADD COLUMN session_id TEXT")
         logger.info("Migrated prescriptions table: added session_id column")
-    except Exception:
-        pass  # column already exists
+    except Exception as e:
+        if "duplicate column name" in str(e).lower():
+            pass  # column already exists, expected
+        else:
+            logger.error(f"Migration failed for session_id column: {e}")
+            raise
+
+    # Migrate: add X-Ray treatment type if missing (works on existing databases)
+    db.execute("""
+        INSERT OR IGNORE INTO treatment_types (name, description)
+        VALUES
+            ('X-Ray',        'Dental X-Ray imaging and diagnosis'),
+            ('Consultation',  'General dental consultation')
+    """)
 
     # Medicines table (for autocomplete suggestions)
     db.execute("""
@@ -100,6 +112,18 @@ def create_tables():
             category TEXT
         )
     """)
+
+    # Migrate: add medicine_type and brand_name to medicines table
+    for col in ('medicine_type', 'brand_name'):
+        try:
+            db.execute(f"ALTER TABLE medicines ADD COLUMN {col} TEXT")
+            logger.info(f"Migrated medicines table: added {col} column")
+        except Exception as e:
+            if "duplicate column name" in str(e).lower():
+                pass  # column already exists, expected
+            else:
+                logger.error(f"Migration failed for {col} column: {e}")
+                raise
 
     # Create indexes for better query performance
     db.execute("""

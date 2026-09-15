@@ -1,6 +1,7 @@
 """Database connection manager for DentNest application."""
 import sqlite3
 import os
+import threading
 from pathlib import Path
 from typing import Optional
 import logging
@@ -56,6 +57,11 @@ class DatabaseManager:
         # Enable WAL mode for better concurrent performance
         self._connection.execute("PRAGMA journal_mode = WAL")
 
+        # Flush WAL into main .db file after every ~40KB of writes
+        # (default 1000 pages ≈ 4MB is too large for a clinic app —
+        #  data would sit in the -wal file and a raw .db copy would be stale)
+        self._connection.execute("PRAGMA wal_autocheckpoint = 10")
+
         # Set row factory for dict-like access
         self._connection.row_factory = sqlite3.Row
 
@@ -69,6 +75,12 @@ class DatabaseManager:
         """
         if self._connection is None:
             self._setup_database()
+        # Warn if accessed from a non-main thread (SQLite is not thread-safe)
+        if threading.current_thread() is not threading.main_thread():
+            logger.warning(
+                f"Database accessed from non-main thread '{threading.current_thread().name}'. "
+                "SQLite is not fully thread-safe — this may cause 'database is locked' errors."
+            )
         return self._connection
 
     def execute(self, query: str, params: tuple = ()) -> sqlite3.Cursor:
@@ -83,9 +95,13 @@ class DatabaseManager:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute(query, params)
-        conn.commit()
-        return cursor
+        try:
+            cursor.execute(query, params)
+            conn.commit()
+            return cursor
+        except Exception:
+            conn.rollback()
+            raise
 
     def executemany(self, query: str, params_list: list) -> sqlite3.Cursor:
         """Execute query with multiple parameter sets.
@@ -99,9 +115,13 @@ class DatabaseManager:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.executemany(query, params_list)
-        conn.commit()
-        return cursor
+        try:
+            cursor.executemany(query, params_list)
+            conn.commit()
+            return cursor
+        except Exception:
+            conn.rollback()
+            raise
 
     def fetch_one(self, query: str, params: tuple = ()) -> Optional[sqlite3.Row]:
         """Fetch single row from query.
@@ -113,9 +133,13 @@ class DatabaseManager:
         Returns:
             Single row or None
         """
-        cursor = self.get_connection().cursor()
-        cursor.execute(query, params)
-        return cursor.fetchone()
+        try:
+            cursor = self.get_connection().cursor()
+            cursor.execute(query, params)
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"fetch_one failed: {e} | query: {query}")
+            raise
 
     def fetch_all(self, query: str, params: tuple = ()) -> list[sqlite3.Row]:
         """Fetch all rows from query.
@@ -127,9 +151,13 @@ class DatabaseManager:
         Returns:
             List of rows
         """
-        cursor = self.get_connection().cursor()
-        cursor.execute(query, params)
-        return cursor.fetchall()
+        try:
+            cursor = self.get_connection().cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"fetch_all failed: {e} | query: {query}")
+            raise
 
     def close(self):
         """Close database connection."""

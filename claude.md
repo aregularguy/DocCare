@@ -85,12 +85,49 @@ This entire project was built using **Claude Code**, an AI-powered development a
 
 ### 7. Database & Data
 - ✅ Pre-seeded data:
-  - 12 treatment types
-  - 19 common medicines (antibiotics, painkillers, etc.)
+  - 14 treatment types (incl. Consultation, X-Ray)
+  - 19 common medicines with type + brand name (antibiotics, painkillers, antiseptics, etc.)
 - ✅ Foreign key constraints
 - ✅ Indexed fields for fast queries
 - ✅ Automatic timestamps
 - ✅ Trigger for updated_at fields
+- ✅ Online migrations (ALTER TABLE for existing databases)
+
+### 8. Prescription Management
+- ✅ Add prescription with medicine rows (name, M-A-E-N dosage, timing, quantity)
+- ✅ Session-based grouping in patient overview
+- ✅ Print prescription as PDF
+- ✅ Clinic letterhead (stacked: name → doctor → contact)
+- ✅ Logo upload in settings auto-populates PDF
+
+### 12. Medicine Catalog (Medicines page)
+- ✅ Standalone medicine catalog page (sidebar: "Medicines")
+- ✅ Table: Medicine Name, Type, Brand Name, Quantity
+- ✅ Add / Edit / Delete medicines
+- ✅ Medicine types: tablet, capsule, mouthwash, gel, liquid, drops, paste
+- ✅ Search bar across all medicines
+- ✅ `medicine_type` and `brand_name` columns added to DB with safe migration
+- ✅ Backfill function updates existing seed rows with correct types
+
+### 9. Payments Module
+- ✅ Record Payment dialog (from treatment or standalone)
+- ✅ Payment history per treatment
+- ✅ Summary cards: Collected Today / This Month / Outstanding
+- ✅ Payment method badges: Cash / UPI / Card / Cheque / Other
+- ✅ Search + filter by method
+
+### 10. Settings Page
+- ✅ Clinic name (English + Marathi), address, phone, timing
+- ✅ Doctor name, degree, registration number
+- ✅ Clinic logo upload
+- ✅ Database backup (manual + auto on startup)
+- ✅ App password protection (SHA-256 hashed)
+
+### 11. Security & Compliance
+- ✅ App login screen at startup (when password set)
+- ✅ 3-attempt lockout on login
+- ✅ Auto-backup on every startup
+- ✅ Manual backup to any folder
 
 ---
 
@@ -383,6 +420,81 @@ Output: `dist/DentNest.exe` (or `dist/DentNest` on Linux)
 
 ---
 
+## 🐛 Bug Fix Log (Detailed — All Sessions)
+
+### PDF / Print Fixes
+
+| Bug | Root Cause | Fix | File |
+|-----|-----------|-----|------|
+| `AttributeError: type object 'QPrinter' has no attribute 'PageSize'` | PyQt6 API changed from PyQt5 | Use `QPageSize(QPageSize.PageSizeId.A4)` | `patient_details.py` |
+| Marathi text not rendering in PDF | Ubuntu/Segoe UI font has no Devanagari glyphs | Added `Noto Sans Devanagari` to HTML font stack | `patient_details.py` |
+| Medical symbol (⚕ / 🦷) shown as blank box in PDF | Qt HTML renderer does not support inline SVG or emoji fonts | Use Unicode `⚕` with explicit `font-size` CSS; falls back cleanly | `patient_details.py` |
+| Clinic name too big in PDF; patient details wrapping across rows | No font-size constraints; no fixed column widths on patient strip | Restructured letterhead to 3-row stacked table; added `table-layout:fixed` on patient strip | `patient_details.py` |
+| Date cut off in patient strip | No `white-space:nowrap` on cells | Added `white-space:nowrap; overflow:hidden; text-overflow:ellipsis` to patient strip cells | `patient_details.py` |
+| PDF has no border | Missing page border CSS | Added `.page-border` wrapper `div` with `border:4px solid #0F2942` | `patient_details.py` |
+| Only one medicine visible in prescription even when multiple saved | No `session_id` grouping; all medicines for same date collapsed | Added `session_id UUID` column to prescriptions; `_save_prescriptions` generates one UUID per save action; overview groups by session_id | `prescription.py`, `prescription_repository.py`, `migrations.py`, `patient_details.py` |
+
+### Windows / Executable Fixes
+
+| Bug | Root Cause | Fix | File |
+|-----|-----------|-----|------|
+| `ImportError: No module named 'unittest'` when running `.exe` | Relative imports fail inside PyInstaller frozen bundle | Created root-level `app.py` as PyInstaller entry point with `sys.frozen` detection | `app.py`, `build.yml` |
+| Patient data not persisting after closing `.exe` | `db_manager.py` used relative path → database created in PyInstaller's temp dir (deleted on exit) | When `sys.frozen`, use `Path(sys.executable).parent` as DB root | `db_manager.py`, `settings_service.py` |
+| App crash when expanding Billing tab on Windows | `₹` rupee symbol causes font crash; toggle() captured loop vars incorrectly; `payment_date.strftime` on string | Changed to `Rs.`; wrapped billing tab in `QScrollArea`; added `try/except` to `toggle()` and `_build_billing_row`; safe date parsing | `patient_details.py`, `formatters.py` |
+| GitHub Actions release: "Resource not accessible by integration" (403) | GitHub token missing write permission | Added `permissions: contents: write` to workflow YAML | `.github/workflows/build.yml` |
+
+### Currency Symbol Fixes
+
+| Bug | Root Cause | Fix | File |
+|-----|-----------|-----|------|
+| `₹` renders as rectangle/broken box on Windows | Indian Rupee Unicode glyph requires Nirmala UI / Noto Sans font not always present | Changed `format_currency` to return `Rs.{amount}` globally | `formatters.py` |
+| Payment table still showed `₹60.00` | `payment_list.py:596` used `f"₹..."` directly, bypassing `format_currency` | Changed to `f"Rs.{amount:,.2f}"` | `payment_list.py` |
+| `₹` in treatment cost label and spinbox prefix | Hardcoded in form widgets | Changed "Total Cost (₹) *" → "Total Cost (Rs.) *"; `setPrefix("Rs. ")` | `treatment_list.py`, `payment_list.py` |
+
+### Analytics & Dashboard Fixes
+
+| Bug | Root Cause | Fix | File |
+|-----|-----------|-----|------|
+| Analytics MetricCard values appear tiny / barely visible | `setFont(QFont("Segoe UI", 22, ...))` is overridden by subsequent `setStyleSheet()` in Qt6; "Segoe UI" also doesn't exist on Linux | Moved `font-size:22px; font-weight:bold` directly into QSS string; use `Ubuntu` as fallback font | `analytics_dashboard.py` |
+| Emoji icons (👥🆕💰🦷📅⏳) render as blank boxes | Color emoji font (Noto Color Emoji) not installed on the system | Replaced all emoji icons with small colored pill-badge QLabels using accent color background | `analytics_dashboard.py`, `payment_list.py` |
+| Analytics MetricCard initial value used `₹0` | Hardcoded before `format_currency` fix | Changed to `Rs.0` | `analytics_dashboard.py` |
+
+### Payment Method Fixes
+
+| Bug | Root Cause | Fix | File |
+|-----|-----------|-----|------|
+| Method column shows "JP", "AS" (2-letter codes) instead of "Cash", "UPI" etc. | Old data recorded with free-form text; legacy payments stored non-canonical values | `_method_badge` now maps raw DB keys to canonical display names; unknown values fall back to "Other" | `payment_list.py` |
+| Two payment dialogs stored methods differently | `AddPaymentDialog` used `currentText().lower()` → could store "bank transfer"; `RecordPaymentDialog` used `currentData()` correctly | Aligned both: same 5 options (Cash/UPI/Card/Cheque/Other), both use `currentData()` | `patient_details.py` |
+| Method column too narrow; badge gets clipped | `ResizeToContents` with no minimum | Fixed column width 90px; badge `setMinimumWidth(56)` | `payment_list.py` |
+
+### Feature Additions (New Functionality)
+
+| Feature | What Changed | Files |
+|---------|-------------|-------|
+| **X-Ray treatment type** | Added `INSERT OR IGNORE` in migrations so X-Ray + Consultation are seeded into existing databases on startup | `migrations.py`, `treatment_list.py` |
+| **Medical History field** | Repurposed `city` DB column as "Medical History" in UI; changed label, switched `QLineEdit` → `QTextEdit` (multiline); column header + table truncation updated; PDP header shows purple pill | `patient_list.py`, `patient_details.py` |
+| **Add Payment dialog** | Replaced `QDoubleSpinBox` (defaulted to Rs.1) with `QLineEdit` with placeholder; increased dialog and input width | `patient_details.py` |
+| **Consultation treatment type** | Already in seed data; ensured via `INSERT OR IGNORE` migration | `migrations.py` |
+| **Treatment Queue filter** | Added Today / This Week / All filter bar + "Show Completed" toggle; count label; status color badges | `treatment_list.py` |
+| **Settings Page** | Clinic name (EN + Marathi), doctor name, degree, reg. no., address, phone, timing, logo upload; all auto-populate prescription PDF header | `settings.py`, `settings_service.py` |
+| **DB Backup** | `BackupService`: manual backup (file picker) + auto-backup on every startup to `data/backups/`; prunes to 10 most recent | `backup_service.py`, `settings.py`, `main.py` |
+| **App Login Screen** | `LoginDialog` shown at startup when password is set; password stored as SHA-256 hash in `settings.json`; 3-attempt lockout | `login_dialog.py`, `settings_service.py`, `main.py` |
+| **Prescription PDF header redesign** | 3-row stacked layout: Clinic name → Doctor name/degree/reg → Address\|Phone\|Timing; logo top-right; ⚕ symbol top-left | `patient_details.py` |
+
+### Outstanding / Known Pending Issues
+
+| # | Severity | Issue | Status |
+|---|----------|-------|--------|
+| 1 | High | `migrations.py` uses bare `except Exception: pass` — silent migration failures hide DB corruption | ❌ Not fixed |
+| 2 | High | Billing PDF not implemented — doctor needs printable bill with header + treatment charges + payment summary | ❌ Pending |
+| 3 | High | Due Payment List not implemented — list of patients with outstanding balances | ❌ Pending |
+| 4 | Medium | `dashboard.py` `MetricCard.update_value` uses `findChild(QLabel, "metric_value")` — fragile, breaks if widget tree changes | ❌ Not fixed |
+| 5 | Medium | Patient list Medical History column shows old city values for pre-existing patients — needs manual edit per patient | ⚠️ Data issue |
+| 6 | Low | Tooth designation (clickable 2D dental chart) not implemented | ❌ Pending |
+| 7 | Low | Code Review items #10–#25 (medium/low severity) — defensive coding, edge cases | ❌ Pending |
+
+---
+
 ## 💡 Development Tips
 
 ### Adding a New Page
@@ -531,6 +643,63 @@ Output: `dist/DentNest.exe` (or `dist/DentNest` on Linux)
 - ✅ Beautiful dropdown with hover animations
 - ✅ Fixed search patient functionality
 - ✅ Auto-load patients on form open
+
+### Session 6: Prescription Module
+- ✅ Prescription tab in Patient Details page
+- ✅ Add medicine rows (name, M-A-E-N dosage, timing, quantity)
+- ✅ Session-based grouping (all medicines saved together appear as one group)
+- ✅ Print prescription as PDF with clinic letterhead
+- ✅ Prescription overview in patient profile
+
+### Session 7: PDF Polish & Billing Fixes
+- ✅ Fixed `QPrinter.PageSize.A4` → `QPageSize` (PyQt6 API)
+- ✅ Added Noto Sans Devanagari for Marathi text rendering
+- ✅ Simplified prescription table (removed Unit/Dose, Frequency; added M-A-E-N Dosage column)
+- ✅ Fixed date cut-off in patient strip (table-layout:fixed)
+- ✅ Added 4px border on PDF page
+- ✅ Redesigned letterhead: 3-row stacked (Clinic → Doctor → Contact)
+- ✅ Replaced `₹` with `Rs.` globally for Windows compatibility
+- ✅ Fixed billing tab crash on Windows (QScrollArea, try/except)
+- ✅ Fixed patient data not persisting in .exe (db path using sys.executable)
+- ✅ Replaced Add Payment QDoubleSpinBox with QLineEdit (no default Rs.1)
+
+### Session 8: Settings, Backup & Login
+- ✅ Settings page with clinic name (EN + Marathi), doctor info, address, phone, timing
+- ✅ Clinic logo upload → appears top-right of prescription PDF
+- ✅ All settings auto-populate prescription PDF header dynamically
+- ✅ Database backup: manual (file picker) + auto on startup (`data/backups/`, keeps 10)
+- ✅ App login screen with SHA-256 hashed password; 3-attempt lockout
+- ✅ GitHub Actions CI: auto-build Windows `.exe` on push to `main`
+
+### Session 9: Treatment Queue & UX
+- ✅ Treatment Queue filters: Today / This Week / All
+- ✅ "Show Completed" toggle (hide completed by default)
+- ✅ Status color badges in treatment queue (planned/in_progress/completed)
+- ✅ Add Payment dialog width increased
+- ✅ View button in Treatment Queue navigates to Patient Details
+
+### Session 10: New Features & Bug Fixes (April 2026)
+- ✅ Added X-Ray + Consultation treatment types via migration (works on existing DBs)
+- ✅ Renamed City field → Medical History (multiline QTextEdit with notes placeholder)
+- ✅ Fixed Analytics MetricCard values tiny (`setFont` overridden by QSS in Qt6)
+- ✅ Fixed emoji icons (👥💰📅) rendering as boxes → replaced with colored text pill badges
+- ✅ Fixed payment table showing raw `₹` symbol; aligned all forms to use `Rs.`
+- ✅ Fixed payment method badge showing "JP"/"AS" legacy values → shows canonical "Cash"/"UPI" etc.
+- ✅ Aligned both payment dialogs to same 5 method options; both now use `currentData()`
+- ✅ Method column fixed width 90px; badge has `setMinimumWidth(56)`
+
+### Session 11: Medicine Catalog Module (April 2026)
+- ✅ Added `medicine_type` (TEXT) and `brand_name` (TEXT) columns to `medicines` table via `ALTER TABLE` migration (same safe try/except pattern)
+- ✅ Updated `Medicine` model: added `medicine_type` and `brand_name` optional fields; `from_db_row()` uses defensive key checks for backward compatibility with old DB schema
+- ✅ Expanded seed data to 5-element tuples; assigned types (tablet, capsule, mouthwash, gel, liquid, drops, paste) to all 19 medicines; added `_backfill_medicine_types()` to UPDATE existing rows where `medicine_type IS NULL`
+- ✅ Added `get_all_types()` to `MedicineRepository` — returns distinct `medicine_type` values for combobox population
+- ✅ Added 4 new methods to `PrescriptionService`: `add_medicine()`, `update_medicine()`, `delete_medicine()`, `get_medicine()` (all existing methods untouched)
+- ✅ Full rewrite of `prescription_list.py`:
+  - `AddMedicineDialog` — Name (required), Type (combobox), Brand Name, Quantity
+  - `EditMedicineDialog` — Same layout, pre-populated from existing record
+  - `PrescriptionListWidget` — Banner "Medicine Catalog", search bar, table (Medicine Name / Type / Brand Name / Quantity / Actions), Edit + Delete buttons per row
+- ✅ Renamed sidebar label `Prescribe` → `Medicines` in `main_window.py`
+- ⚠️ Patient details prescription tab is **untouched** — continues to work independently
 
 ---
 

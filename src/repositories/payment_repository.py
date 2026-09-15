@@ -116,10 +116,10 @@ class PaymentRepository(BaseRepository[Payment]):
         Returns:
             List of recent payments
         """
-        query = f"""
+        query = """
             SELECT * FROM payments
             ORDER BY payment_date DESC, created_at DESC
-            LIMIT {limit}
+            LIMIT ?
         """
-        rows = self.db.fetch_all(query)
+        rows = self.db.fetch_all(query, (limit,))
         return [Payment.from_db_row(row) for row in rows]

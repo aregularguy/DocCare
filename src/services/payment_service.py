@@ -1,10 +1,13 @@
 """Payment business logic service."""
 from typing import List, Tuple, Optional
 from datetime import date
+import logging
 from ..models.payment import Payment
 from ..repositories.payment_repository import PaymentRepository
 from ..repositories.treatment_repository import TreatmentRepository
 from ..utils.validators import validate_payment_amount
+
+logger = logging.getLogger(__name__)
 
 
 class PaymentService:
@@ -56,9 +59,8 @@ class PaymentService:
                 notes=notes.strip() if notes else None
             )
 
-            # Update treatment's amount_paid
-            new_amount_paid = treatment.amount_paid + amount
-            self.treatment_repository.update_amount_paid(treatment_id, new_amount_paid)
+            # Atomically increment treatment's amount_paid in a single SQL statement
+            self.treatment_repository.increment_amount_paid(treatment_id, amount)
 
             return True, "Payment added successfully", payment_id
         except Exception as e:
@@ -134,9 +136,24 @@ class PaymentService:
             if not success:
                 return False, "Failed to delete payment"
 
-            # Update treatment's amount_paid
-            new_amount_paid = max(0, treatment.amount_paid - payment.amount)
-            self.treatment_repository.update_amount_paid(payment.treatment_id, new_amount_paid)
+            # Atomically decrement treatment's amount_paid
+            self.treatment_repository.increment_amount_paid(payment.treatment_id, -payment.amount)
+            # Clamp to 0 and warn if data was inconsistent
+            from ..database.db_manager import DatabaseManager
+            db = DatabaseManager()
+            row = db.fetch_one(
+                "SELECT amount_paid FROM treatments WHERE id = ?",
+                (payment.treatment_id,)
+            )
+            if row and float(row['amount_paid']) < 0:
+                logger.warning(
+                    f"Data inconsistency: treatment {payment.treatment_id} "
+                    f"amount_paid went negative ({row['amount_paid']}), clamping to 0"
+                )
+                db.execute(
+                    "UPDATE treatments SET amount_paid = 0 WHERE id = ?",
+                    (payment.treatment_id,)
+                )
 
             return True, "Payment deleted successfully"
         except Exception as e:

@@ -1,0 +1,1550 @@
+{
+  "nodes": [
+    {
+      "id": "dentnest",
+      "label": "DentNest",
+      "type": "project",
+      "properties": {
+        "description": "Comprehensive dental practice management system, formerly DocCare",
+        "version": "1.0.0",
+        "developer": "Arshad Bagwan",
+        "started": "March 2026",
+        "license": "Proprietary - internal use only",
+        "total_files": "35+",
+        "lines_of_code": "3500+",
+        "status": "Core features complete, ready for expansion"
+      },
+      "source_file": "README.md"
+    },
+    {
+      "id": "python",
+      "label": "Python 3.10+",
+      "type": "technology",
+      "properties": {
+        "role": "Core programming language"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "pyqt6",
+      "label": "PyQt6",
+      "type": "dependency",
+      "properties": {
+        "version": ">=6.6.0",
+        "role": "Desktop GUI framework"
+      },
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "matplotlib",
+      "label": "Matplotlib",
+      "type": "dependency",
+      "properties": {
+        "version": ">=3.8.0",
+        "role": "Analytics chart rendering"
+      },
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "pandas",
+      "label": "Pandas",
+      "type": "dependency",
+      "properties": {
+        "version": ">=2.1.0",
+        "role": "Data analysis"
+      },
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "python_dateutil",
+      "label": "python-dateutil",
+      "type": "dependency",
+      "properties": {
+        "version": ">=2.8.2",
+        "role": "Date parsing and manipulation"
+      },
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "pyinstaller",
+      "label": "PyInstaller",
+      "type": "dependency",
+      "properties": {
+        "version": ">=6.3.0",
+        "role": "Standalone executable builder"
+      },
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "sqlite",
+      "label": "SQLite",
+      "type": "technology",
+      "properties": {
+        "role": "Offline local database",
+        "file": "data/dentnest.db",
+        "tables": 6
+      },
+      "source_file": "README.md"
+    },
+    {
+      "id": "three_layer_arch",
+      "label": "3-Layer Architecture",
+      "type": "architecture_pattern",
+      "properties": {
+        "layers": "Presentation -> Business Logic -> Data Access",
+        "description": "Clear separation of concerns across UI, services, and repositories"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "presentation_layer",
+      "label": "Presentation Layer (PyQt6 UI)",
+      "type": "architecture_layer",
+      "properties": {
+        "components": "Main Window, Sidebar Navigation, Dashboard, Forms, Dialogs, Analytics Charts",
+        "directory": "src/ui/"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "service_layer",
+      "label": "Service Layer (Business Logic)",
+      "type": "architecture_layer",
+      "properties": {
+        "components": "PatientService, TreatmentService, PaymentService, PrescriptionService, AnalyticsService",
+        "directory": "src/services/"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "repository_layer",
+      "label": "Repository Layer (Data Access)",
+      "type": "architecture_layer",
+      "properties": {
+        "components": "BaseRepository, PatientRepository, TreatmentRepository, PaymentRepository, PrescriptionRepository",
+        "directory": "src/repositories/"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "database_layer",
+      "label": "Database Layer (SQLite)",
+      "type": "architecture_layer",
+      "properties": {
+        "components": "db_manager.py, migrations.py, seed_data.py",
+        "directory": "src/database/"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "patient_management",
+      "label": "Patient Management",
+      "type": "feature",
+      "properties": {
+        "status": "complete",
+        "capabilities": "CRUD, search by name/mobile/city, patient history, duplicate prevention",
+        "fields": "Name, Mobile (10 digits), Age, City, Address"
+      },
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "id": "treatment_management",
+      "label": "Treatment Management",
+      "type": "feature",
+      "properties": {
+        "status": "core implemented",
+        "capabilities": "Queue view, two-step workflow, patient search, treatment types",
+        "types": "Root Canal, Filling, Cleaning, Extraction, Crown, Implant, etc.",
+        "treatment_type_count": 12
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "payment_tracking",
+      "label": "Payment Tracking",
+      "type": "feature",
+      "properties": {
+        "status": "partially implemented",
+        "capabilities": "Record partial/full payments, pending calculation, payment history",
+        "methods": "Cash, Card, UPI, Cheque, Other"
+      },
+      "source_file": "README.md"
+    },
+    {
+      "id": "prescription_management",
+      "label": "Prescription Management",
+      "type": "feature",
+      "properties": {
+        "status": "partially implemented",
+        "capabilities": "Add medicines per visit, autocomplete, dosage/frequency/duration",
+        "medicine_count": 19
+      },
+      "source_file": "README.md"
+    },
+    {
+      "id": "analytics_dashboard",
+      "label": "Analytics Dashboard",
+      "type": "feature",
+      "properties": {
+        "status": "complete",
+        "charts": "Line (payment trends), Donut (treatment distribution, payment methods), Bar (top medicines)",
+        "periods": "Today, This Week, This Month, This Year"
+      },
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "type": "feature",
+      "properties": {
+        "status": "complete",
+        "capabilities": "Quick stats, today metrics, quick action buttons"
+      },
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "id": "cursor_inspired_ui",
+      "label": "Cursor-Inspired UI Design",
+      "type": "design_decision",
+      "properties": {
+        "theme": "Light theme",
+        "primary_color": "#007AFF",
+        "font": "Segoe UI / System default",
+        "inspiration": "cursor.com interface",
+        "features": "Sidebar navigation, card-based layouts, hover effects, donut charts"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "patients_table",
+      "label": "patients table",
+      "type": "database_table",
+      "properties": {
+        "fields": "name, mobile_number, age, city, address, timestamps",
+        "constraints": "mobile_number NOT NULL (unique enforced at app level only)"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "treatment_types_table",
+      "label": "treatment_types table",
+      "type": "database_table",
+      "properties": {
+        "description": "Pre-seeded lookup table with 12 common dental procedures"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "treatments_table",
+      "label": "treatments table",
+      "type": "database_table",
+      "properties": {
+        "fields": "patient_id, treatment_type_id, cost, amount_paid, status, notes, dates",
+        "statuses": "planned, in_progress, completed",
+        "cascade": "delete with patient"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "payments_table",
+      "label": "payments table",
+      "type": "database_table",
+      "properties": {
+        "fields": "treatment_id, amount, payment_method, date",
+        "methods": "cash, card, upi, cheque, other",
+        "cascade": "delete with treatment"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "prescriptions_table",
+      "label": "prescriptions table",
+      "type": "database_table",
+      "properties": {
+        "fields": "treatment_id, medicine_name, dosage, frequency, duration",
+        "cascade": "delete with treatment"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "medicines_table",
+      "label": "medicines table",
+      "type": "database_table",
+      "properties": {
+        "description": "Lookup table for autocomplete, 19 pre-seeded medicines",
+        "categories": "antibiotic, painkiller, etc."
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "code_review",
+      "label": "Code Review Report",
+      "type": "document",
+      "properties": {
+        "reviewer": "Claude Code (Opus 4.6)",
+        "date": "2026-04-10",
+        "scope": "Full codebase audit for crashes, data corruption, edge cases, missing error handling",
+        "total_issues": 32,
+        "fixed": 19,
+        "remaining": 13
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "security_audit",
+      "label": "Security Audit Report",
+      "type": "document",
+      "properties": {
+        "auditor": "Claude Code (Opus 4.6)",
+        "date": "2026-04-22",
+        "scope": "Full codebase, all layers, attacker-perspective",
+        "critical_count": 3,
+        "high_count": 4,
+        "medium_count": 3,
+        "low_count": 3,
+        "total_issues": 13
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "bug_race_condition_payment",
+      "label": "Race Condition in Payment Addition (Bug #1)",
+      "type": "bug",
+      "properties": {
+        "severity": "critical",
+        "status": "fixed",
+        "file": "src/services/payment_service.py, src/repositories/treatment_repository.py",
+        "fix": "Atomic SQL UPDATE instead of read-then-write"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "bug_no_rollback",
+      "label": "No Transaction Rollback on DB Errors (Bug #4)",
+      "type": "bug",
+      "properties": {
+        "severity": "critical",
+        "status": "fixed",
+        "file": "src/database/db_manager.py",
+        "fix": "try/except with conn.rollback() on failure"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "bug_html_injection",
+      "label": "HTML Injection in Prescription PDF (Bug #6)",
+      "type": "bug",
+      "properties": {
+        "severity": "high",
+        "status": "fixed",
+        "file": "src/ui/dialogs/patient_details.py",
+        "fix": "Added html.escape() for patient data in HTML template"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "bug_sql_injection",
+      "label": "SQL Injection Pattern in Repositories (Bug #17)",
+      "type": "bug",
+      "properties": {
+        "severity": "medium",
+        "status": "fixed",
+        "file": "src/repositories/base_repository.py, src/repositories/payment_repository.py",
+        "fix": "Added _validate_identifier() regex whitelist, parameterized LIMIT"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "bug_widget_memory_leak",
+      "label": "Widget Memory Leak on Tab Switches (Bug #18)",
+      "type": "bug",
+      "properties": {
+        "severity": "medium",
+        "status": "fixed",
+        "file": "src/ui/dialogs/patient_details.py",
+        "fix": "Added QApplication.processEvents() after deleteLater()"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "bug_thread_safety",
+      "label": "Thread Safety with check_same_thread=False (Bug #19)",
+      "type": "bug",
+      "properties": {
+        "severity": "medium",
+        "status": "fixed",
+        "file": "src/database/db_manager.py",
+        "fix": "Added thread check warning in get_connection()"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "vuln_no_auth",
+      "label": "CRITICAL-1: No Authentication",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "critical",
+        "status": "open",
+        "description": "Zero authentication — no login, no password, no user accounts, no roles",
+        "impact": "Anyone who opens the app has full unrestricted access",
+        "legal": "Violates IT Rules 2011 requirement for access control on SPDI"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_unencrypted_db",
+      "label": "CRITICAL-2: Unencrypted Patient Data on Disk",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "critical",
+        "status": "open",
+        "description": "SQLite database stored as plain unencrypted file",
+        "impact": "Laptop theft = full data breach",
+        "legal": "Potential liability up to Rs. 250 crore under DPDPA 2023",
+        "recommended_fix": "SQLCipher for AES-256 encryption or field-level encryption"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_no_access_control",
+      "label": "CRITICAL-3: No Object-Level Access Control (IDOR)",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "critical",
+        "status": "open",
+        "description": "Every data access method accepts an integer ID with no authorization check"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_toctou_payment",
+      "label": "HIGH-1: TOCTOU Race Condition in Payment Processing",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "high",
+        "status": "open",
+        "file": "src/services/payment_service.py",
+        "description": "Payment validation and creation not atomic — double payment possible"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_sql_injection_limit",
+      "label": "HIGH-2: SQL Injection in LIMIT Clauses",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "high",
+        "status": "open",
+        "file": "src/repositories/patient_repository.py",
+        "description": "LIMIT parameter inserted via f-string in get_recent_patients()"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_no_db_constraints",
+      "label": "HIGH-3: No Database Integrity Constraints",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "high",
+        "status": "open",
+        "file": "src/database/migrations.py",
+        "description": "Missing UNIQUE on mobile, no CHECK constraints on amounts/ages"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "vuln_pii_in_logs",
+      "label": "HIGH-4: Sensitive Data in Logs",
+      "type": "vulnerability",
+      "properties": {
+        "severity": "high",
+        "status": "open",
+        "file": "src/database/db_manager.py",
+        "description": "Failed SQL queries logged with full query text including PII"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "attack_chain_stolen_laptop",
+      "label": "Attack Chain: Complete Data Breach (Stolen Laptop)",
+      "type": "attack_chain",
+      "properties": {
+        "description": "Laptop stolen -> open dentnest.db with SQLite browser -> all PII exposed",
+        "blocked_by": "Database encryption (SQLCipher or field-level)"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "attack_chain_insider",
+      "label": "Attack Chain: Insider Data Theft",
+      "type": "attack_chain",
+      "properties": {
+        "description": "Disgruntled receptionist copies patient data, no audit log to prove who leaked",
+        "blocked_by": "Authentication + role-based access + audit logging"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "it_rules_2011",
+      "label": "IT Rules 2011 (India)",
+      "type": "regulation",
+      "properties": {
+        "requirement": "Access control on Sensitive Personal Data or Information (SPDI)",
+        "relevance": "Medical records are SPDI requiring reasonable security practices"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "dpdpa_2023",
+      "label": "DPDPA 2023 (India)",
+      "type": "regulation",
+      "properties": {
+        "requirement": "Data protection for personal data",
+        "penalty": "Up to Rs. 250 crore for violations",
+        "relevance": "Patient PII and medical records are personal data"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "sqlcipher",
+      "label": "SQLCipher",
+      "type": "technology",
+      "properties": {
+        "description": "Full database AES-256 encryption for SQLite",
+        "role": "Recommended fix for unencrypted database vulnerability"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "repository_pattern",
+      "label": "Repository Pattern",
+      "type": "design_pattern",
+      "properties": {
+        "description": "Separates data access from business logic"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "inno_setup",
+      "label": "Inno Setup",
+      "type": "tool",
+      "properties": {
+        "role": "Windows installer creator",
+        "url": "https://jrsoftware.org/isinfo.php",
+        "config_file": "installer.iss"
+      },
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "id": "packaging_guide",
+      "label": "Packaging & Distribution Guide",
+      "type": "document",
+      "properties": {
+        "purpose": "Convert Python app into standalone Windows installer",
+        "options": "Single executable (~95 MB) or Professional installer with Inno Setup",
+        "distribution_methods": "USB Drive, Email, Cloud Storage, Professional Hosting"
+      },
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "id": "main_py",
+      "label": "src/main.py",
+      "type": "source_file",
+      "properties": {
+        "role": "Application entry point"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "main_window_py",
+      "label": "src/ui/main_window.py",
+      "type": "source_file",
+      "properties": {
+        "role": "Main window with sidebar navigation"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "styles_py",
+      "label": "src/ui/styles.py",
+      "type": "source_file",
+      "properties": {
+        "role": "Light theme QSS stylesheet, COLORS dictionary"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "db_manager_py",
+      "label": "src/database/db_manager.py",
+      "type": "source_file",
+      "properties": {
+        "role": "SQLite connection manager"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "migrations_py",
+      "label": "src/database/migrations.py",
+      "type": "source_file",
+      "properties": {
+        "role": "Schema creation and migration"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "seed_data_py",
+      "label": "src/database/seed_data.py",
+      "type": "source_file",
+      "properties": {
+        "role": "Initial seed data (12 treatment types, 19 medicines)"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "offline_first_design",
+      "label": "Offline-First Design",
+      "type": "design_decision",
+      "properties": {
+        "description": "No internet required, fully local database",
+        "rationale": "Doctor-friendly for busy dental practices without reliable internet"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "arshad_bagwan",
+      "label": "Arshad Bagwan",
+      "type": "person",
+      "properties": {
+        "role": "Developer"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "claude_code",
+      "label": "Claude Code (AI Assistant)",
+      "type": "tool",
+      "properties": {
+        "model": "Opus 4.6",
+        "role": "AI-powered development assistant that built the entire project"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "clinic_logo_image",
+      "label": "Clinic Logo (Caduceus)",
+      "type": "image",
+      "properties": {
+        "file": "data/clinic_logo.png",
+        "description": "Black caduceus medical symbol (staff with two entwined serpents and wings) on white background, used as clinic logo",
+        "purpose": "Medical/healthcare branding for prescription PDFs and clinic identity"
+      },
+      "source_file": "data/clinic_logo.png"
+    },
+    {
+      "id": "dentnest_icon",
+      "label": "DentNest App Icon",
+      "type": "image",
+      "properties": {
+        "file": "src/resources/icons/dentnest.png",
+        "description": "Blue shield with a white tooth outline and a medical cross in the center, with DENTNEST text below in dark blue",
+        "purpose": "Application brand icon representing dental care and protection",
+        "color_scheme": "Blue gradient shield, consistent with app primary color #007AFF"
+      },
+      "source_file": "src/resources/icons/dentnest.png"
+    },
+    {
+      "id": "rationale_atomic_sql",
+      "label": "Rationale: Atomic SQL for Payment Consistency",
+      "type": "rationale",
+      "properties": {
+        "explanation": "Changed from read-then-write to atomic SQL UPDATE (amount_paid = amount_paid + ?) to prevent double-counting payments due to race conditions between concurrent reads and writes",
+        "trade_off": "Slightly more complex SQL but eliminates data corruption risk"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "rationale_offline_first",
+      "label": "Rationale: Offline-First Architecture",
+      "type": "rationale",
+      "properties": {
+        "explanation": "Chose SQLite over cloud database because dental clinics may not have reliable internet; the app must work fully offline with no external dependencies",
+        "trade_off": "No multi-device sync or cloud backup, but guarantees availability"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "rationale_cursor_ui",
+      "label": "Rationale: Cursor-Inspired UI Design",
+      "type": "rationale",
+      "properties": {
+        "explanation": "Chose clean light theme inspired by Cursor.com for professional appearance; sidebar navigation with grouped menu items for intuitive workflow",
+        "trade_off": "Hardcoded Segoe UI font may not be available on all machines"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "rationale_repository_pattern",
+      "label": "Rationale: Repository Pattern for Data Access",
+      "type": "rationale",
+      "properties": {
+        "explanation": "Separates data access from business logic for clean architecture; enables changing database implementation without modifying business rules",
+        "trade_off": "Additional abstraction layer adds code but improves maintainability"
+      },
+      "source_file": "claude.md"
+    },
+    {
+      "id": "rationale_single_exe",
+      "label": "Rationale: Single Executable Distribution",
+      "type": "rationale",
+      "properties": {
+        "explanation": "PyInstaller bundles entire Python runtime into one ~95 MB executable so doctor can run without installing Python or dependencies",
+        "trade_off": "Large file size (~95 MB) but zero setup required for end user"
+      },
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "id": "rationale_no_auth_warning",
+      "label": "Rationale: No Authentication (Security Risk)",
+      "type": "rationale",
+      "properties": {
+        "explanation": "Authentication was not implemented in v1.0.0, likely for speed of initial development; security audit identifies this as the top risk requiring architectural changes for regulatory compliance",
+        "trade_off": "Faster development but critical security gap violating IT Rules 2011 and DPDPA 2023"
+      },
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "id": "design_concern_no_backup",
+      "label": "Design Concern: No Database Backup Mechanism",
+      "type": "design_concern",
+      "properties": {
+        "description": "Single SQLite file - if corrupted, all data is lost",
+        "status": "open"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "design_concern_no_audit_log",
+      "label": "Design Concern: No Audit Log",
+      "type": "design_concern",
+      "properties": {
+        "description": "No record of who changed what and when",
+        "status": "open"
+      },
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "id": "print_pdf",
+      "label": "print.pdf",
+      "type": "document",
+      "properties": {
+        "description": "PDF file in project root, likely a prescription or report printout",
+        "status": "unreadable (poppler-utils not installed)"
+      },
+      "source_file": "print.pdf"
+    }
+  ],
+  "edges": [
+    {
+      "source": "dentnest",
+      "target": "python",
+      "relationship": "built_with",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "pyqt6",
+      "relationship": "depends_on",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "requirements.txt"
+    },
+    {
+      "source": "dentnest",
+      "target": "matplotlib",
+      "relationship": "depends_on",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "requirements.txt"
+    },
+    {
+      "source": "dentnest",
+      "target": "pandas",
+      "relationship": "depends_on",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "requirements.txt"
+    },
+    {
+      "source": "dentnest",
+      "target": "python_dateutil",
+      "relationship": "depends_on",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "requirements.txt"
+    },
+    {
+      "source": "dentnest",
+      "target": "pyinstaller",
+      "relationship": "depends_on",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "requirements.txt"
+    },
+    {
+      "source": "dentnest",
+      "target": "sqlite",
+      "relationship": "uses_database",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "three_layer_arch",
+      "relationship": "follows_architecture",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "three_layer_arch",
+      "target": "presentation_layer",
+      "relationship": "contains_layer",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "three_layer_arch",
+      "target": "service_layer",
+      "relationship": "contains_layer",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "three_layer_arch",
+      "target": "repository_layer",
+      "relationship": "contains_layer",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "three_layer_arch",
+      "target": "database_layer",
+      "relationship": "contains_layer",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "presentation_layer",
+      "target": "service_layer",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "service_layer",
+      "target": "repository_layer",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "repository_layer",
+      "target": "database_layer",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "presentation_layer",
+      "target": "pyqt6",
+      "relationship": "built_with",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "analytics_dashboard",
+      "target": "matplotlib",
+      "relationship": "renders_with",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "database_layer",
+      "target": "sqlite",
+      "relationship": "uses",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "patient_management",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "treatment_management",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "payment_tracking",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "prescription_management",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "analytics_dashboard",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "dashboard",
+      "relationship": "has_feature",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "cursor_inspired_ui",
+      "relationship": "uses_design",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "patients_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "treatment_types_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "treatments_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "payments_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "prescriptions_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "sqlite",
+      "target": "medicines_table",
+      "relationship": "contains_table",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "treatments_table",
+      "target": "patients_table",
+      "relationship": "foreign_key_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "treatments_table",
+      "target": "treatment_types_table",
+      "relationship": "foreign_key_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "payments_table",
+      "target": "treatments_table",
+      "relationship": "foreign_key_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "prescriptions_table",
+      "target": "treatments_table",
+      "relationship": "foreign_key_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "patient_management",
+      "target": "patients_table",
+      "relationship": "reads_writes",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "treatment_management",
+      "target": "treatments_table",
+      "relationship": "reads_writes",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "payment_tracking",
+      "target": "payments_table",
+      "relationship": "reads_writes",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "prescription_management",
+      "target": "prescriptions_table",
+      "relationship": "reads_writes",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "prescription_management",
+      "target": "medicines_table",
+      "relationship": "reads_for_autocomplete",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "code_review",
+      "target": "dentnest",
+      "relationship": "audits",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "dentnest",
+      "relationship": "audits",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_race_condition_payment",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_no_rollback",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_html_injection",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_sql_injection",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_widget_memory_leak",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "code_review",
+      "target": "bug_thread_safety",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_no_auth",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_unencrypted_db",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_no_access_control",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_toctou_payment",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_sql_injection_limit",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_no_db_constraints",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "security_audit",
+      "target": "vuln_pii_in_logs",
+      "relationship": "identifies",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "vuln_unencrypted_db",
+      "target": "dpdpa_2023",
+      "relationship": "violates",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "vuln_no_auth",
+      "target": "it_rules_2011",
+      "relationship": "violates",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "vuln_unencrypted_db",
+      "target": "it_rules_2011",
+      "relationship": "violates",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "sqlcipher",
+      "target": "vuln_unencrypted_db",
+      "relationship": "recommended_fix_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "attack_chain_stolen_laptop",
+      "target": "vuln_unencrypted_db",
+      "relationship": "exploits",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "attack_chain_insider",
+      "target": "vuln_no_auth",
+      "relationship": "exploits",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "attack_chain_insider",
+      "target": "vuln_no_access_control",
+      "relationship": "exploits",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "bug_race_condition_payment",
+      "target": "vuln_toctou_payment",
+      "relationship": "related_to",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "bug_sql_injection",
+      "target": "vuln_sql_injection_limit",
+      "relationship": "related_to",
+      "type": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "repository_pattern",
+      "relationship": "uses_pattern",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "packaging_guide",
+      "target": "pyinstaller",
+      "relationship": "documents_usage_of",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "source": "packaging_guide",
+      "target": "inno_setup",
+      "relationship": "documents_usage_of",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "main_py",
+      "relationship": "entry_point",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "presentation_layer",
+      "target": "main_window_py",
+      "relationship": "contains",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "presentation_layer",
+      "target": "styles_py",
+      "relationship": "contains",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "database_layer",
+      "target": "db_manager_py",
+      "relationship": "contains",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "database_layer",
+      "target": "migrations_py",
+      "relationship": "contains",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "database_layer",
+      "target": "seed_data_py",
+      "relationship": "contains",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "dentnest",
+      "target": "offline_first_design",
+      "relationship": "follows_principle",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "arshad_bagwan",
+      "target": "dentnest",
+      "relationship": "developed",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "claude_code",
+      "target": "dentnest",
+      "relationship": "built",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "claude_code",
+      "target": "code_review",
+      "relationship": "authored",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "claude_code",
+      "target": "security_audit",
+      "relationship": "authored",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "dentnest_icon",
+      "target": "dentnest",
+      "relationship": "brand_icon_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/resources/icons/dentnest.png"
+    },
+    {
+      "source": "clinic_logo_image",
+      "target": "dentnest",
+      "relationship": "clinic_logo_for",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/clinic_logo.png"
+    },
+    {
+      "source": "clinic_logo_image",
+      "target": "prescription_management",
+      "relationship": "used_in",
+      "type": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/clinic_logo.png"
+    },
+    {
+      "source": "dentnest_icon",
+      "target": "cursor_inspired_ui",
+      "relationship": "consistent_with",
+      "type": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "src/resources/icons/dentnest.png"
+    },
+    {
+      "source": "rationale_atomic_sql",
+      "target": "bug_race_condition_payment",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "rationale_offline_first",
+      "target": "offline_first_design",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "rationale_offline_first",
+      "target": "sqlite",
+      "relationship": "rationale_for",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "rationale_cursor_ui",
+      "target": "cursor_inspired_ui",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "rationale_repository_pattern",
+      "target": "repository_pattern",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude.md"
+    },
+    {
+      "source": "rationale_single_exe",
+      "target": "pyinstaller",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "PACKAGING_GUIDE.md"
+    },
+    {
+      "source": "rationale_no_auth_warning",
+      "target": "vuln_no_auth",
+      "relationship": "rationale_for",
+      "type": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "design_concern_no_backup",
+      "target": "sqlite",
+      "relationship": "concern_about",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "design_concern_no_audit_log",
+      "target": "vuln_no_auth",
+      "relationship": "compounds_risk_of",
+      "type": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "vuln_toctou_payment",
+      "target": "payments_table",
+      "relationship": "affects",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "vuln_no_db_constraints",
+      "target": "migrations_py",
+      "relationship": "located_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "vuln_pii_in_logs",
+      "target": "db_manager_py",
+      "relationship": "located_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SECURITY_AUDIT.md"
+    },
+    {
+      "source": "bug_no_rollback",
+      "target": "db_manager_py",
+      "relationship": "located_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "bug_thread_safety",
+      "target": "db_manager_py",
+      "relationship": "located_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CODE_REVIEW.md"
+    },
+    {
+      "source": "print_pdf",
+      "target": "prescription_management",
+      "relationship": "generated_by",
+      "type": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "print.pdf"
+    },
+    {
+      "source": "styles_py",
+      "target": "cursor_inspired_ui",
+      "relationship": "implements",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude.md"
+    }
+  ],
+  "metadata": {
+    "chunk": "01",
+    "total_chunks": 1,
+    "source_files": [
+      "CODE_REVIEW.md",
+      "requirements.txt",
+      "QUICKSTART.md",
+      "claude.md",
+      "PACKAGING_GUIDE.md",
+      "README.md",
+      "SECURITY_AUDIT.md",
+      "BUILD_SUMMARY.txt",
+      "print.pdf",
+      "data/clinic_logo.png",
+      "src/resources/icons/dentnest.png"
+    ],
+    "extraction_notes": "print.pdf could not be read (poppler-utils not installed). All other files successfully processed. Two images analyzed via vision: clinic_logo.png is a caduceus medical symbol, dentnest.png is a blue shield with tooth and cross brand icon."
+  }
+}

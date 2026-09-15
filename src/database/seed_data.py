@@ -24,114 +24,124 @@ def seed_treatment_types():
         ('Consultation', 'General dental consultation'),
     ]
 
-    # Check if data already exists
-    existing = db.fetch_one("SELECT COUNT(*) as count FROM treatment_types")
-    if existing and existing['count'] > 0:
-        logger.info("Treatment types already exist, skipping seed")
-        return
-
-    # Insert treatment types
+    # Use INSERT OR IGNORE so missing types are always added
+    # (even if some already exist from migration or a partial import)
     db.executemany(
-        "INSERT INTO treatment_types (name, description) VALUES (?, ?)",
+        "INSERT OR IGNORE INTO treatment_types (name, description) VALUES (?, ?)",
         treatment_types
     )
 
-    logger.info(f"Seeded {len(treatment_types)} treatment types")
+    logger.info(f"Ensured {len(treatment_types)} treatment types exist")
 
 
 def seed_medicines():
     """Add common medicines to database."""
     db = DatabaseManager()
 
+    # (name, common_dosage, category, medicine_type, brand_name)
     medicines = [
         # Antibiotics
-        ('Amoxicillin 500mg', '500mg', 'antibiotic'),
-        ('Azithromycin 500mg', '500mg', 'antibiotic'),
-        ('Clindamycin 300mg', '300mg', 'antibiotic'),
-        ('Metronidazole 400mg', '400mg', 'antibiotic'),
+        ('Amoxicillin 500mg', '500mg', 'antibiotic', 'capsule', ''),
+        ('Azithromycin 500mg', '500mg', 'antibiotic', 'tablet', ''),
+        ('Clindamycin 300mg', '300mg', 'antibiotic', 'capsule', ''),
+        ('Metronidazole 400mg', '400mg', 'antibiotic', 'tablet', ''),
 
         # Painkillers
-        ('Ibuprofen 400mg', '400mg', 'painkiller'),
-        ('Paracetamol 500mg', '500mg', 'painkiller'),
-        ('Diclofenac 50mg', '50mg', 'painkiller'),
-        ('Ketorolac 10mg', '10mg', 'painkiller'),
+        ('Ibuprofen 400mg', '400mg', 'painkiller', 'tablet', ''),
+        ('Paracetamol 500mg', '500mg', 'painkiller', 'tablet', ''),
+        ('Diclofenac 50mg', '50mg', 'painkiller', 'tablet', ''),
+        ('Ketorolac 10mg', '10mg', 'painkiller', 'tablet', ''),
 
         # Antiseptics and Mouthwash
-        ('Chlorhexidine Mouthwash', '0.2%', 'antiseptic'),
-        ('Betadine Gargle', '2%', 'antiseptic'),
-        ('Hydrogen Peroxide Mouthwash', '3%', 'antiseptic'),
+        ('Chlorhexidine Mouthwash', '0.2%', 'antiseptic', 'mouthwash', ''),
+        ('Betadine Gargle', '2%', 'antiseptic', 'mouthwash', ''),
+        ('Hydrogen Peroxide Mouthwash', '3%', 'antiseptic', 'mouthwash', ''),
 
         # Anti-inflammatory
-        ('Prednisolone 5mg', '5mg', 'anti-inflammatory'),
-        ('Dexamethasone 0.5mg', '0.5mg', 'anti-inflammatory'),
+        ('Prednisolone 5mg', '5mg', 'anti-inflammatory', 'tablet', ''),
+        ('Dexamethasone 0.5mg', '0.5mg', 'anti-inflammatory', 'tablet', ''),
 
         # Vitamins and Supplements
-        ('Vitamin B Complex', 'standard', 'vitamin'),
-        ('Calcium + Vitamin D3', 'standard', 'supplement'),
+        ('Vitamin B Complex', 'standard', 'vitamin', 'tablet', ''),
+        ('Calcium + Vitamin D3', 'standard', 'supplement', 'tablet', ''),
 
         # Topical Applications
-        ('Lignocaine Gel 2%', '2%', 'topical'),
-        ('Clove Oil', 'standard', 'topical'),
+        ('Lignocaine Gel 2%', '2%', 'topical', 'gel', ''),
+        ('Clove Oil', 'standard', 'topical', 'liquid', ''),
 
         # Antifungal
-        ('Fluconazole 150mg', '150mg', 'antifungal'),
-        ('Nystatin Oral Drops', 'standard', 'antifungal'),
+        ('Fluconazole 150mg', '150mg', 'antifungal', 'capsule', ''),
+        ('Nystatin Oral Drops', 'standard', 'antifungal', 'drops', ''),
 
         # Extended dental medicines — Antibiotics
-        ('Amoxicillin + Clavulanate 625mg', '625mg', 'antibiotic'),
-        ('Tinidazole 500mg', '500mg', 'antibiotic'),
-        ('Doxycycline 100mg', '100mg', 'antibiotic'),
+        ('Amoxicillin + Clavulanate 625mg', '625mg', 'antibiotic', 'tablet', ''),
+        ('Tinidazole 500mg', '500mg', 'antibiotic', 'tablet', ''),
+        ('Doxycycline 100mg', '100mg', 'antibiotic', 'capsule', ''),
 
         # Painkillers / Anti-inflammatory
-        ('Ibuprofen 600mg', '600mg', 'analgesic'),
-        ('Paracetamol 650mg', '650mg', 'analgesic'),
-        ('Aceclofenac 100mg', '100mg', 'analgesic'),
-        ('Nimesulide 100mg', '100mg', 'analgesic'),
-        ('Tramadol 50mg', '50mg', 'analgesic'),
-        ('Ketorolac 10mg (analgesic)', '10mg', 'analgesic'),
-        ('Diclofenac 50mg (analgesic)', '50mg', 'analgesic'),
+        ('Ibuprofen 600mg', '600mg', 'analgesic', 'tablet', ''),
+        ('Paracetamol 650mg', '650mg', 'analgesic', 'tablet', ''),
+        ('Aceclofenac 100mg', '100mg', 'analgesic', 'tablet', ''),
+        ('Nimesulide 100mg', '100mg', 'analgesic', 'tablet', ''),
+        ('Tramadol 50mg', '50mg', 'analgesic', 'capsule', ''),
+        ('Ketorolac 10mg (analgesic)', '10mg', 'analgesic', 'tablet', ''),
+        ('Diclofenac 50mg (analgesic)', '50mg', 'analgesic', 'tablet', ''),
 
         # Antifungal
-        ('Clotrimazole Mouth Gel', 'standard', 'antifungal'),
-        ('Nystatin Oral Suspension', 'standard', 'antifungal'),
+        ('Clotrimazole Mouth Gel', 'standard', 'antifungal', 'gel', ''),
+        ('Nystatin Oral Suspension', 'standard', 'antifungal', 'liquid', ''),
 
         # Mouthwash / Rinse
-        ('Chlorhexidine 0.2% Mouthwash', '0.2%', 'antiseptic'),
-        ('Povidone Iodine Gargle', 'standard', 'antiseptic'),
-        ('Benzydamine Mouthwash', 'standard', 'anti-inflammatory'),
+        ('Chlorhexidine 0.2% Mouthwash', '0.2%', 'antiseptic', 'mouthwash', ''),
+        ('Povidone Iodine Gargle', 'standard', 'antiseptic', 'mouthwash', ''),
+        ('Benzydamine Mouthwash', 'standard', 'anti-inflammatory', 'mouthwash', ''),
 
         # Topical / Anesthetic
-        ('Lidocaine Gel 2%', '2%', 'anesthetic'),
-        ('Benzocaine Gel', 'standard', 'anesthetic'),
-        ('Triamcinolone Acetonide Paste', 'standard', 'corticosteroid'),
-        ('Choline Salicylate Gel', 'standard', 'analgesic'),
+        ('Lidocaine Gel 2%', '2%', 'anesthetic', 'gel', ''),
+        ('Benzocaine Gel', 'standard', 'anesthetic', 'gel', ''),
+        ('Triamcinolone Acetonide Paste', 'standard', 'corticosteroid', 'paste', ''),
+        ('Choline Salicylate Gel', 'standard', 'analgesic', 'gel', ''),
 
         # Vitamins / Supplements
-        ('Vitamin C 500mg', '500mg', 'supplement'),
-        ('Zinc Supplement', 'standard', 'supplement'),
+        ('Vitamin C 500mg', '500mg', 'supplement', 'tablet', ''),
+        ('Zinc Supplement', 'standard', 'supplement', 'tablet', ''),
 
         # Antacids
-        ('Pantoprazole 40mg', '40mg', 'antacid'),
-        ('Omeprazole 20mg', '20mg', 'antacid'),
+        ('Pantoprazole 40mg', '40mg', 'antacid', 'tablet', ''),
+        ('Omeprazole 20mg', '20mg', 'antacid', 'capsule', ''),
     ]
 
-    # Insert only medicines that don't already exist (check by name)
-    inserted = 0
-    for name, common_dosage, category in medicines:
-        existing = db.fetch_one(
-            "SELECT id FROM medicines WHERE name = ?", (name,)
-        )
-        if not existing:
-            db.execute(
-                "INSERT INTO medicines (name, common_dosage, category) VALUES (?, ?, ?)",
-                (name, common_dosage, category)
-            )
-            inserted += 1
+    # Backfill medicine_type for existing rows that lack it
+    _backfill_medicine_types(db, medicines)
 
-    if inserted > 0:
-        logger.info(f"Seeded {inserted} new medicines")
+    # Batch check: fetch all existing medicine names in one query
+    existing_rows = db.fetch_all("SELECT name FROM medicines")
+    existing_names = {row['name'] for row in existing_rows}
+
+    # Filter to only new medicines and batch insert
+    new_medicines = [
+        (name, common_dosage, category, medicine_type, brand_name)
+        for name, common_dosage, category, medicine_type, brand_name in medicines
+        if name not in existing_names
+    ]
+
+    if new_medicines:
+        db.executemany(
+            "INSERT INTO medicines (name, common_dosage, category, medicine_type, brand_name) VALUES (?, ?, ?, ?, ?)",
+            new_medicines
+        )
+        logger.info(f"Seeded {len(new_medicines)} new medicines")
     else:
         logger.info("All medicines already exist, skipping seed")
+
+
+def _backfill_medicine_types(db, medicines):
+    """Backfill medicine_type for existing rows that already have medicines but lack the new column value."""
+    for name, _dosage, _category, medicine_type, brand_name in medicines:
+        db.execute(
+            "UPDATE medicines SET medicine_type = ? WHERE name = ? AND (medicine_type IS NULL OR medicine_type = '')",
+            (medicine_type, name)
+        )
 
 
 def seed_all():

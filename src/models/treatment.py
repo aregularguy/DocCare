@@ -68,7 +68,7 @@ class Treatment:
     @property
     def is_paid(self) -> bool:
         """Check if treatment is fully paid."""
-        return self.pending_amount <= 0.01  # Small tolerance for float comparison
+        return round(self.pending_amount, 2) <= 0
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""

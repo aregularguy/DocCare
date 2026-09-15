@@ -110,7 +110,8 @@ class Sidebar(QWidget):
         self._add_item(nav_layout, 'treatments',   'Treatments')
         nav_layout.addWidget(self._separator())
         self._add_item(nav_layout, 'payments',     'Payments')
-        self._add_item(nav_layout, 'prescriptions','Prescribe')
+        self._add_item(nav_layout, 'due_payments', 'Due Payments')
+        self._add_item(nav_layout, 'prescriptions','Medicines')
         self._add_item(nav_layout, 'analytics',    'Analytics')
         nav_layout.addWidget(self._separator())
         self._add_item(nav_layout, 'settings',     'Settings')
@@ -251,6 +252,7 @@ class MainWindow(QMainWindow):
         from .widgets.patient_list import PatientListWidget
         from .widgets.treatment_list import TreatmentListWidget
         from .widgets.payment_list import PaymentListWidget
+        from .widgets.due_payments import DuePaymentsWidget
         from .widgets.prescription_list import PrescriptionListWidget
         from .widgets.analytics_dashboard import AnalyticsDashboardWidget
         from .widgets.settings import SettingsWidget
@@ -262,6 +264,7 @@ class MainWindow(QMainWindow):
             'patients': PatientListWidget(),
             'treatments': TreatmentListWidget(),
             'payments': PaymentListWidget(),
+            'due_payments': DuePaymentsWidget(),
             'prescriptions': PrescriptionListWidget(),
             'analytics': AnalyticsDashboardWidget(),
             'settings': SettingsWidget(),
@@ -284,6 +287,12 @@ class MainWindow(QMainWindow):
             # Refresh page data if it has a refresh method
             if hasattr(page_widget, 'refresh_data'):
                 page_widget.refresh_data()
+
+    def refresh_all_pages(self):
+        """Refresh data on all pages after DB restore/merge."""
+        for page in self.pages.values():
+            if hasattr(page, 'refresh_data'):
+                page.refresh_data()
 
     def apply_styles(self):
         """Apply the stylesheet to the window."""

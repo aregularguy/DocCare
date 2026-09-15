@@ -197,13 +197,13 @@ class TreatmentFormView(QWidget):
         # Total Cost
         cost_col = QVBoxLayout()
         cost_col.setSpacing(6)
-        cost_lbl = QLabel("Total Cost (₹) *")
+        cost_lbl = QLabel("Total Cost (Rs.) *")
         cost_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         cost_col.addWidget(cost_lbl)
         self.cost_input = QDoubleSpinBox()
         self.cost_input.setMinimum(0)
         self.cost_input.setMaximum(1000000)
-        self.cost_input.setPrefix("₹ ")
+        self.cost_input.setPrefix("Rs. ")
         self.cost_input.setValue(0)
         self.cost_input.setMinimumHeight(44)
         cost_col.addWidget(self.cost_input)
@@ -308,6 +308,7 @@ class TreatmentFormView(QWidget):
             "Veneer":       ("💎", "#E0F7FA", "#00695C"),
             "Bridge":       ("🌉", "#FBF1E1", "#BF360C"),
             "Consultation": ("💬", "#E6F5EE", "#1B5E20"),
+            "X-Ray":        ("🩻", "#EEEFF8", "#6A1B9A"),
         }
 
         treatment_types = self.treatment_service.get_all_treatment_types()
@@ -492,45 +493,82 @@ class TreatmentFormView(QWidget):
 
 
 class TreatmentQueueView(QWidget):
-    """View showing treatment queue."""
+    """View showing treatment queue with date filters."""
+
+    STATUS_STYLE = {
+        "planned":     ("PLANNED",     "#FBF1E1", "#E65100"),
+        "in_progress": ("IN PROGRESS", "#E3F3F6", "#16707F"),
+        "completed":   ("COMPLETED",   "#E6F5EE", "#2E7D32"),
+    }
 
     def __init__(self, parent_widget):
         super().__init__()
         self.parent_widget = parent_widget
         self.treatment_service = TreatmentService()
         self.patient_service = PatientService()
+        self._current_filter = "today"
+        self._hide_completed = True
         self.init_ui()
 
     def init_ui(self):
         """Initialize UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(24)
+        layout.setSpacing(16)
 
-        # Header
+        # ── Header row ──
         header_layout = QHBoxLayout()
-
         title = QLabel("Treatment Queue")
         title.setObjectName("page_title")
         header_layout.addWidget(title)
-
         header_layout.addStretch()
-
         add_btn = QPushButton("➕ Add New Treatment")
         add_btn.setObjectName("primary_button")
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.on_add_new_treatment)
         header_layout.addWidget(add_btn)
-
         layout.addLayout(header_layout)
 
-        # Queue table
+        # ── Filter bar ──
+        filter_bar = QHBoxLayout()
+        filter_bar.setSpacing(8)
+
+        self._filter_btns = {}
+        for key, label in [("today", "Today"), ("week", "This Week"), ("all", "All")]:
+            btn = QPushButton(label)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setFixedHeight(34)
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda checked, k=key: self._set_filter(k))
+            self._filter_btns[key] = btn
+            filter_bar.addWidget(btn)
+
+        filter_bar.addSpacing(16)
+
+        self._completed_btn = QPushButton("Show Completed")
+        self._completed_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._completed_btn.setFixedHeight(34)
+        self._completed_btn.setCheckable(True)
+        self._completed_btn.setChecked(False)
+        self._completed_btn.clicked.connect(self._toggle_completed)
+        filter_bar.addWidget(self._completed_btn)
+
+        filter_bar.addStretch()
+
+        self._count_label = QLabel("")
+        self._count_label.setStyleSheet("color:#5B6B73; font-size:12px;")
+        filter_bar.addWidget(self._count_label)
+
+        layout.addLayout(filter_bar)
+
+        self._apply_filter_styles()
+
+        # ── Queue table ──
         self.queue_table = QTableWidget()
         self.queue_table.setColumnCount(7)
         self.queue_table.setHorizontalHeaderLabels([
             "Patient", "Mobile", "Treatment", "Cost", "Status", "Date", "Actions"
         ])
-
         self.queue_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.queue_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.queue_table.setAlternatingRowColors(True)
@@ -538,7 +576,6 @@ class TreatmentQueueView(QWidget):
         self.queue_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.queue_table.verticalHeader().setDefaultSectionSize(48)
 
-        # Column widths
         header = self.queue_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
@@ -547,7 +584,7 @@ class TreatmentQueueView(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         header.resizeSection(3, 100)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(4, 120)
+        header.resizeSection(4, 130)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.resizeSection(5, 100)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
@@ -557,19 +594,87 @@ class TreatmentQueueView(QWidget):
 
         self.load_queue()
 
-    def load_queue(self):
-        """Load treatment queue."""
-        # Get all pending treatments
-        all_patients = self.patient_service.get_all_patients()
+    # ── filter helpers ────────────────────────────────────────────────────────
 
+    def _set_filter(self, key: str):
+        self._current_filter = key
+        self._apply_filter_styles()
+        self.load_queue()
+
+    def _toggle_completed(self):
+        self._hide_completed = not self._completed_btn.isChecked()
+        self._apply_filter_styles()
+        self.load_queue()
+
+    def _apply_filter_styles(self):
+        active = (
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
+            " border-radius:6px; padding:0 16px; font-size:13px; font-weight:700; }"
+        )
+        inactive = (
+            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #CFDADE;"
+            " border-radius:6px; padding:0 16px; font-size:13px; }"
+            "QPushButton:hover { background:#DDE5E8; }"
+        )
+        for key, btn in self._filter_btns.items():
+            btn.setStyleSheet(active if key == self._current_filter else inactive)
+            btn.setChecked(key == self._current_filter)
+
+        completed_on = (
+            "QPushButton { background:#E6F5EE; color:#2E7D32; border:1px solid #A7F3D0;"
+            " border-radius:6px; padding:0 14px; font-size:13px; font-weight:600; }"
+        )
+        completed_off = (
+            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #CFDADE;"
+            " border-radius:6px; padding:0 14px; font-size:13px; }"
+            "QPushButton:hover { background:#DDE5E8; }"
+        )
+        self._completed_btn.setStyleSheet(
+            completed_on if not self._hide_completed else completed_off
+        )
+
+    def _passes_filter(self, treatment) -> bool:
+        """Return True if treatment should be shown given current filters."""
+        if self._hide_completed and treatment.status == "completed":
+            return False
+        if self._current_filter == "all":
+            return True
+        try:
+            from datetime import date as _date, timedelta
+            today = _date.today()
+            t_date = treatment.start_date
+            if isinstance(t_date, str):
+                from datetime import datetime
+                t_date = datetime.fromisoformat(t_date).date()
+            if t_date is None:
+                return self._current_filter == "all"
+            if self._current_filter == "today":
+                return t_date == today
+            if self._current_filter == "week":
+                week_start = today - timedelta(days=today.weekday())
+                return week_start <= t_date <= today + timedelta(days=6 - today.weekday())
+        except (ValueError, AttributeError) as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Date filter error for treatment {treatment.id}: {e}")
+            return True
+        return True
+
+    def load_queue(self):
+        """Load treatment queue applying current filter."""
+        from datetime import date as _date
+        all_patients = self.patient_service.get_all_patients()
         self.queue_table.setRowCount(0)
+        shown = 0
 
         for patient in all_patients:
             treatments = self.treatment_service.get_patient_treatments(patient.id)
-
             for treatment in treatments:
+                if not self._passes_filter(treatment):
+                    continue
+
                 row = self.queue_table.rowCount()
                 self.queue_table.insertRow(row)
+                shown += 1
 
                 _f = QFont("Ubuntu", 12)
                 _f_bold = QFont("Ubuntu", 12)
@@ -587,20 +692,47 @@ class TreatmentQueueView(QWidget):
                 treatment_item.setFont(_f)
                 self.queue_table.setItem(row, 2, treatment_item)
 
-                cost_item = QTableWidgetItem(f"₹{treatment.total_cost:.2f}")
+                cost_item = QTableWidgetItem(f"Rs.{treatment.total_cost:.2f}")
                 cost_item.setFont(_f)
                 self.queue_table.setItem(row, 3, cost_item)
 
-                status_item = QTableWidgetItem(treatment.status.upper())
-                status_item.setFont(_f)
+                # Colored status badge
+                status_key = treatment.status.lower().replace(" ", "_")
+                label, bg, fg = self.STATUS_STYLE.get(status_key, (treatment.status.upper(), "#F1F5F9", "#374151"))
+                status_item = QTableWidgetItem(label)
+                status_item.setFont(_f_bold)
+                status_item.setBackground(QColor(bg))
+                status_item.setForeground(QColor(fg))
+                status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.queue_table.setItem(row, 4, status_item)
 
-                date_str = treatment.start_date.strftime('%Y-%m-%d') if treatment.start_date else "N/A"
+                try:
+                    t_date = treatment.start_date
+                    if isinstance(t_date, str):
+                        from datetime import datetime
+                        t_date = datetime.fromisoformat(t_date).date()
+                    date_str = t_date.strftime('%d %b %Y') if t_date else "N/A"
+                except (ValueError, AttributeError) as e:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Date parse error for treatment {treatment.id}: {e}")
+                    date_str = str(treatment.start_date) if treatment.start_date else "N/A"
                 self.queue_table.setItem(row, 5, QTableWidgetItem(date_str))
 
-                # Action buttons
                 actions = self.create_action_buttons(treatment.id)
                 self.queue_table.setCellWidget(row, 6, actions)
+
+        # Show empty state
+        if shown == 0:
+            filter_names = {"today": "today", "week": "this week", "all": ""}
+            msg = f"No active treatments for {filter_names.get(self._current_filter, '')}".strip()
+            self.queue_table.insertRow(0)
+            empty_item = QTableWidgetItem(msg + "  —  click 'Add New Treatment' to add one.")
+            empty_item.setForeground(QColor("#5B6B73"))
+            self.queue_table.setItem(0, 0, empty_item)
+            self.queue_table.setSpan(0, 0, 1, 7)
+
+        filter_label = {"today": "Today", "week": "This Week", "all": "All Time"}
+        self._count_label.setText(f"{shown} treatment{'s' if shown != 1 else ''} · {filter_label.get(self._current_filter, '')}")
 
     def create_action_buttons(self, treatment_id: int):
         """Create action buttons for each queue row."""
