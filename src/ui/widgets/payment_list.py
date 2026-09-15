@@ -13,14 +13,15 @@ from PyQt6.QtGui import QFont, QColor, QBrush
 from ...services.patient_service import PatientService
 from ...services.treatment_service import TreatmentService
 from ...services.payment_service import PaymentService
+from ...utils.formatters import format_currency
 
 
 METHOD_COLORS = {
-    'cash':   ('#E8F8EC', '#34C759'),
-    'card':   ('#E5F0FF', '#007AFF'),
-    'upi':    ('#F0EFFF', '#5856D6'),
-    'cheque': ('#FFF3E0', '#FF9500'),
-    'other':  ('#F2F2F7', '#86868B'),
+    'cash':   ('#E6F5EE', '#2E9E6B'),
+    'card':   ('#E3F3F6', '#1F8A9E'),
+    'upi':    ('#EEEFF8', '#6E72B8'),
+    'cheque': ('#FBF1E1', '#C98A2E'),
+    'other':  ('#EEF3F4', '#5B6B73'),
 }
 
 
@@ -29,10 +30,10 @@ def _method_badge(method: str) -> QLabel:
     bg, fg = METHOD_COLORS.get(key, METHOD_COLORS['other'])
     lbl = QLabel(method.upper() if method else 'OTHER')
     lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    lbl.setFixedHeight(24)
+    lbl.setMinimumHeight(24)
     lbl.setStyleSheet(
         f"background:{bg}; color:{fg}; border-radius:12px;"
-        f" padding:0 10px; font-weight:700; font-size:11px;"
+        f" padding:3px 12px; font-weight:700; font-size:11px;"
     )
     return lbl
 
@@ -69,7 +70,7 @@ class RecordPaymentDialog(QDialog):
         title_bar = QFrame()
         title_bar.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 0px; }"
         )
         title_bar.setFixedHeight(60)
@@ -109,7 +110,7 @@ class RecordPaymentDialog(QDialog):
 
         self.patient_info_lbl = QLabel("")
         self.patient_info_lbl.setStyleSheet(
-            "color:#007AFF; font-size:12px; background:transparent;"
+            "color:#1F8A9E; font-size:12px; background:transparent;"
         )
         form_layout.addRow("", self.patient_info_lbl)
 
@@ -122,7 +123,7 @@ class RecordPaymentDialog(QDialog):
 
         # Amount
         self.amount_spin = QDoubleSpinBox()
-        self.amount_spin.setPrefix("₹ ")
+        self.amount_spin.setPrefix("Rs. ")
         self.amount_spin.setRange(0.01, 9_999_999.0)
         self.amount_spin.setDecimals(2)
         self.amount_spin.setValue(0.01)
@@ -131,7 +132,7 @@ class RecordPaymentDialog(QDialog):
 
         self.pending_lbl = QLabel("")
         self.pending_lbl.setStyleSheet(
-            "color:#FF9500; font-size:12px; background:transparent;"
+            "color:#C98A2E; font-size:12px; background:transparent;"
         )
         form_layout.addRow("", self.pending_lbl)
 
@@ -163,7 +164,7 @@ class RecordPaymentDialog(QDialog):
         # Buttons
         btn_bar = QFrame()
         btn_bar.setStyleSheet(
-            "QFrame { background:#F2F2F7; border-top:1px solid #E5E5EA; }"
+            "QFrame { background:#EEF3F4; border-top:1px solid #DDE5E8; }"
         )
         btn_layout = QHBoxLayout(btn_bar)
         btn_layout.setContentsMargins(28, 14, 28, 14)
@@ -227,7 +228,7 @@ class RecordPaymentDialog(QDialog):
         self.treatment_combo.setEnabled(True)
         self.treatment_combo.addItem("— select treatment —", -1)
         for t in payable:
-            label = f"{t.treatment_type_name}  (₹{t.pending_amount:,.2f} pending)"
+            label = f"{t.treatment_type_name}  ({format_currency(t.pending_amount)} pending)"
             self.treatment_combo.addItem(label, t.id)
 
     def _on_treatment_changed(self, idx: int):
@@ -244,7 +245,7 @@ class RecordPaymentDialog(QDialog):
                 self.amount_spin.setValue(t.pending_amount)
                 self.amount_spin.setEnabled(True)
                 self.pending_lbl.setText(
-                    f"Pending: ₹{t.pending_amount:,.2f}  ·  Total cost: ₹{t.total_cost:,.2f}"
+                    f"Pending: {format_currency(t.pending_amount)}  ·  Total cost: {format_currency(t.total_cost)}"
                 )
                 return
 
@@ -321,7 +322,7 @@ class PaymentListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -335,7 +336,7 @@ class PaymentListWidget(QWidget):
         )
         b_subtitle = QLabel("Track and manage all patient payment transactions")
         b_subtitle.setStyleSheet(
-            "color:#94B8D4; font-size:13px; background:transparent;"
+            "color:#A9CBD2; font-size:13px; background:transparent;"
         )
         banner_text.addStretch()
         banner_text.addWidget(b_title)
@@ -358,13 +359,13 @@ class PaymentListWidget(QWidget):
         cards_row.setSpacing(16)
 
         self.card_today = self._make_summary_card(
-            "Total Collected Today", "Rs.0", "#34C759", "💰"
+            "Total Collected Today", format_currency(0), "#2E9E6B", "💰"
         )
         self.card_month = self._make_summary_card(
-            "Total Collected This Month", "Rs.0", "#007AFF", "📅"
+            "Total Collected This Month", format_currency(0), "#1F8A9E", "📅"
         )
         self.card_pending = self._make_summary_card(
-            "Total Outstanding", "Rs.0", "#FF9500", "⏳"
+            "Total Outstanding", format_currency(0), "#C98A2E", "⏳"
         )
         cards_row.addWidget(self.card_today)
         cards_row.addWidget(self.card_month)
@@ -395,7 +396,7 @@ class PaymentListWidget(QWidget):
         table_frame = QFrame()
         table_frame.setObjectName("card")
         table_frame.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
             " border-radius:12px; padding:0px; }"
         )
         tbl_layout = QVBoxLayout(table_frame)
@@ -411,10 +412,12 @@ class PaymentListWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        # ResizeToContents ignores cell widgets, which clipped the method badge
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(3, 130)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.setColumnWidth(0, 180)
-        self.table.setColumnWidth(1, 200)
+        self.table.setColumnWidth(0, 240)
+        self.table.setColumnWidth(1, 260)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(
@@ -433,7 +436,7 @@ class PaymentListWidget(QWidget):
         self.empty_lbl = QLabel("No payments recorded yet.")
         self.empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_lbl.setStyleSheet(
-            "color:#86868B; font-size:15px; padding:40px;"
+            "color:#5B6B73; font-size:15px; padding:40px;"
         )
         self.empty_lbl.hide()
         layout.addWidget(self.empty_lbl)
@@ -452,13 +455,13 @@ class PaymentListWidget(QWidget):
         card = QFrame()
         card.setObjectName("metric_card")
         card.setStyleSheet(
-            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #E5E5EA;"
-            f" border-left: 4px solid {accent}; border-radius:10px; }}"
+            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #DDE5E8;"
+            f" border-left: 4px solid {accent}; border-radius:10px; padding:0px; }}"
         )
         card.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
         )
-        card.setFixedHeight(100)
+        card.setMinimumHeight(100)
 
         cl = QVBoxLayout(card)
         cl.setContentsMargins(20, 14, 20, 14)
@@ -477,7 +480,7 @@ class PaymentListWidget(QWidget):
         val_lbl.setObjectName("metric_value")
         # Use Noto Sans / DejaVu Sans for full ₹ Unicode glyph support at large sizes
         val_lbl.setStyleSheet(
-            f"font-size:22px; font-weight:700; color:{accent}; background:transparent;"
+            f"font-size:20pt; font-weight:700; color:{accent}; background:transparent;"
             f" font-family: 'Noto Sans', 'DejaVu Sans', 'Segoe UI', sans-serif;"
         )
         cl.addWidget(val_lbl)
@@ -485,7 +488,7 @@ class PaymentListWidget(QWidget):
         lbl_lbl = QLabel(label)
         lbl_lbl.setObjectName("metric_label")
         lbl_lbl.setStyleSheet(
-            "font-size:11px; color:#86868B; background:transparent;"
+            "font-size:11px; color:#5B6B73; background:transparent;"
             " font-family: 'Ubuntu', 'Segoe UI', sans-serif;"
         )
         cl.addWidget(lbl_lbl)
@@ -514,13 +517,13 @@ class PaymentListWidget(QWidget):
                 t.pending_amount for t in pending_treatments if t.pending_amount > 0
             )
 
-            self.card_today._value_label.setText(f"Rs.{total_today:,.0f}")
-            self.card_month._value_label.setText(f"Rs.{total_month:,.0f}")
-            self.card_pending._value_label.setText(f"Rs.{total_outstanding:,.0f}")
+            self.card_today._value_label.setText(format_currency(total_today))
+            self.card_month._value_label.setText(format_currency(total_month))
+            self.card_pending._value_label.setText(format_currency(total_outstanding))
         except Exception as e:
-            self.card_today._value_label.setText("Rs.0")
-            self.card_month._value_label.setText("Rs.0")
-            self.card_pending._value_label.setText("Rs.0")
+            self.card_today._value_label.setText(format_currency(0))
+            self.card_month._value_label.setText(format_currency(0))
+            self.card_pending._value_label.setText(format_currency(0))
 
     def _load_table(self):
         self._all_rows = []
@@ -593,11 +596,11 @@ class PaymentListWidget(QWidget):
             )
 
             # Amount
-            amt_item = QTableWidgetItem(f"₹{row['amount']:,.2f}")
+            amt_item = QTableWidgetItem(format_currency(row['amount']))
             amt_item.setTextAlignment(
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
-            amt_item.setForeground(QBrush(QColor("#34C759")))
+            amt_item.setForeground(QBrush(QColor("#2E9E6B")))
             f = amt_item.font()
             f.setBold(True)
             amt_item.setFont(f)
