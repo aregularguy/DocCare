@@ -33,24 +33,8 @@ jobs:
         shell: cmd
 
       - name: Build EXE with PyInstaller
-        run: |
-          pyinstaller --clean `
-            --onefile `
-            --windowed `
-            --name DentNest `
-            --add-data "data;data" `
-            --hidden-import PyQt6.QtCore `
-            --hidden-import PyQt6.QtGui `
-            --hidden-import PyQt6.QtWidgets `
-            --hidden-import PyQt6.QtPrintSupport `
-            --hidden-import matplotlib `
-            --hidden-import matplotlib.backends.backend_qtagg `
-            --hidden-import pandas `
-            --hidden-import numpy `
-            --hidden-import sqlite3 `
-            --hidden-import dateutil `
-            --exclude-module tkinter `
-            app.py
+        # All build settings (icons, hidden imports, exclusions) live in DentNest.spec
+        run: pyinstaller --clean DentNest.spec
         shell: pwsh
 
       - name: Get version tag
