@@ -142,6 +142,26 @@ def create_tables():
         END
     """)
 
+    # Dental chart (Odontogram) — tooth conditions per patient
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS tooth_conditions (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            patient_id    INTEGER NOT NULL,
+            tooth_number  INTEGER NOT NULL,
+            condition     TEXT    NOT NULL DEFAULT 'healthy',
+            notes         TEXT    DEFAULT '',
+            recorded_date DATE,
+            updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+            UNIQUE (patient_id, tooth_number)
+        )
+    """)
+
+    db.execute("""
+        CREATE INDEX IF NOT EXISTS idx_tooth_conditions_patient
+        ON tooth_conditions(patient_id)
+    """)
+
     logger.info("Database tables created successfully")
 
 
