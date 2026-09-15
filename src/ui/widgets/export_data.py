@@ -21,7 +21,7 @@ class ExportDataWidget(QWidget):
 
         placeholder = QLabel("Data export functionality coming soon...")
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        placeholder.setStyleSheet("color: #86868B; padding: 100px; font-size: 16px;")
+        placeholder.setStyleSheet("color: #5B6B73; padding: 100px; font-size: 16px;")
         layout.addWidget(placeholder)
 
     def refresh_data(self):

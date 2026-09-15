@@ -211,7 +211,7 @@ class PatientListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -228,9 +228,9 @@ class PatientListWidget(QWidget):
         add_btn = QPushButton("➕  Add New Patient")
         add_btn.setObjectName("primary_button")
         add_btn.setStyleSheet(
-            "QPushButton { background: white; color: #0F2942; border: none;"
+            "QPushButton { background: white; color: #1F4E5A; border: none;"
             " border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 13px; }"
-            "QPushButton:hover { background: #E0F2FE; }"
+            "QPushButton:hover { background: #E3F3F6; }"
         )
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.show_add_form)
@@ -322,7 +322,7 @@ class PatientListWidget(QWidget):
         view_btn.setFixedHeight(30)
         view_btn.setMinimumWidth(82)
         view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        view_btn.setStyleSheet(_btn_style.format(bg="#EFF6FF", fg="#1A4A7A", hv="#DBEAFE"))
+        view_btn.setStyleSheet(_btn_style.format(bg="#E3F3F6", fg="#2A6674", hv="#CDEAF0"))
         view_btn.clicked.connect(lambda: self.on_view_patient(patient_id))
         layout.addWidget(view_btn)
 
@@ -337,7 +337,7 @@ class PatientListWidget(QWidget):
         delete_btn = QPushButton("🗑️")
         delete_btn.setFixedSize(30, 30)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        delete_btn.setStyleSheet(_btn_style.format(bg="#FEF2F2", fg="#991B1B", hv="#FEE2E2"))
+        delete_btn.setStyleSheet(_btn_style.format(bg="#FBEBEA", fg="#9E3B38", hv="#F8DEDD"))
         delete_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
         layout.addWidget(delete_btn)
 

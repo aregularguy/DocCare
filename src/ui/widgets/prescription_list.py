@@ -38,12 +38,12 @@ class AddPrescriptionDialog(QDialog):
         # Title
         title = QLabel("💊 New Prescription")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0F2942; margin-bottom: 4px;")
+        title.setStyleSheet("color: #1F4E5A; margin-bottom: 4px;")
         layout.addWidget(title)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet("background-color: #E5E5EA; max-height: 1px;")
+        separator.setStyleSheet("background-color: #DDE5E8; max-height: 1px;")
         layout.addWidget(separator)
 
         form = QFormLayout()
@@ -71,7 +71,7 @@ class AddPrescriptionDialog(QDialog):
         patient_search_layout.addWidget(self.patient_results)
 
         self.selected_patient_label = QLabel("No patient selected")
-        self.selected_patient_label.setStyleSheet("color: #86868B; font-size: 12px;")
+        self.selected_patient_label.setStyleSheet("color: #5B6B73; font-size: 12px;")
         patient_search_layout.addWidget(self.selected_patient_label)
 
         patient_container = QWidget()
@@ -213,7 +213,7 @@ class AddPrescriptionDialog(QDialog):
         self.selected_patient_label.setText(
             f"✓ {patient.name}  |  📱 {patient.mobile_number or 'N/A'}"
         )
-        self.selected_patient_label.setStyleSheet("color: #34C759; font-size: 12px; font-weight: 600;")
+        self.selected_patient_label.setStyleSheet("color: #2E9E6B; font-size: 12px; font-weight: 600;")
 
         # Load treatments for this patient
         self._load_treatments(patient.id)
@@ -317,7 +317,7 @@ class PrescriptionListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -337,7 +337,7 @@ class PrescriptionListWidget(QWidget):
 
         banner_sub = QLabel("Manage patient prescriptions and medicines")
         banner_sub.setStyleSheet(
-            "color: #94B8D4; font-size: 13px; background: transparent;"
+            "color: #A9CBD2; font-size: 13px; background: transparent;"
         )
         left_layout.addWidget(banner_sub)
         banner_layout.addLayout(left_layout)
@@ -358,9 +358,9 @@ class PrescriptionListWidget(QWidget):
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setFixedHeight(40)
         add_btn.setStyleSheet(
-            "QPushButton { background-color: #38BDF8; color: #0F2942; border: none;"
+            "QPushButton { background-color: #3AA9BA; color: #1F4E5A; border: none;"
             " border-radius: 8px; padding: 0 20px; font-weight: 700; font-size: 13px; }"
-            "QPushButton:hover { background-color: #7DD3FC; }"
+            "QPushButton:hover { background-color: #A9CBD2; }"
         )
         add_btn.clicked.connect(self._open_add_dialog)
         banner_layout.addWidget(add_btn)
@@ -391,7 +391,7 @@ class PrescriptionListWidget(QWidget):
         self.empty_label = QLabel("No prescriptions yet.\nClick '＋ Add Prescription' to add one.")
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_label.setStyleSheet(
-            "color: #86868B; font-size: 15px; padding: 60px;"
+            "color: #5B6B73; font-size: 15px; padding: 60px;"
         )
         self.empty_label.setVisible(False)
         layout.addWidget(self.empty_label)
@@ -426,7 +426,7 @@ class PrescriptionListWidget(QWidget):
         # Patient name (bold)
         patient_item = QTableWidgetItem(patient.name)
         patient_item.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
-        patient_item.setForeground(QColor("#0F2942"))
+        patient_item.setForeground(QColor("#1F4E5A"))
         self.table.setItem(row, 0, patient_item)
 
         # Treatment
@@ -435,7 +435,7 @@ class PrescriptionListWidget(QWidget):
 
         # Medicine
         med_item = QTableWidgetItem(prescription.medicine_name)
-        med_item.setForeground(QColor("#1A4A7A"))
+        med_item.setForeground(QColor("#2A6674"))
         self.table.setItem(row, 2, med_item)
 
         # Dosage
