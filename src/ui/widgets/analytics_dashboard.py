@@ -1,7 +1,7 @@
 """Analytics dashboard — clean, well-sized charts with proper styling."""
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QFrame, QScrollArea, QGridLayout, QPushButton
+    QFrame, QScrollArea, QGridLayout, QPushButton, QSizePolicy
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
@@ -23,13 +23,13 @@ from ...utils.formatters import format_currency
 
 
 # ── Palette ──────────────────────────────────────────────────────────────────
-COLORS = ['#007AFF', '#34C759', '#FF9500', '#5856D6', '#FF3B30', '#00C7BE', '#FF2D55']
+COLORS = ['#1F8A9E', '#2E9E6B', '#C98A2E', '#6E72B8', '#D0534F', '#00C7BE', '#FF2D55']
 BG = '#FFFFFF'
-TEXT = '#1D1D1F'
-SUBTEXT = '#86868B'
+TEXT = '#1E2B32'
+SUBTEXT = '#5B6B73'
 
-METRIC_ACCENTS = ['#007AFF', '#34C759', '#FF9500', '#5856D6']
-METRIC_BG = ['#E5F0FF', '#E8F8EC', '#FFF3E0', '#F0EFFF']
+METRIC_ACCENTS = ['#1F8A9E', '#2E9E6B', '#C98A2E', '#6E72B8']
+METRIC_BG = ['#E3F3F6', '#E6F5EE', '#FBF1E1', '#EEEFF8']
 METRIC_ICONS = ['P', 'N', 'Rs', 'T']   # text badges — emoji render as boxes on many systems
 
 
@@ -42,7 +42,7 @@ class MetricCard(QFrame):
         self.setStyleSheet(
             f"QFrame#metric_card {{"
             f"  background:{bg}; border-radius:12px;"
-            f"  border-left:4px solid {accent};"
+            f"  border-left:4px solid {accent}; padding:0px;"
             f"}}"
         )
         self.setMinimumHeight(110)
@@ -63,6 +63,7 @@ class MetricCard(QFrame):
         top.addStretch()
         layout.addLayout(top)
 
+        # Font set via stylesheet: the global `* { font-size }` rule overrides setFont()
         self.value_lbl = QLabel(value)
         # All font properties must be in the widget's OWN stylesheet to beat
         # the global "* { font-size: 13px }" wildcard rule in styles.py.
@@ -93,9 +94,10 @@ class ChartCard(QFrame):
         super().__init__(parent)
         self.setObjectName("card")
         self.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
-            " border-radius:12px; }"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
+            " border-radius:12px; padding:0px; }"
         )
+        self.setMinimumHeight(300)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 16, 20, 16)
@@ -103,7 +105,7 @@ class ChartCard(QFrame):
 
         title_lbl = QLabel(title)
         title_lbl.setFont(QFont("Ubuntu", 13, QFont.Weight.DemiBold))
-        title_lbl.setStyleSheet("color:#1D1D1F; background:transparent;")
+        title_lbl.setStyleSheet("color:#1E2B32; background:transparent;")
         layout.addWidget(title_lbl)
 
         self.figure = Figure(figsize=figsize, dpi=96, facecolor=BG)
@@ -131,7 +133,7 @@ class PeriodSelector(QFrame):
         self.active = "This Month"
         self.buttons = {}
         self.setStyleSheet(
-            "QFrame { background:#F2F2F7; border-radius:8px; padding:2px; }"
+            "QFrame { background:#EEF3F4; border-radius:8px; padding:2px; }"
         )
 
         layout = QHBoxLayout(self)
@@ -149,11 +151,11 @@ class PeriodSelector(QFrame):
 
     def _btn_style(self, active):
         if active:
-            return ("QPushButton { background:#FFFFFF; color:#007AFF; font-weight:600;"
+            return ("QPushButton { background:#FFFFFF; color:#1F8A9E; font-weight:600;"
                     " border-radius:6px; padding:5px 14px; font-size:12px; border:none; }")
-        return ("QPushButton { background:transparent; color:#86868B; font-weight:400;"
+        return ("QPushButton { background:transparent; color:#5B6B73; font-weight:400;"
                 " border-radius:6px; padding:5px 14px; font-size:12px; border:none; }"
-                "QPushButton:hover { color:#1D1D1F; }")
+                "QPushButton:hover { color:#1E2B32; }")
 
     def _select(self, period):
         self.active = period
@@ -279,10 +281,10 @@ class AnalyticsDashboardWidget(QWidget):
             dates = [datetime.fromisoformat(d['date']) for d in daily]
             amounts = [d['amount'] for d in daily]
 
-            ax.plot(dates, amounts, color='#007AFF', linewidth=2.5,
+            ax.plot(dates, amounts, color='#1F8A9E', linewidth=2.5,
                     marker='o', markersize=5, markerfacecolor='white',
-                    markeredgewidth=2, markeredgecolor='#007AFF', zorder=3)
-            ax.fill_between(dates, amounts, alpha=0.12, color='#007AFF')
+                    markeredgewidth=2, markeredgecolor='#1F8A9E', zorder=3)
+            ax.fill_between(dates, amounts, alpha=0.12, color='#1F8A9E')
 
             # Format x-axis dates nicely
             import matplotlib.dates as mdates
@@ -301,8 +303,8 @@ class AnalyticsDashboardWidget(QWidget):
                         fontsize=8, color=SUBTEXT, ha='left', va='bottom',
                         xytext=(2, 4), textcoords='offset points')
             ax.tick_params(colors=SUBTEXT, labelsize=9)
-            ax.spines['left'].set_color('#E5E5EA')
-            ax.spines['bottom'].set_color('#E5E5EA')
+            ax.spines['left'].set_color('#DDE5E8')
+            ax.spines['bottom'].set_color('#DDE5E8')
         else:
             self._empty(ax, "No payment data for this period")
 
@@ -453,7 +455,7 @@ class AnalyticsDashboardWidget(QWidget):
         short_names = [m[:18] + '…' if len(m) > 18 else m for m in medicines]
 
         x_pos = range(len(short_names))
-        bars = ax.bar(x_pos, counts, color='#007AFF', width=0.55,
+        bars = ax.bar(x_pos, counts, color='#1F8A9E', width=0.55,
                       edgecolor='none')
 
         # Gradient effect: darker for taller bars
@@ -473,8 +475,8 @@ class AnalyticsDashboardWidget(QWidget):
         ax.set_xticklabels(short_names, rotation=40, ha='right', fontsize=8)
         ax.set_ylabel('Prescriptions', color=SUBTEXT, fontsize=10)
         ax.tick_params(colors=SUBTEXT, labelsize=9)
-        ax.spines['left'].set_color('#E5E5EA')
-        ax.spines['bottom'].set_color('#E5E5EA')
+        ax.spines['left'].set_color('#DDE5E8')
+        ax.spines['bottom'].set_color('#DDE5E8')
         ax.set_ylim(0, max_count * 1.25)
 
         fig.tight_layout(pad=1.0)

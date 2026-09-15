@@ -33,12 +33,12 @@ class AddMedicineDialog(QDialog):
 
         title = QLabel("Add Medicine")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0F2942; margin-bottom: 4px;")
+        title.setStyleSheet("color: #1F4E5A; margin-bottom: 4px;")
         layout.addWidget(title)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet("background-color: #E5E5EA; max-height: 1px;")
+        separator.setStyleSheet("background-color: #DDE5E8; max-height: 1px;")
         layout.addWidget(separator)
 
         form = QFormLayout()
@@ -132,12 +132,12 @@ class EditMedicineDialog(QDialog):
 
         title = QLabel("Edit Medicine")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0F2942; margin-bottom: 4px;")
+        title.setStyleSheet("color: #1F4E5A; margin-bottom: 4px;")
         layout.addWidget(title)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet("background-color: #E5E5EA; max-height: 1px;")
+        separator.setStyleSheet("background-color: #DDE5E8; max-height: 1px;")
         layout.addWidget(separator)
 
         form = QFormLayout()
@@ -237,7 +237,7 @@ class PrescriptionListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -256,7 +256,7 @@ class PrescriptionListWidget(QWidget):
 
         banner_sub = QLabel("Manage your medicine inventory")
         banner_sub.setStyleSheet(
-            "color: #94B8D4; font-size: 13px; background: transparent;"
+            "color: #A9CBD2; font-size: 13px; background: transparent;"
         )
         left_layout.addWidget(banner_sub)
         banner_layout.addLayout(left_layout)
@@ -275,9 +275,9 @@ class PrescriptionListWidget(QWidget):
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setFixedHeight(40)
         add_btn.setStyleSheet(
-            "QPushButton { background-color: #38BDF8; color: #0F2942; border: none;"
+            "QPushButton { background-color: #3AA9BA; color: #1F4E5A; border: none;"
             " border-radius: 8px; padding: 0 20px; font-weight: 700; font-size: 13px; }"
-            "QPushButton:hover { background-color: #7DD3FC; }"
+            "QPushButton:hover { background-color: #A9CBD2; }"
         )
         add_btn.clicked.connect(self._open_add_dialog)
         banner_layout.addWidget(add_btn)
@@ -290,9 +290,9 @@ class PrescriptionListWidget(QWidget):
         self.search_input.setPlaceholderText("Search medicines by name...")
         self.search_input.setFixedHeight(38)
         self.search_input.setStyleSheet(
-            "QLineEdit { border: 1px solid #D2D2D7; border-radius: 8px;"
+            "QLineEdit { border: 1px solid #CFDADE; border-radius: 8px;"
             " padding: 0 12px; font-size: 13px; }"
-            "QLineEdit:focus { border-color: #007AFF; }"
+            "QLineEdit:focus { border-color: #1F8A9E; }"
         )
         self.search_input.textChanged.connect(self._on_search)
         search_layout.addWidget(self.search_input)
@@ -320,7 +320,7 @@ class PrescriptionListWidget(QWidget):
         self.empty_label = QLabel("No medicines found.\nClick '+ Add Medicine' to add one.")
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_label.setStyleSheet(
-            "color: #86868B; font-size: 15px; padding: 60px;"
+            "color: #5B6B73; font-size: 15px; padding: 60px;"
         )
         self.empty_label.setVisible(False)
         layout.addWidget(self.empty_label)
@@ -351,7 +351,7 @@ class PrescriptionListWidget(QWidget):
         # Medicine Name (bold)
         name_item = QTableWidgetItem(medicine.name)
         name_item.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
-        name_item.setForeground(QColor("#0F2942"))
+        name_item.setForeground(QColor("#1F4E5A"))
         self.table.setItem(row, 0, name_item)
 
         # Type
@@ -374,9 +374,9 @@ class PrescriptionListWidget(QWidget):
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         edit_btn.setFixedSize(60, 30)
         edit_btn.setStyleSheet(
-            "QPushButton { background-color: #007AFF; color: white; border: none;"
+            "QPushButton { background-color: #1F8A9E; color: white; border: none;"
             " border-radius: 6px; font-size: 12px; font-weight: 600; }"
-            "QPushButton:hover { background-color: #0051D5; }"
+            "QPushButton:hover { background-color: #16707F; }"
         )
         edit_btn.clicked.connect(lambda checked, m=medicine: self._open_edit_dialog(m))
         actions_layout.addWidget(edit_btn)
@@ -385,7 +385,7 @@ class PrescriptionListWidget(QWidget):
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         delete_btn.setFixedSize(60, 30)
         delete_btn.setStyleSheet(
-            "QPushButton { background-color: #FF3B30; color: white; border: none;"
+            "QPushButton { background-color: #D0534F; color: white; border: none;"
             " border-radius: 6px; font-size: 12px; font-weight: 600; }"
             "QPushButton:hover { background-color: #D32F2F; }"
         )

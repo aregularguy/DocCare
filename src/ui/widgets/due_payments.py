@@ -87,13 +87,13 @@ class DuePaymentsWidget(QWidget):
         cards_row.setSpacing(16)
 
         self.card_outstanding = self._make_summary_card(
-            "Total Outstanding", "Rs.0", "#FF9500", "Rs"
+            "Total Outstanding", "Rs.0", "#C98A2E", "Rs"
         )
         self.card_patients = self._make_summary_card(
-            "Patients with Dues", "0", "#007AFF", "P"
+            "Patients with Dues", "0", "#1F8A9E", "P"
         )
         self.card_treatments = self._make_summary_card(
-            "Treatments with Dues", "0", "#FF3B30", "T"
+            "Treatments with Dues", "0", "#D0534F", "T"
         )
         cards_row.addWidget(self.card_outstanding)
         cards_row.addWidget(self.card_patients)
@@ -116,7 +116,7 @@ class DuePaymentsWidget(QWidget):
         table_frame = QFrame()
         table_frame.setObjectName("card")
         table_frame.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
             " border-radius:12px; padding:0px; }"
         )
         tbl_layout = QVBoxLayout(table_frame)
@@ -166,7 +166,7 @@ class DuePaymentsWidget(QWidget):
             "QHeaderView::section {"
             "  background:#F8F8FA; color:#6B7280; font-weight:600;"
             "  font-size:11px; border:none; padding:10px 12px;"
-            "  border-bottom:2px solid #E5E5EA;"
+            "  border-bottom:2px solid #DDE5E8;"
             "}"
         )
 
@@ -187,11 +187,11 @@ class DuePaymentsWidget(QWidget):
         self.prev_btn.setFixedSize(100, 36)
         self.prev_btn.setStyleSheet(
             "QPushButton {"
-            "  background:#F2F2F7; color:#1D1D1F; border:1px solid #E5E5EA;"
+            "  background:#EEF3F4; color:#1E2B32; border:1px solid #DDE5E8;"
             "  border-radius:8px; font-weight:600; font-size:12px;"
             "}"
-            "QPushButton:hover { background:#E5E5EA; }"
-            "QPushButton:disabled { color:#C7C7CC; background:#FAFAFA; border-color:#F2F2F7; }"
+            "QPushButton:hover { background:#DDE5E8; }"
+            "QPushButton:disabled { color:#A9B6BC; background:#F4F7F8; border-color:#EEF3F4; }"
         )
         self.prev_btn.clicked.connect(self._prev_page)
         pag_layout.addWidget(self.prev_btn)
@@ -200,7 +200,7 @@ class DuePaymentsWidget(QWidget):
 
         self.page_label = QLabel("Page 1 of 1")
         self.page_label.setStyleSheet(
-            "color:#86868B; font-size:12px; font-weight:500;"
+            "color:#5B6B73; font-size:12px; font-weight:500;"
         )
         self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         pag_layout.addWidget(self.page_label)
@@ -212,11 +212,11 @@ class DuePaymentsWidget(QWidget):
         self.next_btn.setFixedSize(100, 36)
         self.next_btn.setStyleSheet(
             "QPushButton {"
-            "  background:#007AFF; color:white; border:none;"
+            "  background:#1F8A9E; color:white; border:none;"
             "  border-radius:8px; font-weight:600; font-size:12px;"
             "}"
-            "QPushButton:hover { background:#0056D6; }"
-            "QPushButton:disabled { background:#B0D4FF; }"
+            "QPushButton:hover { background:#16707F; }"
+            "QPushButton:disabled { background:#B9DCE4; }"
         )
         self.next_btn.clicked.connect(self._next_page)
         pag_layout.addWidget(self.next_btn)
@@ -227,7 +227,7 @@ class DuePaymentsWidget(QWidget):
         self.empty_lbl = QLabel("No outstanding payments. All treatments are fully paid!")
         self.empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_lbl.setStyleSheet(
-            "color:#86868B; font-size:15px; padding:40px;"
+            "color:#5B6B73; font-size:15px; padding:40px;"
         )
         self.empty_lbl.hide()
         self._layout.addWidget(self.empty_lbl)
@@ -242,7 +242,7 @@ class DuePaymentsWidget(QWidget):
         card = QFrame()
         card.setObjectName("metric_card")
         card.setStyleSheet(
-            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #E5E5EA;"
+            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #DDE5E8;"
             f" border-left: 4px solid {accent}; border-radius:10px; }}"
         )
         card.setSizePolicy(
@@ -278,7 +278,7 @@ class DuePaymentsWidget(QWidget):
         lbl_lbl = QLabel(label)
         lbl_lbl.setObjectName("metric_label")
         lbl_lbl.setStyleSheet(
-            "font-size:11px; color:#86868B; background:transparent;"
+            "font-size:11px; color:#5B6B73; background:transparent;"
         )
         cl.addWidget(lbl_lbl)
 
@@ -406,7 +406,7 @@ class DuePaymentsWidget(QWidget):
             # Patient name (bold, dark blue)
             name_item = QTableWidgetItem(row_data['patient_name'])
             name_item.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-            name_item.setForeground(QBrush(QColor("#0F2942")))
+            name_item.setForeground(QBrush(QColor("#1F4E5A")))
             self.table.setItem(row_idx, 0, name_item)
 
             # Treatment
@@ -428,7 +428,7 @@ class DuePaymentsWidget(QWidget):
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
             paid_item.setFont(QFont("Segoe UI", 11))
-            paid_item.setForeground(QBrush(QColor("#34C759")))
+            paid_item.setForeground(QBrush(QColor("#2E9E6B")))
             self.table.setItem(row_idx, 3, paid_item)
 
             # Due amount (right-aligned, bold, orange)
@@ -437,7 +437,7 @@ class DuePaymentsWidget(QWidget):
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
             due_item.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-            due_item.setForeground(QBrush(QColor("#FF9500")))
+            due_item.setForeground(QBrush(QColor("#C98A2E")))
             self.table.setItem(row_idx, 4, due_item)
 
             # Pay Now button
@@ -446,12 +446,12 @@ class DuePaymentsWidget(QWidget):
             pay_btn.setFixedHeight(32)
             pay_btn.setStyleSheet(
                 "QPushButton {"
-                "  background:#007AFF; color:white; border:none;"
+                "  background:#1F8A9E; color:white; border:none;"
                 "  border-radius:8px; font-weight:600; font-size:12px;"
                 "  padding:0 16px;"
                 "}"
-                "QPushButton:hover { background:#0056D6; }"
-                "QPushButton:pressed { background:#004BB5; }"
+                "QPushButton:hover { background:#16707F; }"
+                "QPushButton:pressed { background:#125B67; }"
             )
             pay_btn.clicked.connect(
                 lambda _, pid=row_data['patient_id'], tid=row_data['treatment_id']: self._on_pay_now(pid, tid)

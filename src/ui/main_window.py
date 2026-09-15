@@ -195,7 +195,13 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("DentNest - Dental Practice Management")
-        self.setMinimumSize(1280, 800)
+        # Keep the minimum small enough for 125-150% Windows display scaling,
+        # and open at a size that fits the screen's available area.
+        self.setMinimumSize(1024, 640)
+        screen = self.screen()
+        if screen is not None:
+            avail = screen.availableGeometry()
+            self.resize(min(1440, avail.width()), min(900, avail.height()))
 
         # Set Window Icon
         icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "dentnest.png")

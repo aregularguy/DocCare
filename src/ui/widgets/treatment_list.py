@@ -60,7 +60,7 @@ class TreatmentFormView(QWidget):
         patient_frame = QFrame()
         patient_frame.setObjectName("card")
         patient_frame.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
             " border-radius:12px; }"
         )
         pl = QVBoxLayout(patient_frame)
@@ -72,7 +72,7 @@ class TreatmentFormView(QWidget):
         step1_badge.setFixedSize(28, 28)
         step1_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         step1_badge.setStyleSheet(
-            "background:#007AFF; color:white; border-radius:14px;"
+            "background:#1F8A9E; color:white; border-radius:14px;"
             " font-weight:700; font-size:13px;"
         )
         step1_row.addWidget(step1_badge)
@@ -125,20 +125,20 @@ class TreatmentFormView(QWidget):
         # Selected patient banner
         self.selected_patient_label = QLabel("No patient selected")
         self.selected_patient_label.setStyleSheet(
-            "color:#86868B; font-style:italic; padding:6px 0;"
+            "color:#5B6B73; font-style:italic; padding:6px 0;"
         )
         pl.addWidget(self.selected_patient_label)
 
         # OR divider + create new
         or_row = QHBoxLayout()
         line_l = QFrame(); line_l.setFrameShape(QFrame.Shape.HLine)
-        line_l.setStyleSheet("color:#E5E5EA;")
+        line_l.setStyleSheet("color:#DDE5E8;")
         or_row.addWidget(line_l)
         or_lbl = QLabel("  OR  ")
-        or_lbl.setStyleSheet("color:#86868B; font-size:12px; font-weight:500;")
+        or_lbl.setStyleSheet("color:#5B6B73; font-size:12px; font-weight:500;")
         or_row.addWidget(or_lbl)
         line_r = QFrame(); line_r.setFrameShape(QFrame.Shape.HLine)
-        line_r.setStyleSheet("color:#E5E5EA;")
+        line_r.setStyleSheet("color:#DDE5E8;")
         or_row.addWidget(line_r)
         pl.addLayout(or_row)
 
@@ -155,7 +155,7 @@ class TreatmentFormView(QWidget):
         treatment_frame = QFrame()
         treatment_frame.setObjectName("card")
         treatment_frame.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
             " border-radius:12px; }"
         )
         tl = QVBoxLayout(treatment_frame)
@@ -167,7 +167,7 @@ class TreatmentFormView(QWidget):
         step2_badge.setFixedSize(28, 28)
         step2_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         step2_badge.setStyleSheet(
-            "background:#34C759; color:white; border-radius:14px;"
+            "background:#2E9E6B; color:white; border-radius:14px;"
             " font-weight:700; font-size:13px;"
         )
         step2_row.addWidget(step2_badge)
@@ -186,7 +186,7 @@ class TreatmentFormView(QWidget):
         type_col = QVBoxLayout()
         type_col.setSpacing(6)
         type_lbl = QLabel("Treatment Type *")
-        type_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        type_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         type_col.addWidget(type_lbl)
         self.treatment_type = QComboBox()
         self.treatment_type.setMinimumHeight(44)
@@ -198,7 +198,7 @@ class TreatmentFormView(QWidget):
         cost_col = QVBoxLayout()
         cost_col.setSpacing(6)
         cost_lbl = QLabel("Total Cost (Rs.) *")
-        cost_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        cost_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         cost_col.addWidget(cost_lbl)
         self.cost_input = QDoubleSpinBox()
         self.cost_input.setMinimum(0)
@@ -218,7 +218,7 @@ class TreatmentFormView(QWidget):
         date_col = QVBoxLayout()
         date_col.setSpacing(6)
         date_lbl = QLabel("Start Date")
-        date_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        date_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         date_col.addWidget(date_lbl)
         self.start_date = QDateEdit()
         self.start_date.setDate(QDate.currentDate())
@@ -231,16 +231,16 @@ class TreatmentFormView(QWidget):
         status_col = QVBoxLayout()
         status_col.setSpacing(6)
         status_lbl = QLabel("Status")
-        status_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        status_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         status_col.addWidget(status_lbl)
         self.status = QComboBox()
         self.status.setMinimumHeight(44)
         self.status.addItem("📋  Planned")
         self.status.addItem("⚙️  In Progress")
         self.status.addItem("✅  Completed")
-        self.status.setItemData(0, QColor("#FFF3E0"), Qt.ItemDataRole.BackgroundRole)
-        self.status.setItemData(1, QColor("#E5F0FF"), Qt.ItemDataRole.BackgroundRole)
-        self.status.setItemData(2, QColor("#E8F8EC"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setItemData(0, QColor("#FBF1E1"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setItemData(1, QColor("#E3F3F6"), Qt.ItemDataRole.BackgroundRole)
+        self.status.setItemData(2, QColor("#E6F5EE"), Qt.ItemDataRole.BackgroundRole)
         self.status.setStyleSheet(
             "QComboBox QAbstractItemView::item { padding: 10px 14px; min-height:36px; }"
         )
@@ -251,7 +251,7 @@ class TreatmentFormView(QWidget):
 
         # Notes
         notes_lbl = QLabel("Notes (optional)")
-        notes_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1D1D1F;")
+        notes_lbl.setStyleSheet("font-weight:600; font-size:13px; color:#1E2B32;")
         tl.addWidget(notes_lbl)
         self.notes = QTextEdit()
         self.notes.setPlaceholderText("Any additional notes about this treatment...")
@@ -296,19 +296,19 @@ class TreatmentFormView(QWidget):
         """Load treatment types with icons and colors."""
         # icon, background color, text color
         TREATMENT_STYLE = {
-            "Root Canal":   ("🦷", "#FFE5E5", "#CC0000"),
-            "Filling":      ("🪨", "#FFF3E0", "#E65100"),
-            "Cleaning":     ("✨", "#E5F0FF", "#0055CC"),
-            "Extraction":   ("🔧", "#F3E5F5", "#7B1FA2"),
+            "Root Canal":   ("🦷", "#FBEBEA", "#CC0000"),
+            "Filling":      ("🪨", "#FBF1E1", "#E65100"),
+            "Cleaning":     ("✨", "#E3F3F6", "#16707F"),
+            "Extraction":   ("🔧", "#EEEFF8", "#7B1FA2"),
             "Crown":        ("👑", "#FFF8E1", "#F57F17"),
-            "Implant":      ("🔩", "#E8F5E9", "#2E7D32"),
-            "Whitening":    ("⬜", "#E5F0FF", "#1565C0"),
+            "Implant":      ("🔩", "#E6F5EE", "#2E7D32"),
+            "Whitening":    ("⬜", "#E3F3F6", "#1F8A9E"),
             "Braces":       ("📎", "#FCE4EC", "#880E4F"),
-            "Denture":      ("🦴", "#F3E5F5", "#4A148C"),
+            "Denture":      ("🦴", "#EEEFF8", "#4A148C"),
             "Veneer":       ("💎", "#E0F7FA", "#00695C"),
-            "Bridge":       ("🌉", "#FFF3E0", "#BF360C"),
-            "Consultation": ("💬", "#E8F5E9", "#1B5E20"),
-            "X-Ray":        ("🩻", "#F3E5F5", "#6A1B9A"),
+            "Bridge":       ("🌉", "#FBF1E1", "#BF360C"),
+            "Consultation": ("💬", "#E6F5EE", "#1B5E20"),
+            "X-Ray":        ("🩻", "#EEEFF8", "#6A1B9A"),
         }
 
         treatment_types = self.treatment_service.get_all_treatment_types()
@@ -320,13 +320,13 @@ class TreatmentFormView(QWidget):
             "  font-size: 13px;"
             "}"
             "QComboBox QAbstractItemView::item:selected {"
-            "  background: #007AFF;"
+            "  background: #1F8A9E;"
             "  color: white;"
             "}"
         )
 
         for tt in treatment_types:
-            style = TREATMENT_STYLE.get(tt.name, ("🦷", "#F5F5F7", "#1D1D1F"))
+            style = TREATMENT_STYLE.get(tt.name, ("🦷", "#EEF3F4", "#1E2B32"))
             icon, bg, fg = style
             label = f"{icon}  {tt.name}"
             self.treatment_type.addItem(label, tt.id)
@@ -412,7 +412,7 @@ class TreatmentFormView(QWidget):
             self.selected_patient_label.setText(
                 f"✅ Selected: {self.selected_patient.name} ({self.selected_patient.mobile_number})"
             )
-            self.selected_patient_label.setStyleSheet("color: #34C759; font-weight: 500;")
+            self.selected_patient_label.setStyleSheet("color: #2E9E6B; font-weight: 500;")
 
     def on_create_new_patient(self):
         """Navigate to create new patient."""
@@ -481,7 +481,7 @@ class TreatmentFormView(QWidget):
         self.patient_search.clear()
         self.search_results.setRowCount(0)
         self.selected_patient_label.setText("No patient selected")
-        self.selected_patient_label.setStyleSheet("color: #86868B; font-style: italic;")
+        self.selected_patient_label.setStyleSheet("color: #5B6B73; font-style: italic;")
         self.cost_input.setValue(0)
         self.notes.clear()
         self.status.setCurrentIndex(0)
@@ -496,9 +496,9 @@ class TreatmentQueueView(QWidget):
     """View showing treatment queue with date filters."""
 
     STATUS_STYLE = {
-        "planned":     ("PLANNED",     "#FFF3E0", "#E65100"),
-        "in_progress": ("IN PROGRESS", "#E5F0FF", "#0055CC"),
-        "completed":   ("COMPLETED",   "#E8F8EC", "#2E7D32"),
+        "planned":     ("PLANNED",     "#FBF1E1", "#E65100"),
+        "in_progress": ("IN PROGRESS", "#E3F3F6", "#16707F"),
+        "completed":   ("COMPLETED",   "#E6F5EE", "#2E7D32"),
     }
 
     def __init__(self, parent_widget):
@@ -556,7 +556,7 @@ class TreatmentQueueView(QWidget):
         filter_bar.addStretch()
 
         self._count_label = QLabel("")
-        self._count_label.setStyleSheet("color:#86868B; font-size:12px;")
+        self._count_label.setStyleSheet("color:#5B6B73; font-size:12px;")
         filter_bar.addWidget(self._count_label)
 
         layout.addLayout(filter_bar)
@@ -608,26 +608,26 @@ class TreatmentQueueView(QWidget):
 
     def _apply_filter_styles(self):
         active = (
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:6px; padding:0 16px; font-size:13px; font-weight:700; }"
         )
         inactive = (
-            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #D1D5DB;"
+            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #CFDADE;"
             " border-radius:6px; padding:0 16px; font-size:13px; }"
-            "QPushButton:hover { background:#E2E8F0; }"
+            "QPushButton:hover { background:#DDE5E8; }"
         )
         for key, btn in self._filter_btns.items():
             btn.setStyleSheet(active if key == self._current_filter else inactive)
             btn.setChecked(key == self._current_filter)
 
         completed_on = (
-            "QPushButton { background:#E8F8EC; color:#2E7D32; border:1px solid #A7F3D0;"
+            "QPushButton { background:#E6F5EE; color:#2E7D32; border:1px solid #A7F3D0;"
             " border-radius:6px; padding:0 14px; font-size:13px; font-weight:600; }"
         )
         completed_off = (
-            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #D1D5DB;"
+            "QPushButton { background:#F1F5F9; color:#374151; border:1px solid #CFDADE;"
             " border-radius:6px; padding:0 14px; font-size:13px; }"
-            "QPushButton:hover { background:#E2E8F0; }"
+            "QPushButton:hover { background:#DDE5E8; }"
         )
         self._completed_btn.setStyleSheet(
             completed_on if not self._hide_completed else completed_off
@@ -727,7 +727,7 @@ class TreatmentQueueView(QWidget):
             msg = f"No active treatments for {filter_names.get(self._current_filter, '')}".strip()
             self.queue_table.insertRow(0)
             empty_item = QTableWidgetItem(msg + "  —  click 'Add New Treatment' to add one.")
-            empty_item.setForeground(QColor("#86868B"))
+            empty_item.setForeground(QColor("#5B6B73"))
             self.queue_table.setItem(0, 0, empty_item)
             self.queue_table.setSpan(0, 0, 1, 7)
 
@@ -748,9 +748,9 @@ class TreatmentQueueView(QWidget):
         view_btn.setMinimumWidth(110)
         view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         view_btn.setStyleSheet(
-            "QPushButton { background: #EFF6FF; color: #1A4A7A; border: 1px solid #BFDBFE;"
+            "QPushButton { background: #E3F3F6; color: #2A6674; border: 1px solid #B9DCE4;"
             " border-radius: 6px; padding: 0 12px; font-size: 12px; font-weight: 600; }"
-            "QPushButton:hover { background: #DBEAFE; border-color: #38BDF8; color: #0F2942; }"
+            "QPushButton:hover { background: #CDEAF0; border-color: #3AA9BA; color: #1F4E5A; }"
         )
         view_btn.clicked.connect(lambda: self.on_view_treatment(treatment_id))
         layout.addWidget(view_btn)

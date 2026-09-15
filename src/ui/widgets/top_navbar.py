@@ -52,7 +52,7 @@ class LogoButton(QLabel):
         pix.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pix)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QBrush(QColor("#4A2D8F")))
+        painter.setBrush(QBrush(QColor("#4E4F8F")))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(0, 0, 40, 40, 8, 8)
         painter.setPen(QColor("white"))
@@ -80,7 +80,7 @@ class TopNavBar(QFrame):
         self.setFixedHeight(56)
         self.setStyleSheet(
             "QFrame { background: #FFFFFF;"
-            " border-bottom: 1px solid #E5E5EA; }"
+            " border-bottom: 1px solid #DDE5E8; }"
         )
         self._build()
 
@@ -95,7 +95,7 @@ class TopNavBar(QFrame):
 
         app_name = QLabel("DentNest")
         app_name.setStyleSheet(
-            "color: #1D1D1F; font-size: 16px; font-weight: 700;"
+            "color: #1E2B32; font-size: 16px; font-weight: 700;"
             " background: transparent; border: none;"
         )
         layout.addWidget(app_name)
@@ -108,10 +108,10 @@ class TopNavBar(QFrame):
         self.search.setFixedHeight(36)
         self.search.setMaximumWidth(340)
         self.search.setStyleSheet(
-            "QLineEdit { background: #F5F5F7; border: 1px solid #E5E5EA;"
+            "QLineEdit { background: #EEF3F4; border: 1px solid #DDE5E8;"
             " border-radius: 8px; padding: 0 14px; font-size: 13px;"
-            " color: #1D1D1F; }"
-            "QLineEdit:focus { border: 1.5px solid #7C3AED; background: white; }"
+            " color: #1E2B32; }"
+            "QLineEdit:focus { border: 1.5px solid #1F8A9E; background: white; }"
         )
         layout.addWidget(self.search, stretch=1)
 
@@ -120,10 +120,10 @@ class TopNavBar(QFrame):
         # ── Right: doctor profile button ──
         self.profile_btn = QPushButton("👤   Dr. Name  ▾")
         self.profile_btn.setStyleSheet(
-            "QPushButton { background: #F5F3FF; color: #4A2D8F;"
-            " border: 1px solid #DDD6FE; border-radius: 8px;"
+            "QPushButton { background: #EEEFF8; color: #4E4F8F;"
+            " border: 1px solid #D6D8EE; border-radius: 8px;"
             " padding: 6px 14px; font-size: 13px; font-weight: 600; }"
-            "QPushButton:hover { background: #EDE9FE; }"
+            "QPushButton:hover { background: #E3F3F6; }"
             "QPushButton::menu-indicator { image: none; }"
         )
         self.profile_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -133,11 +133,11 @@ class TopNavBar(QFrame):
     def _show_profile_menu(self):
         menu = QMenu(self)
         menu.setStyleSheet(
-            "QMenu { background: white; border: 1px solid #E5E5EA;"
+            "QMenu { background: white; border: 1px solid #DDE5E8;"
             " border-radius: 8px; padding: 4px; }"
             "QMenu::item { padding: 10px 20px; font-size: 13px;"
-            " color: #1D1D1F; border-radius: 4px; }"
-            "QMenu::item:selected { background: #F5F3FF; color: #4A2D8F; }"
+            " color: #1E2B32; border-radius: 4px; }"
+            "QMenu::item:selected { background: #EEEFF8; color: #4E4F8F; }"
         )
         menu.addAction("👤  Profile")
         menu.addAction("⚙️  Settings")

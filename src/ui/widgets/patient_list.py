@@ -221,7 +221,7 @@ class PatientListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -238,9 +238,9 @@ class PatientListWidget(QWidget):
         add_btn = QPushButton("➕  Add New Patient")
         add_btn.setObjectName("primary_button")
         add_btn.setStyleSheet(
-            "QPushButton { background: white; color: #0F2942; border: none;"
+            "QPushButton { background: white; color: #1F4E5A; border: none;"
             " border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 13px; }"
-            "QPushButton:hover { background: #E0F2FE; }"
+            "QPushButton:hover { background: #E3F3F6; }"
         )
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.show_add_form)
@@ -307,13 +307,13 @@ class PatientListWidget(QWidget):
 
             id_item = QTableWidgetItem(str(patient.id))
             id_item.setFont(_id_font)
-            id_item.setForeground(QColor("#86868B"))
+            id_item.setForeground(QColor("#5B6B73"))
             id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
             self.table.setItem(row, 0, id_item)
 
             name_item = QTableWidgetItem(patient.name)
             name_item.setFont(_name_font)
-            name_item.setForeground(QColor("#0F2942"))
+            name_item.setForeground(QColor("#1F4E5A"))
             self.table.setItem(row, 1, name_item)
 
             mob_item = QTableWidgetItem(patient.mobile_number)
@@ -358,7 +358,7 @@ class PatientListWidget(QWidget):
             )
             return b
 
-        view_btn = _make_btn("History", "#EFF6FF", "#1A4A7A", "#DBEAFE", w=68)
+        view_btn = _make_btn("History", "#E3F3F6", "#2A6674", "#CDEAF0", w=68)
         view_btn.clicked.connect(lambda: self.on_view_patient(patient_id))
         layout.addWidget(view_btn)
 
@@ -366,7 +366,7 @@ class PatientListWidget(QWidget):
         edit_btn.clicked.connect(lambda: self.show_edit_form(patient_id))
         layout.addWidget(edit_btn)
 
-        del_btn = _make_btn("Del", "#FEF2F2", "#991B1B", "#FEE2E2", w=40)
+        del_btn = _make_btn("Del", "#FBEBEA", "#9E3B38", "#F8DEDD", w=40)
         del_btn.clicked.connect(lambda: self.on_delete_patient(patient_id))
         layout.addWidget(del_btn)
 

@@ -36,7 +36,7 @@ class LoginDialog(QDialog):
         banner.setFixedHeight(100)
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            "stop:0 #0F2942, stop:1 #1A4A7A); }"
+            "stop:0 #1F4E5A, stop:1 #2A6674); }"
         )
         bl = QHBoxLayout(banner)
         bl.setContentsMargins(28, 0, 28, 0)
@@ -52,7 +52,7 @@ class LoginDialog(QDialog):
 
         # ── Body ──
         body = QFrame()
-        body.setStyleSheet("background:#F8FAFC;")
+        body.setStyleSheet("background:#F4F7F8;")
         vl = QVBoxLayout(body)
         vl.setContentsMargins(40, 32, 40, 32)
         vl.setSpacing(16)
@@ -67,9 +67,9 @@ class LoginDialog(QDialog):
         self.password_input.setPlaceholderText("Password")
         self.password_input.setFixedHeight(46)
         self.password_input.setStyleSheet(
-            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            "QLineEdit { border:2px solid #CFDADE; border-radius:8px;"
             " padding:0 14px; font-size:14px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
         self.password_input.returnPressed.connect(self._on_unlock)
         vl.addWidget(self.password_input)
@@ -84,9 +84,9 @@ class LoginDialog(QDialog):
         unlock_btn.setFixedHeight(46)
         unlock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         unlock_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:8px; font-size:14px; font-weight:700; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         unlock_btn.clicked.connect(self._on_unlock)
         vl.addWidget(unlock_btn)
@@ -96,8 +96,8 @@ class LoginDialog(QDialog):
         forgot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         forgot_btn.setStyleSheet(
             "QPushButton { background:transparent; border:none;"
-            " color:#007AFF; font-size:12px; font-weight:600; text-decoration:underline; }"
-            "QPushButton:hover { color:#0051D5; }"
+            " color:#1F8A9E; font-size:12px; font-weight:600; text-decoration:underline; }"
+            "QPushButton:hover { color:#16707F; }"
         )
         forgot_btn.clicked.connect(self._on_forgot_password)
         vl.addWidget(forgot_btn, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -123,15 +123,15 @@ class LoginDialog(QDialog):
             # Red border flash
             self.password_input.setStyleSheet(
                 "QLineEdit { border:2px solid #DC2626; border-radius:8px;"
-                " padding:0 14px; font-size:14px; background:#FEF2F2; }"
+                " padding:0 14px; font-size:14px; background:#FBEBEA; }"
             )
             QTimer.singleShot(800, self._reset_input_style)
 
     def _reset_input_style(self):
         self.password_input.setStyleSheet(
-            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            "QLineEdit { border:2px solid #CFDADE; border-radius:8px;"
             " padding:0 14px; font-size:14px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
 
     def _on_forgot_password(self):
@@ -174,11 +174,11 @@ class _RecoveryKeyDialog(QDialog):
 
         title = QLabel("Enter Recovery Key")
         title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        title.setStyleSheet("color:#0F2942;")
+        title.setStyleSheet("color:#1F4E5A;")
         layout.addWidget(title)
 
         info = QLabel("Enter the recovery key that was shown when you set your password.")
-        info.setStyleSheet("color:#64748B; font-size:12px;")
+        info.setStyleSheet("color:#5B6B73; font-size:12px;")
         info.setWordWrap(True)
         layout.addWidget(info)
 
@@ -186,10 +186,10 @@ class _RecoveryKeyDialog(QDialog):
         self.key_input.setPlaceholderText("XXX-XXX-XXX-XXX")
         self.key_input.setFixedHeight(44)
         self.key_input.setStyleSheet(
-            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            "QLineEdit { border:2px solid #CFDADE; border-radius:8px;"
             " padding:0 14px; font-size:16px; font-family:monospace;"
             " letter-spacing:2px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
         self.key_input.returnPressed.connect(self._on_verify)
         layout.addWidget(self.key_input)
@@ -205,9 +205,9 @@ class _RecoveryKeyDialog(QDialog):
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(
-            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB;"
+            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #CFDADE;"
             " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:600; }"
-            "QPushButton:hover { background:#E5E7EB; }"
+            "QPushButton:hover { background:#DDE5E8; }"
         )
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
@@ -215,9 +215,9 @@ class _RecoveryKeyDialog(QDialog):
         verify_btn = QPushButton("Verify")
         verify_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         verify_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:700; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         verify_btn.clicked.connect(self._on_verify)
         btn_layout.addWidget(verify_btn)
@@ -259,7 +259,7 @@ class _SetNewPasswordDialog(QDialog):
 
         title = QLabel("Set New Password")
         title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        title.setStyleSheet("color:#0F2942;")
+        title.setStyleSheet("color:#1F4E5A;")
         layout.addWidget(title)
 
         info = QLabel("Recovery key verified. Enter your new password below.")
@@ -272,9 +272,9 @@ class _SetNewPasswordDialog(QDialog):
         self.pw_input.setPlaceholderText("New password (min 4 characters)")
         self.pw_input.setFixedHeight(44)
         self.pw_input.setStyleSheet(
-            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            "QLineEdit { border:2px solid #CFDADE; border-radius:8px;"
             " padding:0 14px; font-size:14px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
         layout.addWidget(self.pw_input)
 
@@ -283,9 +283,9 @@ class _SetNewPasswordDialog(QDialog):
         self.confirm_input.setPlaceholderText("Confirm new password")
         self.confirm_input.setFixedHeight(44)
         self.confirm_input.setStyleSheet(
-            "QLineEdit { border:2px solid #D1D5DB; border-radius:8px;"
+            "QLineEdit { border:2px solid #CFDADE; border-radius:8px;"
             " padding:0 14px; font-size:14px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
         self.confirm_input.returnPressed.connect(self._on_save)
         layout.addWidget(self.confirm_input)
@@ -301,9 +301,9 @@ class _SetNewPasswordDialog(QDialog):
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(
-            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #D1D5DB;"
+            "QPushButton { background:#F3F4F6; color:#374151; border:1px solid #CFDADE;"
             " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:600; }"
-            "QPushButton:hover { background:#E5E7EB; }"
+            "QPushButton:hover { background:#DDE5E8; }"
         )
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
@@ -311,9 +311,9 @@ class _SetNewPasswordDialog(QDialog):
         save_btn = QPushButton("Set Password")
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:8px; padding:8px 20px; font-size:13px; font-weight:700; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         save_btn.clicked.connect(self._on_save)
         btn_layout.addWidget(save_btn)

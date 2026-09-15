@@ -15,6 +15,7 @@ from ...services.payment_service import PaymentService
 from ...services.prescription_service import PrescriptionService
 from ...services.settings_service import SettingsService
 from ...utils.formatters import format_currency, format_date
+from ..widgets.dental_chart_widget import DentalChartWidget
 from datetime import date as date_type
 import html as html_mod
 import os
@@ -80,13 +81,19 @@ class PatientDetailsWidget(QWidget):
         self._tabs.setStyleSheet(
             "QTabWidget::pane { border: none; }"
             "QTabBar::tab { padding: 12px 24px; font-size: 13px; }"
-            "QTabBar::tab:selected { color: #0F2942; font-weight: 700;"
-            " border-bottom: 3px solid #38BDF8; }"
+            "QTabBar::tab:selected { color: #1F4E5A; font-weight: 700;"
+            " border-bottom: 3px solid #3AA9BA; }"
         )
         self._overview_tab_index = 0
         self._tabs.addTab(self._build_overview_tab(), "Overview")
         self._tabs.addTab(self._build_billing_tab(), "Billing")
         self._tabs.addTab(self._build_prescription_tab(), "📋 Prescription")
+
+        # Dental Chart tab
+        self._dental_chart_widget = DentalChartWidget(self.patient.id)
+        self._dental_chart_tab_index = 3
+        self._tabs.addTab(self._dental_chart_widget, "🦷 Dental Chart")
+
         self._tabs.currentChanged.connect(self._on_tab_changed)
         body.addWidget(self._tabs, stretch=3)
         tabs = self._tabs  # keep local alias for billing panel below
@@ -99,7 +106,7 @@ class PatientDetailsWidget(QWidget):
 
     def _build_header(self):
         header = QFrame()
-        header.setStyleSheet("background:#fff; border-bottom:1px solid #E5E5EA;")
+        header.setStyleSheet("background:#fff; border-bottom:1px solid #DDE5E8;")
         hl = QVBoxLayout(header)
         hl.setContentsMargins(32, 16, 32, 16)
         hl.setSpacing(10)
@@ -128,7 +135,7 @@ class PatientDetailsWidget(QWidget):
         meta_row.setSpacing(8)
         meta_row.setContentsMargins(0, 4, 0, 0)
 
-        def make_chip(label, value, val_color="#0F2942", bg="#EFF6FF"):
+        def make_chip(label, value, val_color="#1F4E5A", bg="#E3F3F6"):
             """Two-part chip: grey label + colored value."""
             chip = QFrame()
             chip.setStyleSheet(
@@ -138,7 +145,7 @@ class PatientDetailsWidget(QWidget):
             cl.setContentsMargins(10, 4, 10, 4)
             cl.setSpacing(4)
             lbl = QLabel(label)
-            lbl.setStyleSheet("color:#86868B; font-size:11px; background:transparent;")
+            lbl.setStyleSheet("color:#5B6B73; font-size:11px; background:transparent;")
             val = QLabel(value)
             val.setStyleSheet(
                 f"color:{val_color}; font-size:12px; font-weight:700; background:transparent;"
@@ -153,13 +160,13 @@ class PatientDetailsWidget(QWidget):
         med_hist = (self.patient.city or "").strip()
         if med_hist:
             short = med_hist[:30] + "…" if len(med_hist) > 30 else med_hist
-            meta_row.addWidget(make_chip("History", short, "#6D1B7B", "#F3E5F5"))
+            meta_row.addWidget(make_chip("History", short, "#6D1B7B", "#EEEFF8"))
 
-        meta_row.addWidget(make_chip("Charged", format_currency(self.total_charged), "#0F2942"))
-        meta_row.addWidget(make_chip("Paid", format_currency(self.total_paid), "#34C759", "#E8F8EC"))
+        meta_row.addWidget(make_chip("Charged", format_currency(self.total_charged), "#1F4E5A"))
+        meta_row.addWidget(make_chip("Paid", format_currency(self.total_paid), "#2E9E6B", "#E6F5EE"))
 
-        due_color = "#FF3B30" if self.total_due > 0 else "#34C759"
-        due_bg    = "#FFE5E5" if self.total_due > 0 else "#E8F8EC"
+        due_color = "#D0534F" if self.total_due > 0 else "#2E9E6B"
+        due_bg    = "#FBEBEA" if self.total_due > 0 else "#E6F5EE"
         meta_row.addWidget(make_chip("Due", format_currency(self.total_due), due_color, due_bg))
         meta_row.addStretch()
 
@@ -185,6 +192,12 @@ class PatientDetailsWidget(QWidget):
     def _on_tab_changed(self, index: int):
         if index == self._overview_tab_index:
             self._refresh_overview()
+        elif index == self._dental_chart_tab_index:
+            # Refresh chart in case conditions were changed externally
+            try:
+                self._dental_chart_widget.refresh()
+            except Exception:
+                pass
 
     def _refresh_overview(self):
         """Rebuild the overview tab content in-place.
@@ -240,12 +253,12 @@ class PatientDetailsWidget(QWidget):
         if not self.treatments:
             empty = QLabel("No treatments recorded yet.")
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty.setStyleSheet("color:#86868B; padding:60px;")
+            empty.setStyleSheet("color:#5B6B73; padding:60px;")
             layout.addWidget(empty)
         else:
             treatments_title = QLabel("🦷 Treatments")
             treatments_title.setFont(QFont("Inter", 15, QFont.Weight.DemiBold))
-            treatments_title.setStyleSheet("color:#1D1D1F; margin-bottom:4px;")
+            treatments_title.setStyleSheet("color:#1E2B32; margin-bottom:4px;")
             layout.addWidget(treatments_title)
 
             for t in self.treatments:
@@ -261,12 +274,12 @@ class PatientDetailsWidget(QWidget):
 
             rx_title = QLabel("💊 Prescriptions")
             rx_title.setFont(QFont("Inter", 15, QFont.Weight.DemiBold))
-            rx_title.setStyleSheet("color:#1D1D1F; margin-top:8px; margin-bottom:4px;")
+            rx_title.setStyleSheet("color:#1E2B32; margin-top:8px; margin-bottom:4px;")
             layout.addWidget(rx_title)
 
             if not all_prescriptions:
                 no_rx = QLabel("No prescriptions recorded")
-                no_rx.setStyleSheet("color:#86868B; font-size:13px; padding:6px 0;")
+                no_rx.setStyleSheet("color:#5B6B73; font-size:13px; padding:6px 0;")
                 layout.addWidget(no_rx)
             else:
                 # Group by session_id (preserving insertion order = newest first via DB ORDER BY DESC)
@@ -291,9 +304,9 @@ class PatientDetailsWidget(QWidget):
         card.setObjectName("rx_session_card")
         card.setStyleSheet(
             "QFrame#rx_session_card {"
-            "  background: #FAFCFF;"
-            "  border: 1px solid #BFDBFE;"
-            "  border-left: 4px solid #2563EB;"
+            "  background: #F7FAFB;"
+            "  border: 1px solid #B9DCE4;"
+            "  border-left: 4px solid #1F8A9E;"
             "  border-radius: 8px;"
             "  margin-bottom: 8px;"
             "}"
@@ -308,19 +321,19 @@ class PatientDetailsWidget(QWidget):
 
         num_lbl = QLabel(f"Prescription #{session_num}")
         num_lbl.setFont(QFont("Ubuntu", 12, QFont.Weight.Bold))
-        num_lbl.setStyleSheet("color:#1D4ED8;")
+        num_lbl.setStyleSheet("color:#16707F;")
         header.addWidget(num_lbl)
 
         if meds and meds[0].prescribed_date:
             date_str = meds[0].prescribed_date.strftime("%d %b %Y")
             date_lbl = QLabel(f"  📅 {date_str}")
-            date_lbl.setStyleSheet("color:#64748B; font-size:12px;")
+            date_lbl.setStyleSheet("color:#5B6B73; font-size:12px;")
             header.addWidget(date_lbl)
 
         header.addStretch()
         med_count = QLabel(f"{len(meds)} medicine{'s' if len(meds) != 1 else ''}")
         med_count.setStyleSheet(
-            "color:#1D4ED8; background:#DBEAFE; border-radius:8px;"
+            "color:#16707F; background:#CDEAF0; border-radius:8px;"
             " padding:2px 8px; font-size:11px; font-weight:600;"
         )
         header.addWidget(med_count)
@@ -329,7 +342,7 @@ class PatientDetailsWidget(QWidget):
         # Divider
         div = QFrame()
         div.setFrameShape(QFrame.Shape.HLine)
-        div.setStyleSheet("color:#BFDBFE; margin: 2px 0;")
+        div.setStyleSheet("color:#B9DCE4; margin: 2px 0;")
         vbox.addWidget(div)
 
         # One row per medicine
@@ -339,18 +352,18 @@ class PatientDetailsWidget(QWidget):
 
             bullet = QLabel("•")
             bullet.setFixedWidth(12)
-            bullet.setStyleSheet("color:#2563EB; font-size:14px;")
+            bullet.setStyleSheet("color:#1F8A9E; font-size:14px;")
             med_row.addWidget(bullet)
 
             name_lbl = QLabel(rx.medicine_name)
             name_lbl.setFont(QFont("Ubuntu", 12, QFont.Weight.Medium))
-            name_lbl.setStyleSheet("color:#0F172A;")
+            name_lbl.setStyleSheet("color:#1E2B32;")
             med_row.addWidget(name_lbl)
 
             detail_parts = [p for p in [rx.dosage, rx.frequency, rx.duration] if p]
             if detail_parts:
                 detail_lbl = QLabel("  ·  ".join(detail_parts))
-                detail_lbl.setStyleSheet("color:#64748B; font-size:12px;")
+                detail_lbl.setStyleSheet("color:#5B6B73; font-size:12px;")
                 med_row.addWidget(detail_lbl)
 
             med_row.addStretch()
@@ -370,8 +383,8 @@ class PatientDetailsWidget(QWidget):
         card = ClickableCard(on_click if treatment.pending_amount > 0 else None)
         card.setObjectName("card")
         card.setStyleSheet(
-            "QFrame#card { border-left: 4px solid #007AFF; margin-bottom: 8px; }"
-            "QFrame#card:hover { background: #F0F7FF; }"
+            "QFrame#card { border-left: 4px solid #1F8A9E; margin-bottom: 8px; }"
+            "QFrame#card:hover { background: #EEF7F9; }"
         )
 
         layout = QVBoxLayout(card)
@@ -385,11 +398,11 @@ class PatientDetailsWidget(QWidget):
         row1.addStretch()
 
         status_colors = {
-            "planned": "#FF9500",
-            "in_progress": "#007AFF",
-            "completed": "#34C759"
+            "planned": "#C98A2E",
+            "in_progress": "#1F8A9E",
+            "completed": "#2E9E6B"
         }
-        color = status_colors.get(treatment.status, "#86868B")
+        color = status_colors.get(treatment.status, "#5B6B73")
         badge = QLabel(treatment.status.replace("_", " ").upper())
         badge.setStyleSheet(
             f"color:white; background:{color}; padding:3px 10px;"
@@ -401,34 +414,34 @@ class PatientDetailsWidget(QWidget):
         # Row 2: date
         date_str = treatment.start_date.strftime("%d %b %Y") if treatment.start_date else "N/A"
         date_lbl = QLabel(f"📅  {date_str}")
-        date_lbl.setStyleSheet("color:#86868B; font-size:12px; margin-bottom:6px;")
+        date_lbl.setStyleSheet("color:#5B6B73; font-size:12px; margin-bottom:6px;")
         layout.addWidget(date_lbl)
 
         # Row 3: colored metric boxes
         metrics_row = QHBoxLayout()
         metrics_row.setSpacing(10)
 
-        metrics_row.addWidget(self._metric_box("Total Cost", format_currency(treatment.total_cost), "#5856D6", "#F0EFFF"))
-        metrics_row.addWidget(self._metric_box("Paid", format_currency(treatment.amount_paid), "#34C759", "#E8F8EC"))
+        metrics_row.addWidget(self._metric_box("Total Cost", format_currency(treatment.total_cost), "#6E72B8", "#EEEFF8"))
+        metrics_row.addWidget(self._metric_box("Paid", format_currency(treatment.amount_paid), "#2E9E6B", "#E6F5EE"))
         metrics_row.addWidget(self._metric_box(
             "Pending",
             format_currency(treatment.pending_amount),
-            "#FF3B30" if treatment.pending_amount > 0 else "#34C759",
-            "#FFE5E5" if treatment.pending_amount > 0 else "#E8F8EC"
+            "#D0534F" if treatment.pending_amount > 0 else "#2E9E6B",
+            "#FBEBEA" if treatment.pending_amount > 0 else "#E6F5EE"
         ))
         metrics_row.addStretch()
         layout.addLayout(metrics_row)
 
         if treatment.notes:
             notes_lbl = QLabel(f"📝  {treatment.notes}")
-            notes_lbl.setStyleSheet("color:#86868B; font-size:12px; margin-top:4px;")
+            notes_lbl.setStyleSheet("color:#5B6B73; font-size:12px; margin-top:4px;")
             notes_lbl.setWordWrap(True)
             layout.addWidget(notes_lbl)
 
         # Click hint only when there's a pending amount
         if treatment.pending_amount > 0:
             hint = QLabel("Click to select for payment →")
-            hint.setStyleSheet("color:#007AFF; font-size:11px;")
+            hint.setStyleSheet("color:#1F8A9E; font-size:11px;")
             hint.setAlignment(Qt.AlignmentFlag.AlignRight)
             layout.addWidget(hint)
 
@@ -470,13 +483,13 @@ class PatientDetailsWidget(QWidget):
         toolbar = QWidget()
         toolbar.setFixedHeight(56)
         toolbar.setStyleSheet(
-            "QWidget { background:#EFF6FF; border-bottom:2px solid #BFDBFE; }"
+            "QWidget { background:#E3F3F6; border-bottom:2px solid #B9DCE4; }"
         )
         tb_layout = QHBoxLayout(toolbar)
         tb_layout.setContentsMargins(24, 8, 24, 8)
         tb_lbl = QLabel("Billing Summary")
         tb_lbl.setStyleSheet(
-            "color:#0F2942; font-size:14px; font-weight:700; background:transparent; border:none;"
+            "color:#1F4E5A; font-size:14px; font-weight:700; background:transparent; border:none;"
         )
         tb_layout.addWidget(tb_lbl)
         tb_layout.addStretch()
@@ -485,10 +498,10 @@ class PatientDetailsWidget(QWidget):
         print_bill_btn.setFixedWidth(160)
         print_bill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         print_bill_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border-radius:7px;"
+            "QPushButton { background:#1F4E5A; color:white; border-radius:7px;"
             " font-size:13px; font-weight:600; border:none; }"
-            "QPushButton:hover { background:#1a3a5c; }"
-            "QPushButton:pressed { background:#0a1f33; }"
+            "QPushButton:hover { background:#28606D; }"
+            "QPushButton:pressed { background:#1E2B32; }"
         )
         print_bill_btn.clicked.connect(self._print_bill)
         tb_layout.addWidget(print_bill_btn)
@@ -506,7 +519,7 @@ class PatientDetailsWidget(QWidget):
         if not self.treatments:
             empty = QLabel("No billing records.")
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty.setStyleSheet("color:#86868B; padding:60px;")
+            empty.setStyleSheet("color:#5B6B73; padding:60px;")
             layout.addWidget(empty)
         else:
             for t in self.treatments:
@@ -523,7 +536,7 @@ class PatientDetailsWidget(QWidget):
     def _build_billing_row(self, treatment):
         """One treatment row + collapsible payment history panel."""
         container = QFrame()
-        container.setStyleSheet("border-bottom:1px solid #F2F2F7;")
+        container.setStyleSheet("border-bottom:1px solid #EEF3F4;")
         cl = QVBoxLayout(container)
         cl.setContentsMargins(0, 0, 0, 0)
         cl.setSpacing(0)
@@ -531,7 +544,7 @@ class PatientDetailsWidget(QWidget):
         # ── Payment history panel (hidden by default) ──
         history_panel = QFrame()
         history_panel.setStyleSheet(
-            "background:#FAFAFA; border-radius:6px; margin:0 4px 8px 4px;"
+            "background:#F4F7F8; border-radius:6px; margin:0 4px 8px 4px;"
         )
         hl = QVBoxLayout(history_panel)
         hl.setContentsMargins(16, 10, 16, 10)
@@ -543,7 +556,7 @@ class PatientDetailsWidget(QWidget):
             header_row = QHBoxLayout()
             for col in ["Date", "Method", "Amount"]:
                 lbl = QLabel(col)
-                lbl.setStyleSheet("color:#86868B; font-size:11px; font-weight:600;")
+                lbl.setStyleSheet("color:#5B6B73; font-size:11px; font-weight:600;")
                 header_row.addWidget(lbl)
                 if col != "Amount":
                     header_row.addStretch()
@@ -551,7 +564,7 @@ class PatientDetailsWidget(QWidget):
 
             sep = QFrame()
             sep.setFrameShape(QFrame.Shape.HLine)
-            sep.setStyleSheet("color:#E5E5EA;")
+            sep.setStyleSheet("color:#DDE5E8;")
             hl.addWidget(sep)
 
             for p in payments:
@@ -570,12 +583,12 @@ class PatientDetailsWidget(QWidget):
                 p_row.addStretch()
 
                 method_lbl = QLabel((p.payment_method or "cash").capitalize())
-                method_lbl.setStyleSheet("color:#86868B; font-size:12px;")
+                method_lbl.setStyleSheet("color:#5B6B73; font-size:12px;")
                 p_row.addWidget(method_lbl)
                 p_row.addStretch()
 
                 amount_lbl = QLabel(format_currency(p.amount))
-                amount_lbl.setStyleSheet("color:#34C759; font-weight:600; font-size:13px;")
+                amount_lbl.setStyleSheet("color:#2E9E6B; font-weight:600; font-size:13px;")
                 p_row.addWidget(amount_lbl)
 
                 row_w = QWidget()
@@ -583,12 +596,12 @@ class PatientDetailsWidget(QWidget):
                 hl.addWidget(row_w)
         else:
             no_pay = QLabel("No payments recorded yet.")
-            no_pay.setStyleSheet("color:#86868B; font-size:12px;")
+            no_pay.setStyleSheet("color:#5B6B73; font-size:12px;")
             hl.addWidget(no_pay)
 
         # ── Arrow label (toggled on click) ──
         arrow = QLabel("v")
-        arrow.setStyleSheet("color:#86868B; margin-left:8px; font-size:11px; font-weight:700;")
+        arrow.setStyleSheet("color:#5B6B73; margin-left:8px; font-size:11px; font-weight:700;")
 
         def toggle(_hp=history_panel, _ar=arrow):
             try:
@@ -600,7 +613,7 @@ class PatientDetailsWidget(QWidget):
 
         # ── Main clickable row ──
         row_card = ClickableCard(toggle)
-        row_card.setStyleSheet("QFrame:hover { background:#F5F9FF; }")
+        row_card.setStyleSheet("QFrame:hover { background:#F4F7F8; }")
         row_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         rl = QHBoxLayout(row_card)
         rl.setContentsMargins(4, 12, 4, 12)
@@ -616,12 +629,12 @@ class PatientDetailsWidget(QWidget):
 
         rl.addWidget(QLabel("   Paid: "))
         paid_lbl = QLabel(format_currency(treatment.amount_paid))
-        paid_lbl.setStyleSheet("color:#34C759; font-weight:600;")
+        paid_lbl.setStyleSheet("color:#2E9E6B; font-weight:600;")
         rl.addWidget(paid_lbl)
 
         rl.addWidget(QLabel("   Due: "))
         due_lbl = QLabel(format_currency(treatment.pending_amount))
-        due_lbl.setStyleSheet("color:#FF3B30; font-weight:600;")
+        due_lbl.setStyleSheet("color:#D0534F; font-weight:600;")
         rl.addWidget(due_lbl)
 
         rl.addWidget(arrow)
@@ -632,9 +645,9 @@ class PatientDetailsWidget(QWidget):
         bill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         bill_btn.setToolTip(f"Print bill for {treatment.treatment_type_name} only")
         bill_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border-radius:5px;"
+            "QPushButton { background:#1F4E5A; color:white; border-radius:5px;"
             " font-size:11px; font-weight:600; border:none; }"
-            "QPushButton:hover { background:#1a3a5c; }"
+            "QPushButton:hover { background:#28606D; }"
         )
         bill_btn.clicked.connect(lambda _checked, t=treatment: self._print_bill([t]))
 
@@ -655,7 +668,7 @@ class PatientDetailsWidget(QWidget):
     def _build_billing_panel(self):
         panel = QFrame()
         panel.setStyleSheet(
-            "QFrame { background:#F8FAFC; border-left:1px solid #E2E8F0; }"
+            "QFrame { background:#F4F7F8; border-left:1px solid #DDE5E8; }"
         )
         panel.setFixedWidth(270)
         layout = QVBoxLayout(panel)
@@ -665,14 +678,14 @@ class PatientDetailsWidget(QWidget):
         # Title
         title = QLabel("Client Billing")
         title.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        title.setStyleSheet("color:#0F2942; background:transparent; padding-bottom:10px;")
+        title.setStyleSheet("color:#1F4E5A; background:transparent; padding-bottom:10px;")
         layout.addWidget(title)
 
         # Summary cards
-        due_color = "#FF3B30" if self.total_due > 0 else "#34C759"
+        due_color = "#D0534F" if self.total_due > 0 else "#2E9E6B"
         for lbl_txt, val_txt, col in [
-            ("Total Charged", format_currency(self.total_charged), "#1D1D1F"),
-            ("Total Paid",    format_currency(self.total_paid),    "#34C759"),
+            ("Total Charged", format_currency(self.total_charged), "#1E2B32"),
+            ("Total Paid",    format_currency(self.total_paid),    "#2E9E6B"),
             ("Total Due",     format_currency(self.total_due),     due_color),
         ]:
             layout.addWidget(self._billing_row_label(lbl_txt, val_txt, col))
@@ -680,21 +693,21 @@ class PatientDetailsWidget(QWidget):
         # Divider
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color:#E2E8F0; margin-top:8px; margin-bottom:8px;")
+        sep.setStyleSheet("color:#DDE5E8; margin-top:8px; margin-bottom:8px;")
         layout.addWidget(sep)
 
         # Treatment selector
         sel_label = QLabel("Add payment for:")
         sel_label.setStyleSheet(
-            "font-size:11px; font-weight:600; color:#86868B;"
+            "font-size:11px; font-weight:600; color:#5B6B73;"
             " background:transparent; padding-bottom:4px;"
         )
         layout.addWidget(sel_label)
 
         self.treatment_combo.setFixedHeight(36)
         self.treatment_combo.setStyleSheet(
-            "QComboBox { border:1px solid #CBD5E1; border-radius:7px; padding:0 10px;"
-            " background:white; font-size:12px; color:#0F2942; }"
+            "QComboBox { border:1px solid #C5D2D7; border-radius:7px; padding:0 10px;"
+            " background:white; font-size:12px; color:#1F4E5A; }"
             "QComboBox::drop-down { border:none; width:20px; }"
         )
         layout.addWidget(self.treatment_combo)
@@ -705,10 +718,10 @@ class PatientDetailsWidget(QWidget):
         add_btn.setFixedHeight(38)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border-radius:8px;"
+            "QPushButton { background:#1F4E5A; color:white; border-radius:8px;"
             " font-size:13px; font-weight:600; border:none; }"
-            "QPushButton:hover { background:#1a3a5c; }"
-            "QPushButton:pressed { background:#0a1f33; }"
+            "QPushButton:hover { background:#28606D; }"
+            "QPushButton:pressed { background:#1E2B32; }"
         )
         add_btn.clicked.connect(self._show_add_payment)
         layout.addWidget(add_btn)
@@ -722,7 +735,7 @@ class PatientDetailsWidget(QWidget):
         rl = QHBoxLayout(row)
         rl.setContentsMargins(0, 4, 0, 4)
         lbl = QLabel(label)
-        lbl.setStyleSheet("color:#86868B; font-size:12px; background:transparent;")
+        lbl.setStyleSheet("color:#5B6B73; font-size:12px; background:transparent;")
         val = QLabel(value)
         val.setStyleSheet(
             f"color:{color}; font-weight:700; font-size:13px; background:transparent;"
@@ -762,7 +775,7 @@ class PatientDetailsWidget(QWidget):
         # ── Top bar ──
         top = QHBoxLayout()
         title = QLabel("📋  Create Prescription")
-        title.setStyleSheet("font-size:16px; font-weight:700; color:#0F2942;")
+        title.setStyleSheet("font-size:16px; font-weight:700; color:#1F4E5A;")
         top.addWidget(title)
         top.addStretch()
 
@@ -787,7 +800,7 @@ class PatientDetailsWidget(QWidget):
         # ── Column header ──
         header_frame = QFrame()
         header_frame.setStyleSheet(
-            "QFrame { background:#0F2942; border-radius:8px 8px 0 0; }"
+            "QFrame { background:#1F4E5A; border-radius:8px 8px 0 0; }"
         )
         hh = QHBoxLayout(header_frame)
         hh.setContentsMargins(10, 8, 10, 8)
@@ -800,12 +813,12 @@ class PatientDetailsWidget(QWidget):
             l.setAlignment(Qt.AlignmentFlag.AlignCenter)
             return l
 
-        hh.addWidget(_hcol("#", 26))
-        hh.addWidget(_hcol("Medicine Name", 220))
-        hh.addWidget(_hcol("Dosage  (M - A - E - N)", 210))
-        hh.addWidget(_hcol("Timing", 165))
+        hh.addWidget(_hcol("#", 30))
+        hh.addWidget(_hcol("Medicine Name", 260))
+        hh.addWidget(_hcol("Dosage (M-A-E-N)", 240))
+        hh.addWidget(_hcol("Timing", 220))
         hh.addWidget(_hcol("Qty", 80))
-        hh.addWidget(_hcol("", 28))
+        hh.addWidget(_hcol("", 40))
         outer.addWidget(header_frame)
 
         # ── Rows container (scrollable) ──
@@ -815,7 +828,7 @@ class PatientDetailsWidget(QWidget):
         scroll.setMinimumHeight(200)
 
         self._rx_rows_widget = QWidget()
-        self._rx_rows_widget.setStyleSheet("background:#FAFAFA;")
+        self._rx_rows_widget.setStyleSheet("background:#F4F7F8;")
         self._rx_rows_layout = QVBoxLayout(self._rx_rows_widget)
         self._rx_rows_layout.setContentsMargins(0, 0, 0, 0)
         self._rx_rows_layout.setSpacing(2)
@@ -835,9 +848,9 @@ class PatientDetailsWidget(QWidget):
         add_row_btn = QPushButton("➕  Add Medicine Row")
         add_row_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_row_btn.setStyleSheet(
-            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            "QPushButton { background:#E3F3F6; color:#2A6674; border:1px solid #B9DCE4;"
             " border-radius:7px; padding:8px 16px; font-weight:600; }"
-            "QPushButton:hover { background:#DBEAFE; }"
+            "QPushButton:hover { background:#CDEAF0; }"
         )
         add_row_btn.clicked.connect(self._add_rx_row)
         bot.addWidget(add_row_btn)
@@ -846,9 +859,9 @@ class PatientDetailsWidget(QWidget):
         save_btn = QPushButton("💾  Save Prescription")
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setStyleSheet(
-            "QPushButton { background:#34C759; color:white; border:none;"
+            "QPushButton { background:#2E9E6B; color:white; border:none;"
             " border-radius:7px; padding:8px 20px; font-weight:700; }"
-            "QPushButton:hover { background:#2DB34C; }"
+            "QPushButton:hover { background:#2A9163; }"
         )
         save_btn.clicked.connect(self._save_prescriptions)
         bot.addWidget(save_btn)
@@ -856,9 +869,9 @@ class PatientDetailsWidget(QWidget):
         print_btn = QPushButton("🖨️  Print / PDF")
         print_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         print_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:7px; padding:8px 20px; font-weight:700; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         print_btn.clicked.connect(self._print_prescription)
         bot.addWidget(print_btn)
@@ -972,7 +985,7 @@ class PatientDetailsWidget(QWidget):
             except Exception:
                 date_str = str(t.start_date) if t.start_date else "—"
 
-            row_bg = "#F0F9FF" if i % 2 == 0 else "#FFFFFF"
+            row_bg = "#EEF7F9" if i % 2 == 0 else "#FFFFFF"
             treatment_rows_html += f"""
             <tr style="background:{row_bg};">
               <td style="text-align:center;">{i+1}</td>
@@ -1000,10 +1013,10 @@ class PatientDetailsWidget(QWidget):
           </td>
         </tr>
         <tr style="background:#F0FFF4;">
-          <td colspan="2" style="text-align:right; padding-right:16px; font-weight:600; color:#34C759;">
+          <td colspan="2" style="text-align:right; padding-right:16px; font-weight:600; color:#2E9E6B;">
               Amount Paid
           </td>
-          <td style="text-align:right; padding-right:10px; font-weight:700; font-size:11pt; color:#34C759;">
+          <td style="text-align:right; padding-right:10px; font-weight:700; font-size:11pt; color:#2E9E6B;">
               Rs.{bill_paid:,.0f}
           </td>
         </tr>"""
@@ -1012,11 +1025,11 @@ class PatientDetailsWidget(QWidget):
             summary_html += f"""
         <tr style="background:#FFF5F5;">
           <td colspan="2" style="text-align:right; padding-right:16px; font-weight:700;
-              font-size:11pt; color:#FF3B30;">
+              font-size:11pt; color:#D0534F;">
               Balance Due
           </td>
           <td style="text-align:right; padding-right:10px; font-weight:900;
-              font-size:12pt; color:#FF3B30;">
+              font-size:12pt; color:#D0534F;">
               Rs.{bill_due:,.0f}
           </td>
         </tr>"""
@@ -1032,7 +1045,7 @@ class PatientDetailsWidget(QWidget):
             color: #1a1a1a;
           }}
           .page-border {{
-            border: 4px solid #0F2942;
+            border: 4px solid #1F4E5A;
             padding: 28px 32px;
           }}
 
@@ -1043,36 +1056,36 @@ class PatientDetailsWidget(QWidget):
             margin-bottom: 0;
           }}
           .lh-symbol {{ width:56px; text-align:center; vertical-align:middle; padding-right:6px; }}
-          .lh-symbol .tooth-icon {{ font-size:36pt; color:#0F2942; line-height:1; }}
+          .lh-symbol .tooth-icon {{ font-size:36pt; color:#1F4E5A; line-height:1; }}
           .lh-logo {{ width:80px; text-align:center; vertical-align:middle; padding-left:8px; }}
           .lh-clinic {{ text-align:center; vertical-align:bottom; padding:4px 8px 6px 8px; }}
-          .clinic-name {{ font-size:20pt; font-weight:900; color:#0F2942; letter-spacing:0.5px; }}
-          .clinic-mr {{ font-size:13pt; color:#0F2942; font-weight:600; margin-top:2px; }}
+          .clinic-name {{ font-size:20pt; font-weight:900; color:#1F4E5A; letter-spacing:0.5px; }}
+          .clinic-mr {{ font-size:13pt; color:#1F4E5A; font-weight:600; margin-top:2px; }}
           .lh-doctor {{ text-align:center; padding:6px 8px 8px 8px; }}
-          .doc-name {{ font-size:15pt; font-weight:800; color:#0F2942; }}
+          .doc-name {{ font-size:15pt; font-weight:800; color:#1F4E5A; }}
           .doc-degree {{ font-size:11pt; color:#444; margin-top:2px; }}
           .doc-reg {{ font-size:10pt; color:#888; margin-top:2px; }}
           .lh-contact-row td {{ border-top:1px solid #bbb; }}
           .lh-contact {{ text-align:center; padding:6px 8px 8px 8px; font-size:10pt; color:#555; }}
 
           /* ── Dividers ── */
-          .header-divider {{ border:none; border-top:2px solid #0F2942; margin:10px 0 0 0; }}
+          .header-divider {{ border:none; border-top:2px solid #1F4E5A; margin:10px 0 0 0; }}
 
           /* ── Patient strip ── */
           .patient-strip {{
-            width:100%; border-collapse:collapse; background:#EFF6FF;
+            width:100%; border-collapse:collapse; background:#E3F3F6;
             margin:10px 0 14px 0; table-layout:fixed;
           }}
           .patient-strip td {{ padding:6px 10px; width:25%; }}
           .patient-strip .label {{ font-size:8pt; color:#666; display:block; white-space:nowrap; }}
           .patient-strip .value {{
-            font-size:9pt; font-weight:700; color:#0F2942;
+            font-size:9pt; font-weight:700; color:#1F4E5A;
             display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
           }}
 
           /* ── Bill title ── */
           .bill-title {{
-            text-align:center; font-size:14pt; font-weight:900; color:#0F2942;
+            text-align:center; font-size:14pt; font-weight:900; color:#1F4E5A;
             letter-spacing:2px; margin:14px 0 10px 0;
             border-top:1px dashed #aaa; border-bottom:1px dashed #aaa;
             padding:6px 0;
@@ -1083,16 +1096,16 @@ class PatientDetailsWidget(QWidget):
             width:100%; border-collapse:collapse; margin-top:6px; table-layout:fixed;
           }}
           .bill-table th {{
-            background:#0F2942; color:white; padding:7px 6px;
+            background:#1F4E5A; color:white; padding:7px 6px;
             font-size:10pt; text-align:center;
-            border:1px solid #0a2035;
+            border:1px solid #1E2B32;
           }}
           .bill-table td {{
             padding:7px 6px; font-size:10pt;
-            border:1px solid #D1D5DB; vertical-align:middle;
+            border:1px solid #CFDADE; vertical-align:middle;
           }}
           .bill-table .summary-sep td {{
-            border-top:2px solid #0F2942; border-bottom:none;
+            border-top:2px solid #1F4E5A; border-bottom:none;
             border-left:none; border-right:none;
           }}
 
@@ -1101,7 +1114,7 @@ class PatientDetailsWidget(QWidget):
             border-top:1px dashed #aaa; margin-top:50px;
             padding-top:8px; text-align:right;
           }}
-          .sig-line {{ font-size:13pt; color:#0F2942; font-weight:700; }}
+          .sig-line {{ font-size:13pt; color:#1F4E5A; font-weight:700; }}
         </style>
         </head><body>
         <div class="page-border">
@@ -1173,7 +1186,7 @@ class PatientDetailsWidget(QWidget):
           <tbody>
             {treatment_rows_html}
             <!-- Summary separator -->
-            <tr class="summary-sep"><td colspan="4" style="border-top:2px solid #0F2942; padding:0;"></td></tr>
+            <tr class="summary-sep"><td colspan="4" style="border-top:2px solid #1F4E5A; padding:0;"></td></tr>
             {summary_html}
           </tbody>
         </table>
@@ -1271,7 +1284,7 @@ class PatientDetailsWidget(QWidget):
             color: #1a1a1a;
           }}
           .page-border {{
-            border: 4px solid #0F2942;
+            border: 4px solid #1F4E5A;
             padding: 28px 32px;
           }}
 
@@ -1289,7 +1302,7 @@ class PatientDetailsWidget(QWidget):
           }}
           .lh-symbol .tooth-icon {{
             font-size: 36pt;
-            color: #0F2942;
+            color: #1F4E5A;
             line-height: 1;
           }}
           .lh-logo {{
@@ -1308,12 +1321,12 @@ class PatientDetailsWidget(QWidget):
           .clinic-name {{
             font-size: 20pt;
             font-weight: 900;
-            color: #0F2942;
+            color: #1F4E5A;
             letter-spacing: 0.5px;
           }}
           .clinic-mr {{
             font-size: 13pt;
-            color: #0F2942;
+            color: #1F4E5A;
             font-weight: 600;
             margin-top: 2px;
           }}
@@ -1326,7 +1339,7 @@ class PatientDetailsWidget(QWidget):
           .doc-name {{
             font-size: 15pt;
             font-weight: 800;
-            color: #0F2942;
+            color: #1F4E5A;
           }}
           .doc-degree {{
             font-size: 11pt;
@@ -1353,13 +1366,13 @@ class PatientDetailsWidget(QWidget):
           /* ── Patient strip ── */
           .header-divider {{
             border: none;
-            border-top: 2px solid #0F2942;
+            border-top: 2px solid #1F4E5A;
             margin: 10px 0 0 0;
           }}
           .patient-strip {{
             width: 100%;
             border-collapse: collapse;
-            background: #EFF6FF;
+            background: #E3F3F6;
             margin: 10px 0 14px 0;
             table-layout: fixed;
           }}
@@ -1377,7 +1390,7 @@ class PatientDetailsWidget(QWidget):
           .patient-strip .value {{
             font-size: 9pt;
             font-weight: 700;
-            color: #0F2942;
+            color: #1F4E5A;
             display: block;
             white-space: nowrap;
             overflow: hidden;
@@ -1392,19 +1405,19 @@ class PatientDetailsWidget(QWidget):
             table-layout: fixed;
           }}
           .rx-table th {{
-            background: #0F2942;
+            background: #1F4E5A;
             color: white;
             padding: 6px 4px;
             font-size: 9pt;
             text-align: center;
-            border: 1px solid #0a2035;
+            border: 1px solid #1E2B32;
             word-break: keep-all;
             white-space: nowrap;
           }}
           .rx-table td {{
             padding: 6px 5px;
             font-size: 10pt;
-            border: 1px solid #D1D5DB;
+            border: 1px solid #CFDADE;
             vertical-align: middle;
           }}
           /* Column widths: fixed layout lets medicine column breathe */
@@ -1415,10 +1428,10 @@ class PatientDetailsWidget(QWidget):
           .col-qty      {{ width: 12%; text-align:center; }}
 
           .rx-table tr:nth-child(even) td {{
-            background: #F0F9FF;
+            background: #EEF7F9;
           }}
           .med-name {{ font-weight: 700; font-size: 10pt; word-break: normal; }}
-          .timing-mr {{ font-size: 9pt; color: #0F2942; font-weight: 600; }}
+          .timing-mr {{ font-size: 9pt; color: #1F4E5A; font-weight: 600; }}
 
           /* ── Footer ── */
           .footer-line {{
@@ -1429,7 +1442,7 @@ class PatientDetailsWidget(QWidget):
           }}
           .footer-line .sig-line {{
             font-size: 13pt;
-            color: #0F2942;
+            color: #1F4E5A;
             font-weight: 700;
           }}
         </style>
@@ -1485,7 +1498,7 @@ class PatientDetailsWidget(QWidget):
           </tr>
         </table>
 
-        <div style="font-size:11pt; color:#0F2942; font-weight:700; margin-bottom:8px; letter-spacing:0.5px;">
+        <div style="font-size:11pt; color:#1F4E5A; font-weight:700; margin-bottom:8px; letter-spacing:0.5px;">
           Rx &nbsp; Prescription / औषध यादी
         </div>
 
@@ -1544,7 +1557,7 @@ PatientDetailsDialog = PatientDetailsWidget
 # ── Add Payment Dialog ───────────────────────────────────────────────────────
 
 class AddPaymentDialog(QDialog):
-    """Payment entry dialog."""
+    """Premium-styled payment entry dialog with auto-close on success."""
 
     def __init__(self, treatment_id: int, payment_service: PaymentService, parent=None):
         super().__init__(parent)
@@ -1553,12 +1566,69 @@ class AddPaymentDialog(QDialog):
         self.setWindowTitle("Add Payment")
         self.setMinimumWidth(480)
         self.setModal(True)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
         self.init_ui()
 
     def init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(24, 24, 24, 24)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        # ── Gradient header ──
+        header = QFrame()
+        header.setStyleSheet(
+            "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
+            " border-radius: 0px; }"
+        )
+        header.setFixedHeight(64)
+        hl = QHBoxLayout(header)
+        hl.setContentsMargins(24, 0, 24, 0)
+
+        icon_lbl = QLabel("💳")
+        icon_lbl.setStyleSheet("font-size:24px; background:transparent;")
+        hl.addWidget(icon_lbl)
+
+        title_lbl = QLabel("  Add Payment")
+        title_lbl.setStyleSheet(
+            "color:white; font-size:17px; font-weight:700; background:transparent;"
+        )
+        hl.addWidget(title_lbl)
+        hl.addStretch()
+
+        # Due badge
+        from ...services.treatment_service import TreatmentService
+        try:
+            treatment = TreatmentService().get_treatment_by_id(self.treatment_id)
+            if treatment and treatment.pending_amount > 0:
+                due_lbl = QLabel(f"Due: {format_currency(treatment.pending_amount)}")
+                due_lbl.setStyleSheet(
+                    "background:#D0534F; color:white; border-radius:10px;"
+                    " padding:4px 14px; font-weight:700; font-size:12px;"
+                )
+                hl.addWidget(due_lbl)
+                # Pre-fill the amount
+                self._prefill_amount = treatment.pending_amount
+            else:
+                self._prefill_amount = 0
+        except Exception:
+            self._prefill_amount = 0
+
+        outer.addWidget(header)
+
+        # ── Form body ──
+        body = QWidget()
+        body.setStyleSheet("QWidget { background:#FFFFFF; }")
+        form = QVBoxLayout(body)
+        form.setContentsMargins(28, 24, 28, 20)
+        form.setSpacing(18)
+
+        # Amount field
+        amt_section = QVBoxLayout()
+        amt_section.setSpacing(6)
+        amt_label = QLabel("Amount (₹)")
+        amt_label.setStyleSheet("font-size:13px; font-weight:600; color:#1E2B32;")
+        amt_section.addWidget(amt_label)
 
         layout.addWidget(QLabel("Amount (Rs.):"))
         self.amount = QLineEdit()
@@ -1566,47 +1636,89 @@ class AddPaymentDialog(QDialog):
         self.amount.setFixedHeight(44)
         self.amount.setMinimumWidth(420)
         self.amount.setStyleSheet(
-            "QLineEdit { border:1px solid #D1D5DB; border-radius:7px;"
+            "QLineEdit { border:1px solid #CFDADE; border-radius:7px;"
             " padding:0 12px; font-size:13px; background:white; }"
-            "QLineEdit:focus { border:2px solid #0F2942; }"
+            "QLineEdit:focus { border:2px solid #1F4E5A; }"
         )
         layout.addWidget(self.amount)
 
-        layout.addWidget(QLabel("Payment Method:"))
         self.method = QComboBox()
         for _label, _key in [("Cash", "cash"), ("UPI", "upi"),
                                ("Card", "card"), ("Cheque", "cheque"), ("Other", "other")]:
             self.method.addItem(_label, _key)
         layout.addWidget(self.method)
 
-        layout.addWidget(QLabel("Date:"))
         self.date = QDateEdit()
         self.date.setDate(QDate.currentDate())
         self.date.setCalendarPopup(True)
-        layout.addWidget(self.date)
+        self.date.setDisplayFormat("dd MMM yyyy")
+        self.date.setStyleSheet(
+            "QDateEdit { border:1.5px solid #CFDADE; border-radius:8px;"
+            " padding:10px 14px; font-size:13px; background:#F4F7F8; }"
+            "QDateEdit:focus { border:2px solid #1F8A9E; background:white; }"
+        )
+        date_section.addWidget(self.date)
+        form.addLayout(date_section)
 
-        layout.addWidget(QLabel("Notes (optional):"))
+        # Notes
+        notes_section = QVBoxLayout()
+        notes_section.setSpacing(6)
+        notes_label = QLabel("Notes (optional)")
+        notes_label.setStyleSheet("font-size:13px; font-weight:600; color:#1E2B32;")
+        notes_section.addWidget(notes_label)
+
         self.notes = QTextEdit()
-        self.notes.setMaximumHeight(70)
+        self.notes.setMaximumHeight(64)
         self.notes.setPlaceholderText("e.g. Cash received at reception")
-        layout.addWidget(self.notes)
+        self.notes.setStyleSheet(
+            "QTextEdit { border:1.5px solid #CFDADE; border-radius:8px;"
+            " padding:8px 12px; font-size:13px; background:#F4F7F8; }"
+            "QTextEdit:focus { border:2px solid #1F8A9E; background:white; }"
+        )
+        notes_section.addWidget(self.notes)
+        form.addLayout(notes_section)
 
-        self.error_label = QLabel()
-        self.error_label.setObjectName("error_label")
-        self.error_label.setVisible(False)
-        layout.addWidget(self.error_label)
+        # Error / success inline label
+        self.status_label = QLabel()
+        self.status_label.setWordWrap(True)
+        self.status_label.setVisible(False)
+        self.status_label.setStyleSheet(
+            "padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600;"
+        )
+        form.addWidget(self.status_label)
 
-        btn_row = QHBoxLayout()
-        cancel = QPushButton("Cancel")
-        cancel.setObjectName("secondary_button")
-        cancel.clicked.connect(self.reject)
-        btn_row.addWidget(cancel)
+        outer.addWidget(body)
 
-        save = QPushButton("💾 Save Payment")
-        save.setObjectName("primary_button")
-        save.clicked.connect(self._on_save)
-        btn_row.addWidget(save)
-        layout.addLayout(btn_row)
+        # ── Button bar ──
+        btn_bar = QFrame()
+        btn_bar.setStyleSheet(
+            "QFrame { background:#F8F9FA; border-top:1px solid #DDE5E8; }"
+        )
+        btn_layout = QHBoxLayout(btn_bar)
+        btn_layout.setContentsMargins(28, 14, 28, 14)
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(
+            "QPushButton { background:#EEF3F4; color:#1E2B32; border:1px solid #CFDADE;"
+            " border-radius:8px; padding:10px 24px; font-weight:600; font-size:13px; }"
+            "QPushButton:hover { background:#DDE5E8; }"
+        )
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        save_btn = QPushButton("💾  Save Payment")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(
+            "QPushButton { background:#2E9E6B; color:white; border:none;"
+            " border-radius:8px; padding:10px 28px; font-weight:700; font-size:13px; }"
+            "QPushButton:hover { background:#2A9163; }"
+        )
+        save_btn.clicked.connect(self._on_save)
+        btn_layout.addWidget(save_btn)
+
+        outer.addWidget(btn_bar)
 
     def _on_save(self):
         try:
@@ -1630,11 +1742,25 @@ class AddPaymentDialog(QDialog):
         )
 
         if success:
-            QMessageBox.information(self, "Success", "Payment recorded successfully!")
-            self.accept()
+            # Show inline success toast, then auto-close after 800ms
+            self.status_label.setText("✅  Payment recorded successfully!")
+            self.status_label.setStyleSheet(
+                "background:#E6F5EE; color:#15803D; padding:10px 14px;"
+                " border-radius:8px; font-size:13px; font-weight:600;"
+                " border:1px solid #86EFAC;"
+            )
+            self.status_label.setVisible(True)
+
+            from PyQt6.QtCore import QTimer
+            QTimer.singleShot(800, self.accept)
         else:
-            self.error_label.setText(f"❌ {message}")
-            self.error_label.setVisible(True)
+            self.status_label.setText(f"❌  {message}")
+            self.status_label.setStyleSheet(
+                "background:#FBEBEA; color:#9E3B38; padding:10px 14px;"
+                " border-radius:8px; font-size:13px; font-weight:600;"
+                " border:1px solid #FCA5A5;"
+            )
+            self.status_label.setVisible(True)
 
 
 # ── Prescription Row Widget ───────────────────────────────────────────────────
@@ -1647,16 +1773,16 @@ class _PrescriptionRowWidget(QFrame):
                "With Food    (जेवणासह)"]
 
     _spin_style = (
-        "QSpinBox { border:1px solid #BFDBFE; border-radius:5px; background:#F0F9FF;"
+        "QSpinBox { border:1px solid #B9DCE4; border-radius:5px; background:#EEF7F9;"
         " padding:2px; font-size:13px; font-weight:700; }"
     )
-    _sep_style = "color:#94A3B8; font-size:14px; font-weight:700; background:transparent;"
+    _sep_style = "color:#8A989F; font-size:14px; font-weight:700; background:transparent;"
 
     def __init__(self, row_num: int, medicine_names: list, on_delete, parent=None):
         super().__init__(parent)
         self._on_delete = on_delete
         self.setFrameShape(QFrame.Shape.NoFrame)
-        self.setStyleSheet("QFrame { background:white; border-bottom:1px solid #F0F0F0; }")
+        self.setStyleSheet("QFrame { background:white; border-bottom:1px solid #E8EEF0; }")
         self.setFixedHeight(48)
 
         row = QHBoxLayout(self)
@@ -1667,7 +1793,7 @@ class _PrescriptionRowWidget(QFrame):
         self._num_lbl = QLabel(str(row_num))
         self._num_lbl.setFixedWidth(26)
         self._num_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._num_lbl.setStyleSheet("color:#86868B; font-size:11px; background:transparent;")
+        self._num_lbl.setStyleSheet("color:#5B6B73; font-size:11px; background:transparent;")
         row.addWidget(self._num_lbl)
 
         # Medicine name with autocomplete — wider since no dose/freq columns
@@ -1675,7 +1801,7 @@ class _PrescriptionRowWidget(QFrame):
         self._medicine.setMinimumWidth(220)
         self._medicine.setPlaceholderText("Medicine name…")
         self._medicine.setStyleSheet(
-            "QLineEdit { border:1px solid #E5E5EA; border-radius:5px;"
+            "QLineEdit { border:1px solid #DDE5E8; border-radius:5px;"
             " padding:5px 10px; font-size:13px; }"
         )
         if medicine_names:
@@ -1687,7 +1813,7 @@ class _PrescriptionRowWidget(QFrame):
 
         # ── Dosage: M - A - E - N ──
         dosage_lbl = QLabel("Dosage:")
-        dosage_lbl.setStyleSheet("color:#64748B; font-size:11px; background:transparent;")
+        dosage_lbl.setStyleSheet("color:#5B6B73; font-size:11px; background:transparent;")
         row.addWidget(dosage_lbl)
 
         self._spins = {}
@@ -1713,14 +1839,14 @@ class _PrescriptionRowWidget(QFrame):
         self._timing.setFixedWidth(165)
         self._timing.addItems(self.TIMING)
         self._timing.setStyleSheet(
-            "QComboBox { border:1px solid #E5E5EA; border-radius:5px;"
+            "QComboBox { border:1px solid #DDE5E8; border-radius:5px;"
             " padding:4px 6px; font-size:12px; }"
         )
         row.addWidget(self._timing)
 
         # Quantity (days)
         qty_lbl = QLabel("Qty:")
-        qty_lbl.setStyleSheet("color:#64748B; font-size:11px; background:transparent;")
+        qty_lbl.setStyleSheet("color:#5B6B73; font-size:11px; background:transparent;")
         row.addWidget(qty_lbl)
 
         self._days = QSpinBox()
@@ -1728,7 +1854,7 @@ class _PrescriptionRowWidget(QFrame):
         self._days.setValue(5)
         self._days.setFixedWidth(56)
         self._days.setStyleSheet(
-            "QSpinBox { border:1px solid #E5E5EA; border-radius:5px;"
+            "QSpinBox { border:1px solid #DDE5E8; border-radius:5px;"
             " padding:3px; font-size:12px; }"
         )
         row.addWidget(self._days)
@@ -1738,9 +1864,9 @@ class _PrescriptionRowWidget(QFrame):
         del_btn.setFixedSize(28, 28)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         del_btn.setStyleSheet(
-            "QPushButton { background:#FEF2F2; color:#991B1B; border:none;"
+            "QPushButton { background:#FBEBEA; color:#9E3B38; border:none;"
             " border-radius:6px; font-weight:700; }"
-            "QPushButton:hover { background:#FEE2E2; }"
+            "QPushButton:hover { background:#F8DEDD; }"
         )
         del_btn.clicked.connect(lambda: self._on_delete(self))
         row.addWidget(del_btn)

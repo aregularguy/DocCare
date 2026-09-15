@@ -34,10 +34,10 @@ class SettingsWidget(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea { background: #F8FAFC; }")
+        scroll.setStyleSheet("QScrollArea { background: #F4F7F8; }")
 
         body = QWidget()
-        body.setStyleSheet("background: #F8FAFC;")
+        body.setStyleSheet("background: #F4F7F8;")
         bl = QVBoxLayout(body)
         bl.setContentsMargins(40, 32, 40, 40)
         bl.setSpacing(24)
@@ -66,9 +66,9 @@ class SettingsWidget(QWidget):
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setFixedHeight(44)
         save_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:8px; font-size:14px; font-weight:700; padding:0 32px; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         save_btn.clicked.connect(self._save)
         btn_row = QHBoxLayout()
@@ -86,7 +86,7 @@ class SettingsWidget(QWidget):
         banner.setFixedHeight(100)
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
-            "stop:0 #0F2942, stop:1 #1A4A7A); }"
+            "stop:0 #1F4E5A, stop:1 #2A6674); }"
         )
         bl = QHBoxLayout(banner)
         bl.setContentsMargins(32, 0, 32, 0)
@@ -98,14 +98,14 @@ class SettingsWidget(QWidget):
         bl.addStretch()
 
         sub = QLabel("Clinic & Doctor details auto-populate the prescription PDF")
-        sub.setStyleSheet("color:#93C5FD; font-size:13px; background:transparent;")
+        sub.setStyleSheet("color:#A9CBD2; font-size:13px; background:transparent;")
         bl.addWidget(sub)
         return banner
 
     def _build_section(self, title: str, fields: list) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "QFrame { background:white; border:1px solid #E2E8F0;"
+            "QFrame { background:white; border:1px solid #DDE5E8;"
             " border-radius:12px; }"
         )
         vl = QVBoxLayout(card)
@@ -114,12 +114,12 @@ class SettingsWidget(QWidget):
 
         hdr = QLabel(title)
         hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        hdr.setStyleSheet("color:#0F2942; border:none;")
+        hdr.setStyleSheet("color:#1F4E5A; border:none;")
         vl.addWidget(hdr)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color:#E2E8F0; border:none; border-top:1px solid #E2E8F0;")
+        sep.setStyleSheet("color:#DDE5E8; border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep)
 
         self._fields = getattr(self, '_fields', {})
@@ -135,9 +135,9 @@ class SettingsWidget(QWidget):
             inp.setPlaceholderText(placeholder)
             inp.setFixedHeight(40)
             inp.setStyleSheet(
-                "QLineEdit { border:1px solid #D1D5DB; border-radius:7px;"
+                "QLineEdit { border:1px solid #CFDADE; border-radius:7px;"
                 " padding:0 12px; font-size:13px; background:white; }"
-                "QLineEdit:focus { border:2px solid #0F2942; }"
+                "QLineEdit:focus { border:2px solid #1F4E5A; }"
             )
             self._fields[key] = inp
             row.addWidget(inp)
@@ -148,7 +148,7 @@ class SettingsWidget(QWidget):
     def _build_logo_section(self) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "QFrame { background:white; border:1px solid #E2E8F0;"
+            "QFrame { background:white; border:1px solid #DDE5E8;"
             " border-radius:12px; }"
         )
         vl = QVBoxLayout(card)
@@ -157,12 +157,12 @@ class SettingsWidget(QWidget):
 
         hdr = QLabel("🖼️  Clinic Logo")
         hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        hdr.setStyleSheet("color:#0F2942; border:none;")
+        hdr.setStyleSheet("color:#1F4E5A; border:none;")
         vl.addWidget(hdr)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color:#E2E8F0; border:none; border-top:1px solid #E2E8F0;")
+        sep.setStyleSheet("color:#DDE5E8; border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep)
 
         row = QHBoxLayout()
@@ -172,8 +172,8 @@ class SettingsWidget(QWidget):
         self._logo_preview.setFixedSize(90, 90)
         self._logo_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._logo_preview.setStyleSheet(
-            "QLabel { border:2px dashed #CBD5E1; border-radius:45px;"
-            " background:#F8FAFC; color:#94A3B8; font-size:28px; }"
+            "QLabel { border:2px dashed #C5D2D7; border-radius:45px;"
+            " background:#F4F7F8; color:#8A989F; font-size:28px; }"
         )
         self._logo_preview.setText("🏥")
         row.addWidget(self._logo_preview)
@@ -182,7 +182,7 @@ class SettingsWidget(QWidget):
         right.setSpacing(8)
 
         info = QLabel("Upload a clinic logo — appears top-right of prescription PDF.\nRecommended: square image (PNG or JPG), min 200×200px.")
-        info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        info.setStyleSheet("color:#5B6B73; font-size:12px; border:none;")
         info.setWordWrap(True)
         right.addWidget(info)
 
@@ -193,9 +193,9 @@ class SettingsWidget(QWidget):
         upload_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         upload_btn.setFixedHeight(36)
         upload_btn.setStyleSheet(
-            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            "QPushButton { background:#E3F3F6; color:#2A6674; border:1px solid #B9DCE4;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
-            "QPushButton:hover { background:#DBEAFE; }"
+            "QPushButton:hover { background:#CDEAF0; }"
         )
         upload_btn.clicked.connect(self._upload_logo)
         btns.addWidget(upload_btn)
@@ -204,9 +204,9 @@ class SettingsWidget(QWidget):
         remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         remove_btn.setFixedHeight(36)
         remove_btn.setStyleSheet(
-            "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+            "QPushButton { background:#FBEBEA; color:#9E3B38; border:1px solid #FECACA;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
-            "QPushButton:hover { background:#FEE2E2; }"
+            "QPushButton:hover { background:#F8DEDD; }"
         )
         remove_btn.clicked.connect(self._remove_logo)
         btns.addWidget(remove_btn)
@@ -220,7 +220,7 @@ class SettingsWidget(QWidget):
     def _build_backup_section(self) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+            "QFrame { background:white; border:1px solid #DDE5E8; border-radius:12px; }"
         )
         vl = QVBoxLayout(card)
         vl.setContentsMargins(24, 20, 24, 24)
@@ -228,19 +228,19 @@ class SettingsWidget(QWidget):
 
         hdr = QLabel("🗄️  Database Backup")
         hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        hdr.setStyleSheet("color:#0F2942; border:none;")
+        hdr.setStyleSheet("color:#1F4E5A; border:none;")
         vl.addWidget(hdr)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        sep.setStyleSheet("border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep)
 
         info = QLabel(
             "Keep your patient data safe. Backup creates a copy of your database file.\n"
             "Auto-backup runs every time the app starts (last 7 kept automatically)."
         )
-        info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        info.setStyleSheet("color:#5B6B73; font-size:12px; border:none;")
         info.setWordWrap(True)
         vl.addWidget(info)
 
@@ -260,9 +260,9 @@ class SettingsWidget(QWidget):
         backup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         backup_btn.setFixedHeight(38)
         backup_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         backup_btn.clicked.connect(self._do_backup)
         btns.addWidget(backup_btn)
@@ -271,9 +271,9 @@ class SettingsWidget(QWidget):
         open_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         open_folder_btn.setFixedHeight(38)
         open_folder_btn.setStyleSheet(
-            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            "QPushButton { background:#E3F3F6; color:#2A6674; border:1px solid #B9DCE4;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
-            "QPushButton:hover { background:#DBEAFE; }"
+            "QPushButton:hover { background:#CDEAF0; }"
         )
         open_folder_btn.clicked.connect(self._open_backup_folder)
         btns.addWidget(open_folder_btn)
@@ -283,14 +283,14 @@ class SettingsWidget(QWidget):
         # ── Restore & Merge row ──────────────────────────────────────
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.Shape.HLine)
-        sep2.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        sep2.setStyleSheet("border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep2)
 
         restore_info = QLabel(
             "Restore a backup to replace current data, or import & merge "
             "records from another machine without losing existing data."
         )
-        restore_info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        restore_info.setStyleSheet("color:#5B6B73; font-size:12px; border:none;")
         restore_info.setWordWrap(True)
         vl.addWidget(restore_info)
 
@@ -301,9 +301,9 @@ class SettingsWidget(QWidget):
         restore_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         restore_btn.setFixedHeight(38)
         restore_btn.setStyleSheet(
-            "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+            "QPushButton { background:#FBEBEA; color:#9E3B38; border:1px solid #FECACA;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
-            "QPushButton:hover { background:#FEE2E2; }"
+            "QPushButton:hover { background:#F8DEDD; }"
         )
         restore_btn.clicked.connect(self._do_restore)
         btns2.addWidget(restore_btn)
@@ -312,9 +312,9 @@ class SettingsWidget(QWidget):
         merge_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         merge_btn.setFixedHeight(38)
         merge_btn.setStyleSheet(
-            "QPushButton { background:#EFF6FF; color:#1A4A7A; border:1px solid #BFDBFE;"
+            "QPushButton { background:#E3F3F6; color:#2A6674; border:1px solid #B9DCE4;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
-            "QPushButton:hover { background:#DBEAFE; }"
+            "QPushButton:hover { background:#CDEAF0; }"
         )
         merge_btn.clicked.connect(self._do_merge)
         btns2.addWidget(merge_btn)
@@ -326,7 +326,7 @@ class SettingsWidget(QWidget):
     def _build_cloud_backup_section(self) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+            "QFrame { background:white; border:1px solid #DDE5E8; border-radius:12px; }"
         )
         vl = QVBoxLayout(card)
         vl.setContentsMargins(24, 20, 24, 24)
@@ -334,19 +334,19 @@ class SettingsWidget(QWidget):
 
         hdr = QLabel("Cloud Backup")
         hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        hdr.setStyleSheet("color:#0F2942; border:none;")
+        hdr.setStyleSheet("color:#1F4E5A; border:none;")
         vl.addWidget(hdr)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        sep.setStyleSheet("border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep)
 
         info = QLabel(
             "Choose a cloud-synced folder (Google Drive, OneDrive, Dropbox) for automatic backup.\n"
             "The app will copy the database to this folder every time it starts."
         )
-        info.setStyleSheet("color:#64748B; font-size:12px; border:none;")
+        info.setStyleSheet("color:#5B6B73; font-size:12px; border:none;")
         info.setWordWrap(True)
         vl.addWidget(info)
 
@@ -360,7 +360,7 @@ class SettingsWidget(QWidget):
             status_color, status_bg, status_border = "#92400E", "#FFFBEB", "#FDE68A"
         else:
             status_text = "Not configured"
-            status_color, status_bg, status_border = "#64748B", "#F8FAFC", "#E2E8F0"
+            status_color, status_bg, status_border = "#5B6B73", "#F4F7F8", "#DDE5E8"
 
         self._cloud_status = QLabel(status_text)
         self._cloud_status.setStyleSheet(
@@ -377,9 +377,9 @@ class SettingsWidget(QWidget):
         choose_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         choose_btn.setFixedHeight(38)
         choose_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         choose_btn.clicked.connect(self._choose_cloud_folder)
         btns.addWidget(choose_btn)
@@ -389,9 +389,9 @@ class SettingsWidget(QWidget):
             remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             remove_btn.setFixedHeight(38)
             remove_btn.setStyleSheet(
-                "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+                "QPushButton { background:#FBEBEA; color:#9E3B38; border:1px solid #FECACA;"
                 " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
-                "QPushButton:hover { background:#FEE2E2; }"
+                "QPushButton:hover { background:#F8DEDD; }"
             )
             remove_btn.clicked.connect(self._remove_cloud_folder)
             btns.addWidget(remove_btn)
@@ -420,7 +420,7 @@ class SettingsWidget(QWidget):
     def _build_security_section(self) -> QFrame:
         card = QFrame()
         card.setStyleSheet(
-            "QFrame { background:white; border:1px solid #E2E8F0; border-radius:12px; }"
+            "QFrame { background:white; border:1px solid #DDE5E8; border-radius:12px; }"
         )
         vl = QVBoxLayout(card)
         vl.setContentsMargins(24, 20, 24, 24)
@@ -428,12 +428,12 @@ class SettingsWidget(QWidget):
 
         hdr = QLabel("🔐  App Security")
         hdr.setFont(QFont("Ubuntu", 13, QFont.Weight.Bold))
-        hdr.setStyleSheet("color:#0F2942; border:none;")
+        hdr.setStyleSheet("color:#1F4E5A; border:none;")
         vl.addWidget(hdr)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("border:none; border-top:1px solid #E2E8F0;")
+        sep.setStyleSheet("border:none; border-top:1px solid #DDE5E8;")
         vl.addWidget(sep)
 
         is_set = self.service.is_password_set()
@@ -456,9 +456,9 @@ class SettingsWidget(QWidget):
         set_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         set_btn.setFixedHeight(38)
         set_btn.setStyleSheet(
-            "QPushButton { background:#0F2942; color:white; border:none;"
+            "QPushButton { background:#1F4E5A; color:white; border:none;"
             " border-radius:7px; font-size:13px; font-weight:600; padding:0 18px; }"
-            "QPushButton:hover { background:#1A4A7A; }"
+            "QPushButton:hover { background:#2A6674; }"
         )
         set_btn.clicked.connect(self._set_password)
         btns.addWidget(set_btn)
@@ -468,9 +468,9 @@ class SettingsWidget(QWidget):
             remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             remove_btn.setFixedHeight(38)
             remove_btn.setStyleSheet(
-                "QPushButton { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA;"
+                "QPushButton { background:#FBEBEA; color:#9E3B38; border:1px solid #FECACA;"
                 " border-radius:7px; font-size:13px; font-weight:600; padding:0 16px; }"
-                "QPushButton:hover { background:#FEE2E2; }"
+                "QPushButton:hover { background:#F8DEDD; }"
             )
             remove_btn.clicked.connect(self._remove_password)
             btns.addWidget(remove_btn)
@@ -710,7 +710,7 @@ class SettingsWidget(QWidget):
         )
         self._logo_preview.setPixmap(pix)
         self._logo_preview.setStyleSheet(
-            "QLabel { border:2px solid #BFDBFE; border-radius:45px; background:#F0F9FF; }"
+            "QLabel { border:2px solid #B9DCE4; border-radius:45px; background:#EEF7F9; }"
         )
 
     def refresh_data(self):

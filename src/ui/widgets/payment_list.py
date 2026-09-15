@@ -17,11 +17,11 @@ from ...utils.formatters import format_currency
 
 
 METHOD_COLORS = {
-    'cash':   ('#E8F8EC', '#34C759'),
-    'card':   ('#E5F0FF', '#007AFF'),
-    'upi':    ('#F0EFFF', '#5856D6'),
-    'cheque': ('#FFF3E0', '#FF9500'),
-    'other':  ('#F2F2F7', '#86868B'),
+    'cash':   ('#E6F5EE', '#2E9E6B'),
+    'card':   ('#E3F3F6', '#1F8A9E'),
+    'upi':    ('#EEEFF8', '#6E72B8'),
+    'cheque': ('#FBF1E1', '#C98A2E'),
+    'other':  ('#EEF3F4', '#5B6B73'),
 }
 
 
@@ -84,7 +84,7 @@ class RecordPaymentDialog(QDialog):
         title_bar = QFrame()
         title_bar.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 0px; }"
         )
         title_bar.setFixedHeight(60)
@@ -124,7 +124,7 @@ class RecordPaymentDialog(QDialog):
 
         self.patient_info_lbl = QLabel("")
         self.patient_info_lbl.setStyleSheet(
-            "color:#007AFF; font-size:12px; background:transparent;"
+            "color:#1F8A9E; font-size:12px; background:transparent;"
         )
         form_layout.addRow("", self.patient_info_lbl)
 
@@ -146,7 +146,7 @@ class RecordPaymentDialog(QDialog):
 
         self.pending_lbl = QLabel("")
         self.pending_lbl.setStyleSheet(
-            "color:#FF9500; font-size:12px; background:transparent;"
+            "color:#C98A2E; font-size:12px; background:transparent;"
         )
         form_layout.addRow("", self.pending_lbl)
 
@@ -178,7 +178,7 @@ class RecordPaymentDialog(QDialog):
         # Buttons
         btn_bar = QFrame()
         btn_bar.setStyleSheet(
-            "QFrame { background:#F2F2F7; border-top:1px solid #E5E5EA; }"
+            "QFrame { background:#EEF3F4; border-top:1px solid #DDE5E8; }"
         )
         btn_layout = QHBoxLayout(btn_bar)
         btn_layout.setContentsMargins(28, 14, 28, 14)
@@ -235,7 +235,7 @@ class RecordPaymentDialog(QDialog):
                 self.patient_search.setText(p.name)
                 self.patient_search.setReadOnly(True)
                 self.patient_search.setStyleSheet(
-                    "background:#F2F2F7; color:#1D1D1F;"
+                    "background:#EEF3F4; color:#1E2B32;"
                 )
                 self.patient_info_lbl.setText(
                     f"📞 {p.mobile_number or '—'}  ·  ID #{p.id}"
@@ -359,7 +359,7 @@ class PaymentListWidget(QWidget):
         banner = QFrame()
         banner.setStyleSheet(
             "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
-            " stop:0 #0F2942, stop:0.6 #1A4A7A, stop:1 #1E6FA8);"
+            " stop:0 #1F4E5A, stop:0.6 #2A6674, stop:1 #3A8C99);"
             " border-radius: 14px; }"
         )
         banner.setFixedHeight(110)
@@ -373,7 +373,7 @@ class PaymentListWidget(QWidget):
         )
         b_subtitle = QLabel("Track and manage all patient payment transactions")
         b_subtitle.setStyleSheet(
-            "color:#94B8D4; font-size:13px; background:transparent;"
+            "color:#A9CBD2; font-size:13px; background:transparent;"
         )
         banner_text.addStretch()
         banner_text.addWidget(b_title)
@@ -396,13 +396,13 @@ class PaymentListWidget(QWidget):
         cards_row.setSpacing(16)
 
         self.card_today = self._make_summary_card(
-            "Total Collected Today", "Rs.0", "#34C759", "Today"
+            "Total Collected Today", "Rs.0", "#2E9E6B", "Today"
         )
         self.card_month = self._make_summary_card(
-            "Total Collected This Month", "Rs.0", "#007AFF", "Month"
+            "Total Collected This Month", "Rs.0", "#1F8A9E", "Month"
         )
         self.card_pending = self._make_summary_card(
-            "Total Outstanding", "Rs.0", "#FF9500", "Due"
+            "Total Outstanding", "Rs.0", "#C98A2E", "Due"
         )
         cards_row.addWidget(self.card_today)
         cards_row.addWidget(self.card_month)
@@ -433,7 +433,7 @@ class PaymentListWidget(QWidget):
         table_frame = QFrame()
         table_frame.setObjectName("card")
         table_frame.setStyleSheet(
-            "QFrame#card { background:#FFFFFF; border:1px solid #E5E5EA;"
+            "QFrame#card { background:#FFFFFF; border:1px solid #DDE5E8;"
             " border-radius:12px; padding:0px; }"
         )
         tbl_layout = QVBoxLayout(table_frame)
@@ -452,8 +452,8 @@ class PaymentListWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         self.table.setColumnWidth(3, 90)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.setColumnWidth(0, 180)
-        self.table.setColumnWidth(1, 200)
+        self.table.setColumnWidth(0, 240)
+        self.table.setColumnWidth(1, 260)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(
@@ -472,7 +472,7 @@ class PaymentListWidget(QWidget):
         self.empty_lbl = QLabel("No payments recorded yet.")
         self.empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_lbl.setStyleSheet(
-            "color:#86868B; font-size:15px; padding:40px;"
+            "color:#5B6B73; font-size:15px; padding:40px;"
         )
         self.empty_lbl.hide()
         layout.addWidget(self.empty_lbl)
@@ -491,11 +491,11 @@ class PaymentListWidget(QWidget):
         card = QFrame()
         card.setObjectName("metric_card")
         card.setStyleSheet(
-            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #E5E5EA;"
-            f" border-left: 4px solid {accent}; border-radius:10px; }}"
+            f"QFrame#metric_card {{ background:#FFFFFF; border:1px solid #DDE5E8;"
+            f" border-left: 4px solid {accent}; border-radius:10px; padding:0px; }}"
         )
         card.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
         )
         card.setFixedHeight(120)
 
@@ -526,7 +526,7 @@ class PaymentListWidget(QWidget):
         lbl_lbl = QLabel(label)
         lbl_lbl.setFont(QFont("Ubuntu", 10))
         lbl_lbl.setStyleSheet(
-            "color: #86868B; background: transparent;"
+            "color: #5B6B73; background: transparent;"
         )
         cl.addWidget(lbl_lbl)
 
@@ -637,7 +637,7 @@ class PaymentListWidget(QWidget):
             amt_item.setTextAlignment(
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
-            amt_item.setForeground(QBrush(QColor("#34C759")))
+            amt_item.setForeground(QBrush(QColor("#2E9E6B")))
             f = amt_item.font()
             f.setBold(True)
             amt_item.setFont(f)

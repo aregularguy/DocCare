@@ -37,7 +37,7 @@ class SplashScreen(QDialog):
         card.setStyleSheet(
             "QLabel {"
             "  background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
-            "    stop:0 #0D1F35, stop:1 #1A4A7A);"
+            "    stop:0 #1F4E5A, stop:1 #2A6674);"
             "  border-radius: 18px;"
             "}"
         )
@@ -53,7 +53,7 @@ class SplashScreen(QDialog):
         symbol = QLabel("⚕")
         symbol.setAlignment(Qt.AlignmentFlag.AlignCenter)
         symbol.setStyleSheet(
-            "font-size: 42px; color: #38BDF8;"
+            "font-size: 42px; color: #3AA9BA;"
             "background: transparent; margin-bottom: 6px;"
         )
         inner.addWidget(symbol)
@@ -69,7 +69,7 @@ class SplashScreen(QDialog):
         tag_lbl = QLabel("Dental Practice Management")
         tag_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         tag_lbl.setStyleSheet(
-            "color: #94A3B8; font-size: 13px; background: transparent; margin-top: 4px;"
+            "color: #8A989F; font-size: 13px; background: transparent; margin-top: 4px;"
         )
         inner.addWidget(tag_lbl)
 
@@ -82,8 +82,8 @@ class SplashScreen(QDialog):
         self._progress.setTextVisible(False)
         self._progress.setFixedHeight(4)
         self._progress.setStyleSheet(
-            "QProgressBar { background: #1E3A5F; border-radius: 2px; border: none; }"
-            "QProgressBar::chunk { background: #38BDF8; border-radius: 2px; }"
+            "QProgressBar { background: #2A6674; border-radius: 2px; border: none; }"
+            "QProgressBar::chunk { background: #3AA9BA; border-radius: 2px; }"
         )
         inner.addWidget(self._progress)
 
@@ -91,7 +91,7 @@ class SplashScreen(QDialog):
         self._status = QLabel("Loading…")
         self._status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._status.setStyleSheet(
-            "color: #64748B; font-size: 11px; background: transparent; margin-top: 6px;"
+            "color: #5B6B73; font-size: 11px; background: transparent; margin-top: 6px;"
         )
         inner.addWidget(self._status)
 

@@ -23,9 +23,8 @@ wheels/
 .installed.cfg
 *.egg
 
-# PyInstaller
+# PyInstaller (DentNest.spec is the build recipe and must stay tracked)
 *.manifest
-*.spec
 
 # Database
 data/*.db

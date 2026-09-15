@@ -17,6 +17,8 @@ class MetricCard(QFrame):
     def __init__(self, title: str, value: str, subtitle: str = "", parent=None):
         super().__init__(parent)
         self.setObjectName("metric_card")
+        # Global QSS pads metric cards; the layout margins already provide spacing
+        self.setStyleSheet("QFrame#metric_card { padding:0px; }")
         self.init_ui(title, value, subtitle)
 
     def init_ui(self, title: str, value: str, subtitle: str):
@@ -38,7 +40,7 @@ class MetricCard(QFrame):
         # Subtitle (optional)
         if subtitle:
             subtitle_label = QLabel(subtitle)
-            subtitle_label.setStyleSheet("color: #86868B; font-size: 11px;")
+            subtitle_label.setStyleSheet("color: #5B6B73; font-size: 11px;")
             layout.addWidget(subtitle_label)
 
     def update_value(self, value: str):
@@ -76,7 +78,7 @@ class DashboardWidget(QWidget):
 
         # Today's date
         today_label = QLabel(f"Today: {date.today().strftime('%A, %B %d, %Y')}")
-        today_label.setStyleSheet("color: #86868B; font-size: 14px;")
+        today_label.setStyleSheet("color: #5B6B73; font-size: 14px;")
         main_layout.addWidget(today_label)
 
         # Metrics grid
@@ -112,8 +114,8 @@ class DashboardWidget(QWidget):
         # Create metric cards
         self.total_patients_card = MetricCard("Total Patients", "0")
         self.new_patients_card = MetricCard("New Today", "0")
-        self.payments_today_card = MetricCard("Payments Today", "₹0")
-        self.pending_payments_card = MetricCard("Pending Payments", "₹0")
+        self.payments_today_card = MetricCard("Payments Today", format_currency(0))
+        self.pending_payments_card = MetricCard("Pending Payments", format_currency(0))
 
         # Add to grid
         layout.addWidget(self.total_patients_card, 0, 0)
@@ -151,7 +153,7 @@ class DashboardWidget(QWidget):
         layout.addWidget(self.patients_table)
 
         self.no_patients_label = QLabel("No patients today")
-        self.no_patients_label.setStyleSheet("color: #86868B; padding: 12px; font-size: 13px;")
+        self.no_patients_label.setStyleSheet("color: #5B6B73; padding: 12px; font-size: 13px;")
         self.no_patients_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.no_patients_label)
 
@@ -172,7 +174,7 @@ class DashboardWidget(QWidget):
         layout.addWidget(self.payments_table)
 
         self.no_payments_label = QLabel("No payments today")
-        self.no_payments_label.setStyleSheet("color: #86868B; padding: 12px; font-size: 13px;")
+        self.no_payments_label.setStyleSheet("color: #5B6B73; padding: 12px; font-size: 13px;")
         self.no_payments_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.no_payments_label)
 

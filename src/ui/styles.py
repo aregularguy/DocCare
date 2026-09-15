@@ -1,49 +1,55 @@
 """Professional light theme styles for DentNest (inspired by Cursor UI)."""
+import os
+
+# Arrow icons for combo/spin/date boxes (QSS needs forward slashes)
+ICON_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "icons"
+).replace("\\", "/")
 
 # Color Palette - Light Theme
 COLORS = {
     # Sidebar — deep ocean blue (professional medical SaaS)
-    'sidebar_bg': '#0F2942',
-    'sidebar_hover': '#1A3A5C',
-    'sidebar_active': '#1E4976',
-    'sidebar_active_border': '#38BDF8',
+    'sidebar_bg': '#1F4E5A',
+    'sidebar_hover': '#28606D',
+    'sidebar_active': '#2F7382',
+    'sidebar_active_border': '#3AA9BA',
     'sidebar_text': '#FFFFFF',
-    'sidebar_text_secondary': '#94B8D4',
-    'sidebar_border': '#1E3A5A',
+    'sidebar_text_secondary': '#A9CBD2',
+    'sidebar_border': '#2A5D69',
 
     # Main content
     'main_bg': '#FFFFFF',
-    'content_bg': '#FAFAFA',
+    'content_bg': '#F4F7F8',
     'card_bg': '#FFFFFF',
 
     # Primary colors
-    'primary': '#007AFF',        # Blue
-    'primary_hover': '#0051D5',
-    'primary_light': '#E5F0FF',
+    'primary': '#1F8A9E',        # Blue
+    'primary_hover': '#16707F',
+    'primary_light': '#E3F3F6',
 
     # Status colors
-    'success': '#34C759',        # Green
-    'success_light': '#E8F8EC',
-    'warning': '#FF9500',        # Orange
-    'warning_light': '#FFF3E0',
-    'danger': '#FF3B30',         # Red
-    'danger_light': '#FFE5E5',
-    'info': '#5856D6',           # Purple
-    'info_light': '#F0EFFF',
+    'success': '#2E9E6B',        # Green
+    'success_light': '#E6F5EE',
+    'warning': '#C98A2E',        # Orange
+    'warning_light': '#FBF1E1',
+    'danger': '#D0534F',         # Red
+    'danger_light': '#FBEBEA',
+    'info': '#6E72B8',           # Purple
+    'info_light': '#EEEFF8',
 
     # Text
-    'text_primary': '#1D1D1F',
-    'text_secondary': '#86868B',
-    'text_tertiary': '#C7C7CC',
+    'text_primary': '#1E2B32',
+    'text_secondary': '#5B6B73',
+    'text_tertiary': '#A9B6BC',
 
     # Borders
-    'border': '#E5E5EA',
-    'border_light': '#F2F2F7',
+    'border': '#DDE5E8',
+    'border_light': '#EEF3F4',
 
     # Input fields
     'input_bg': '#FFFFFF',
-    'input_border': '#D2D2D7',
-    'input_border_focus': '#007AFF',
+    'input_border': '#CFDADE',
+    'input_border_focus': '#1F8A9E',
 }
 
 # Font settings
@@ -73,13 +79,58 @@ def get_stylesheet():
         color: {COLORS['text_primary']};
     }}
 
+    /* Soft mist page ground; cards/inputs/tables paint their own white.
+       Plain containers stay transparent so labels inside white cards don't
+       get grey patches. */
     QMainWindow {{
-        background-color: {COLORS['main_bg']};
+        background-color: {COLORS['content_bg']};
     }}
 
     QWidget {{
-        background-color: {COLORS['main_bg']};
+        background-color: transparent;
         color: {COLORS['text_primary']};
+    }}
+
+    QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget {{
+        background-color: {COLORS['content_bg']};
+    }}
+
+    /* Top-level and popup surfaces need an explicit fill */
+    QDialog, QMessageBox, QMenu, QCalendarWidget, QComboBoxPrivateContainer {{
+        background-color: {COLORS['card_bg']};
+    }}
+
+    QAbstractItemView, QListView {{
+        background-color: {COLORS['card_bg']};
+    }}
+
+    QToolTip {{
+        background-color: {COLORS['card_bg']};
+        color: {COLORS['text_primary']};
+        border: 1px solid {COLORS['border']};
+        padding: 4px 8px;
+    }}
+
+    /* Unstyled buttons in message boxes / dialog button rows would inherit the
+       transparent QWidget ground and render dark; give them a light surface.
+       Scoped so page buttons keep their own inline styles and sizes. */
+    QMessageBox QPushButton, QDialogButtonBox QPushButton {{
+        background-color: {COLORS['card_bg']};
+        color: {COLORS['text_primary']};
+        border: 1px solid {COLORS['input_border']};
+        border-radius: 6px;
+        padding: 6px 16px;
+        min-width: 72px;
+    }}
+
+    QMessageBox QPushButton:hover, QDialogButtonBox QPushButton:hover {{
+        background-color: {COLORS['primary_light']};
+        border-color: {COLORS['primary']};
+        color: {COLORS['primary']};
+    }}
+
+    QMessageBox QPushButton:default, QDialogButtonBox QPushButton:default {{
+        border-color: {COLORS['primary']};
     }}
 
     /* ── Sidebar: override global QWidget white bg/dark text for all children ── */
@@ -284,22 +335,47 @@ def get_stylesheet():
         padding: 11px 15px;
     }}
 
-    QComboBox::drop-down {{
+    /* Explicit SVG arrows: Fusion's default arrows render as squares once boxes are styled */
+    QComboBox::drop-down, QDateEdit::drop-down {{
+        subcontrol-origin: padding;
+        subcontrol-position: center right;
+        width: 28px;
         border: none;
-        padding-right: 12px;
-        width: 30px;
+        background: transparent;
     }}
 
-    QComboBox::down-arrow {{
-        image: none;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 7px solid {COLORS['text_secondary']};
-        margin-right: 8px;
+    QComboBox::down-arrow, QDateEdit::down-arrow {{
+        image: url({ICON_DIR}/chevron-down.svg);
+        width: 12px;
+        height: 12px;
     }}
 
-    QComboBox::down-arrow:hover {{
-        border-top: 7px solid {COLORS['primary']};
+    QSpinBox::up-button, QDoubleSpinBox::up-button {{
+        subcontrol-origin: border;
+        subcontrol-position: top right;
+        width: 22px;
+        border: none;
+        background: transparent;
+    }}
+
+    QSpinBox::down-button, QDoubleSpinBox::down-button {{
+        subcontrol-origin: border;
+        subcontrol-position: bottom right;
+        width: 22px;
+        border: none;
+        background: transparent;
+    }}
+
+    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
+        image: url({ICON_DIR}/chevron-up.svg);
+        width: 10px;
+        height: 10px;
+    }}
+
+    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
+        image: url({ICON_DIR}/chevron-down.svg);
+        width: 10px;
+        height: 10px;
     }}
 
     QComboBox QAbstractItemView {{
@@ -351,11 +427,11 @@ def get_stylesheet():
     /* Table Styles */
     QTableWidget {{
         background-color: {COLORS['card_bg']};
-        border: 1px solid #E2E8F0;
+        border: 1px solid #DDE5E8;
         border-radius: 10px;
         gridline-color: {COLORS['border_light']};
         font-size: {FONTS['size_medium']};
-        alternate-background-color: #FAFAFA;
+        alternate-background-color: #F4F7F8;
     }}
 
     QTableWidget::item {{
@@ -365,20 +441,20 @@ def get_stylesheet():
     }}
 
     QTableWidget::item:hover {{
-        background-color: #F0F9FF;
+        background-color: #EEF7F9;
     }}
 
     QTableWidget::item:selected {{
-        background-color: #DBEAFE;
-        color: #0F2942;
+        background-color: #CDEAF0;
+        color: #1F4E5A;
     }}
 
     QHeaderView::section {{
-        background-color: #EFF6FF;
-        color: #1A4A7A;
+        background-color: #E3F3F6;
+        color: #2A6674;
         padding: 10px;
         border: none;
-        border-bottom: 2px solid #38BDF8;
+        border-bottom: 2px solid #3AA9BA;
         font-weight: {FONTS['weight_semibold']};
         font-size: {FONTS['size_small']};
         text-transform: uppercase;
